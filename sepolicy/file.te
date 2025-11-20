@@ -1,0 +1,5 @@
+# Definieer sysfs_pwm als een bestandstype dat in sysfs leeft
+type sysfs_pwm, fs_type, sysfs_type;
+
+# Definieer voor de zekerheid ook sysfs_gpio (vaak ook niet standaard in AOSP)
+type sysfs_gpio, fs_type, sysfs_type;

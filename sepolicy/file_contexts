@@ -1,10 +1,7 @@
-# device/snappautomotive/vim3/sepolicy/file_contexts
-
-# Label de PWM controller voor de backlight
+# PWM (Backlight)
 /sys/class/pwm/pwmchip0/pwm0/duty_cycle    u:object_r:sysfs_pwm:s0
 /sys/class/pwm/pwmchip0/pwm0/enable        u:object_r:sysfs_pwm:s0
 /sys/class/pwm/pwmchip0/pwm0/period        u:object_r:sysfs_pwm:s0
 
-# Label de specifieke GPIO pin voor de reverse trigger (voorbeeld gpio496)
-# Check op je device welk nummer het echt is!
+# GPIO (Reverse trigger) - Pas het nummer 496 aan als jouw kernel anders is!
 /sys/class/gpio/gpio496/value              u:object_r:sysfs_gpio:s0
