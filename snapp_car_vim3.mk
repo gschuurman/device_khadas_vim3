@@ -13,10 +13,6 @@ DEVICE_FRAMEWORK_MANIFEST_FILE += device/google_car/common/manifest.xml
 # but this breaks phone_car. So undo it here.
 PRODUCT_ENFORCE_RRO_TARGETS :=
 
-# Max 4GB
-BOARD_SUPER_PARTITION_SIZE := 4294967296
-BOARD_DB_DYNAMIC_PARTITIONS_SIZE := 4294967296
-
 # Enable mainline checking
 PRODUCT_ENFORCE_ARTIFACT_PATH_REQUIREMENTS := false
 
@@ -167,6 +163,13 @@ PRODUCT_VENDOR_PROPERTIES += \
 # Vehicle HAL for VIM3
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service
+
+# Max 4GB
+BOARD_SUPER_PARTITION_SIZE := 4831838208
+BOARD_DB_DYNAMIC_PARTITIONS_SIZE := 4831838208
+BOARD_SUPER_PARTITION_GROUPS := db_dynamic_partitions
+BOARD_DB_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor
+BOARD_DB_DYNAMIC_PARTITIONS_RESERVED_SIZE := 0
 
 # GAPPS
 $(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk )
