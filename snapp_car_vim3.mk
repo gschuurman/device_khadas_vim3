@@ -13,6 +13,10 @@ DEVICE_FRAMEWORK_MANIFEST_FILE += device/google_car/common/manifest.xml
 # but this breaks phone_car. So undo it here.
 PRODUCT_ENFORCE_RRO_TARGETS :=
 
+# Max 4GB
+BOARD_SUPER_PARTITION_SIZE := 4294967296
+BOARD_DB_DYNAMIC_PARTITIONS_SIZE := 4294967296
+
 # Enable mainline checking
 PRODUCT_ENFORCE_ARTIFACT_PATH_REQUIREMENTS := false
 
