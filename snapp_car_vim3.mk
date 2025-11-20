@@ -142,13 +142,34 @@ PRODUCT_PRODUCT_PROPERTIES += \
         persist.eab.supported=0
 
 # Occupant Awareness
-
 PRODUCT_PACKAGES_DEBUG += \
 	android.hardware.automotive.occupant_awareness@1.0-service \
 	android.hardware.automotive.occupant_awareness@1.0-service_mock
 
 # Sepolicy for occupant awareness system
 include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
+
+# --- USB PERIPHERALS ---
+PRODUCT_PACKAGES += \
+    audio.usb.default \
+    tinyplay \
+    tinycap \
+    tinymix \
+    android.hardware.gnss-service.usb \
+    android.hardware.camera.provider@2.5-external-service \
+    camera.device@3.5-external-impl \
+    camera.device@3.5-impl
+
+# --- JOUW VEHICLE HAL ---
+PRODUCT_PACKAGES += android.hardware.automotive.vehicle-V1-ndk-service-gschuurman
+
+# Kopieer de RC file naar de juiste plek in de vendor partitie
+PRODUCT_COPY_FILES += \
+    vendor/gschuurman/interfaces/automotive/vehicle/aidl/impl/vhal_gschuurman.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/vhal_gschuurman.rc
+
+# GAPPS
+$(call inherit-product,  vendor/gapps/arm64/arm64-vendor.mk )
+
 
 PRODUCT_PROPERTY_OVERRIDES += \
         ro.boot.wificountrycode=00 \
