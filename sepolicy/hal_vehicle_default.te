@@ -1,0 +1,7 @@
+allow hal_vehicle_default sysfs_pwm:dir { search r_dir_perms };
+allow hal_vehicle_default sysfs_pwm:file { rw_file_perms };
+
+allow hal_vehicle_default sysfs_gpio:dir { search r_dir_perms };
+allow hal_vehicle_default sysfs_gpio:file { r_file_perms };
+
+allow hal_vehicle_default i2c_device:chr_file { rw_file_perms };

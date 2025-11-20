@@ -160,16 +160,14 @@ PRODUCT_PACKAGES += \
     camera.device@3.5-external-impl \
     camera.device@3.5-impl
 
-# --- JOUW VEHICLE HAL ---
-PRODUCT_PACKAGES += android.hardware.automotive.vehicle-V1-ndk-service-gschuurman
+BOARD_SEPOLICY_DIRS += device/snappautomotive/vim3/sepolicy
 
-# Kopieer de RC file naar de juiste plek in de vendor partitie
-PRODUCT_COPY_FILES += \
-    vendor/gschuurman/interfaces/automotive/vehicle/aidl/impl/vhal_gschuurman.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/vhal_gschuurman.rc
+# --- JOUW VEHICLE HAL ---
+PRODUCT_PACKAGES += \
+    android.hardware.automotive.vehicle@snap-service
 
 # GAPPS
-$(call inherit-product,  vendor/gapps/arm64/arm64-vendor.mk )
-
+$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk )
 
 PRODUCT_PROPERTY_OVERRIDES += \
         ro.boot.wificountrycode=00 \
