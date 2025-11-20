@@ -156,6 +156,14 @@ PRODUCT_PACKAGES += \
 
 BOARD_SEPOLICY_DIRS += device/snappautomotive/vim3/sepolicy
 
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.path.pwm.duty=/sys/class/pwm/pwmchip0/pwm0/duty_cycle \
+    ro.vendor.vehicle.path.pwm.enable=/sys/class/pwm/pwmchip0/pwm0/enable \
+    ro.vendor.vehicle.path.pwm.period=/sys/class/pwm/pwmchip0/pwm0/period \
+    ro.vendor.vehicle.path.gpio.reverse=/sys/class/gpio/gpio496/value
+
+
+
 # Vehicle HAL for VIM3
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service

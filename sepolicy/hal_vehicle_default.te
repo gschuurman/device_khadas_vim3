@@ -5,3 +5,5 @@ allow hal_vehicle_default sysfs_pwm:file { rw_file_perms };
 # GPIO Toegang
 allow hal_vehicle_default sysfs_gpio:dir { search r_dir_perms };
 allow hal_vehicle_default sysfs_gpio:file { r_file_perms };
+
+get_prop(hal_vehicle_default, vendor_vehicle_path_prop)
