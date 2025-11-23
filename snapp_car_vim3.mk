@@ -25,18 +25,32 @@ BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
 # Override heap growth limit due to high display density on device
 PRODUCT_PROPERTY_OVERRIDES += \
-            dalvik.vm.heapgrowthlimit=256m
+    dalvik.vm.heapgrowthlimit=256m \
+    ro.boot.wificountrycode=00 \
+    ro.config.media_vol_default=0 \
+    log.tag.CarTrustAgentUnlockEvent=I
 
 # Exclude the testing apps
 PRODUCT_IS_AUTOMOTIVE_SDK := true
 
 PRODUCT_PACKAGE_OVERLAYS += device/snappautomotive/vim3/overlay
 
+# --- INHERITANCE ---
 $(call inherit-product, device/snappautomotive/common/additions.mk)
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
 
+# --- A/B (SEAMLESS) UPDATE PACKAGES (VERPLICHT VOOR A16) ---
+PRODUCT_PACKAGES += \
+    android.hardware.boot-service.default \
+    bootctrl.yukawa \
+    update_engine \
+    update_engine_client \
+    update_verifier \
+    checkpoint_gc
+
+# --- AUTOMOTIVE PACKAGES ---
 PRODUCT_PACKAGES += \
     android.hardware.broadcastradio@2.0-service \
     android.hardware.broadcastradio \
@@ -46,6 +60,7 @@ PRODUCT_PACKAGES += \
     CarWifiOverlay \
     librs_jni
 
+# --- COPY FILES ---
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/aosp_excluded_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/aosp_excluded_hardware.xml \
     frameworks/native/data/etc/car_core_hardware.xml:system/etc/permissions/car_core_hardware.xml \
@@ -150,31 +165,23 @@ PRODUCT_PACKAGES += \
     camera.device@3.5-external-impl \
     camera.device@3.5-impl
 
+# Custom SEPolicy
 BOARD_SEPOLICY_DIRS += device/snappautomotive/vim3/sepolicy
 
+# --- CUSTOM HAL CONFIGURATION ---
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.path.pwm.duty=/sys/class/pwm/pwmchip0/pwm0/duty_cycle \
     ro.vendor.vehicle.path.pwm.enable=/sys/class/pwm/pwmchip0/pwm0/enable \
     ro.vendor.vehicle.path.pwm.period=/sys/class/pwm/pwmchip0/pwm0/period \
     ro.vendor.vehicle.path.gpio.reverse=/sys/class/gpio/gpio496/value
 
-
-
 # Vehicle HAL for VIM3
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service
 
-# Max 4GB
-BOARD_SUPER_PARTITION_SIZE := 4831838208
-BOARD_DB_DYNAMIC_PARTITIONS_SIZE := 4831838208
-BOARD_SUPER_PARTITION_GROUPS := db_dynamic_partitions
-BOARD_DB_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor
-BOARD_DB_DYNAMIC_PARTITIONS_RESERVED_SIZE := 0
+# # GAPPS (Altijd als laatste inherit)
+# $(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
 
-# GAPPS
-$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk )
-
-PRODUCT_NAME := snapp_car_vim3
 PRODUCT_CHARACTERISTICS := automotive
 ifeq ($(SNAPP_MODEL),)
 PRODUCT_MODEL := Snapp Automotive build of Android Automotive OS for VIM3
