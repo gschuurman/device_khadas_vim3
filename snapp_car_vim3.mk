@@ -52,8 +52,6 @@ PRODUCT_PACKAGES += \
 
 # --- AUTOMOTIVE PACKAGES ---
 PRODUCT_PACKAGES += \
-    android.hardware.broadcastradio@2.0-service \
-    android.hardware.broadcastradio \
     android.hardware.automotive.remoteaccess@V2-default-service \
     android.hardware.automotive.ivn@V1-default-service \
     CarConnectivityOverlay \
@@ -90,10 +88,10 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_PROPERTY_OVERRIDES += \
     android.car.drawer.unlimited=true \
-    android.car.hvac.demo=true \
+    android.car.hvac.demo=false \
     com.android.car.radio.demo=true \
     com.android.car.radio.demo.dual=true \
-    ro.hardware.egl=mali
+#     ro.hardware.egl=mali
 
 PRODUCT_COPY_FILES += \
     packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
@@ -117,8 +115,6 @@ $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
 # CAN bus support - We don't have a direct hardware interface on the
 # VIM3, but there are dongles which can provide CAN bus connectivity
 
-PRODUCT_PACKAGES += \
-    android.hardware.automotive.can@1.0-service
 PRODUCT_PACKAGES_DEBUG += \
     canhalctrl \
     canhaldump \
@@ -180,7 +176,7 @@ PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service
 
 # # GAPPS (Altijd als laatste inherit)
-# $(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
+$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
 
 PRODUCT_CHARACTERISTICS := automotive
 ifeq ($(SNAPP_MODEL),)
