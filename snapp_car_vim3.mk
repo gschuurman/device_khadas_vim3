@@ -108,6 +108,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.evs-service.sample
 
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.automotive.evs.config_file=/vendor/etc/automotive/evs/evs_configuration_override.xml
+
 # 4. (Optioneel) De EVS App om te testen (zit vaak al in car.mk, maar voor de zekerheid)
 PRODUCT_PACKAGES += \
     snapp_evs_configuration \
@@ -128,7 +131,7 @@ BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
 # Audio Control
 PRODUCT_PACKAGES += \
-            android.hardware.automotive.audiocontrol-service.example
+    android.hardware.automotive.audiocontrol-service.example
 
 # Sepolicy for occupant awareness system
 include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
