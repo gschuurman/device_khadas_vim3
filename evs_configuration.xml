@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<configuration>
+    <camera id="/dev/video0">
+        <function>REVERSE_PARK</function>
+        <width>640</width>  <height>480</width> <framerate>30</framerate>
+    </camera>
+
+    <display device="0" position="driver">
+        <stream id="0" width="1920" height="1080" format="RGBA_8888" framerate="60"/>
+    </display>
+</configuration>

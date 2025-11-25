@@ -103,14 +103,36 @@ DEVICE_MANIFEST_FILE += \
 # EVS - Use the mocked EVS from the emulator builds. This can be replaced
 # with a full EVS HAL implementation to integrate with the VIM3 hardware
 # at a later date.
-ENABLE_EVS_SAMPLE ?= false
-ENABLE_EVS_SERVICE ?= true
-ENABLE_MOCK_EVSHAL ?= true
-ENABLE_CAREVSSERVICE_SAMPLE ?= false
-ENABLE_SAMPLE_EVS_APP ?= false
-ENABLE_CARTELEMETRY_SERVICE ?= false
-CUSTOMIZE_EVS_SERVICE_PARAMETER := true
-$(call inherit-product, device/generic/car/emulator/evs/evs.mk)
+# ENABLE_EVS_SAMPLE ?= false
+# ENABLE_EVS_SERVICE ?= true
+# ENABLE_MOCK_EVSHAL ?= true
+# ENABLE_CAREVSSERVICE_SAMPLE ?= false
+# ENABLE_SAMPLE_EVS_APP ?= false
+# ENABLE_CARTELEMETRY_SERVICE ?= false
+# CUSTOMIZE_EVS_SERVICE_PARAMETER := true
+# $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
+
+
+# ==========================================
+# EVS (Exterior View System) - USB CAMERA
+# ==========================================
+
+# 1. De EVS Manager (De spin in het web)
+PRODUCT_PACKAGES += \
+    android.hardware.automotive.evs.manager-service
+
+# 2. De Sample HAL (Die USB/V4L2 camera's ondersteunt)
+PRODUCT_PACKAGES += \
+    android.hardware.automotive.evs-service.sample
+
+# 3. De Configuratie (Vertelt de HAL welke /dev/videoX hij moet pakken)
+PRODUCT_COPY_FILES += \
+    device/snappautomotive/vim3/evs_configuration.xml:vendor/etc/automotive/evs/evs_configuration.xml
+
+# 4. (Optioneel) De EVS App om te testen (zit vaak al in car.mk, maar voor de zekerheid)
+PRODUCT_PACKAGES += \
+    EvsApp
+
 
 # CAN bus support - We don't have a direct hardware interface on the
 # VIM3, but there are dongles which can provide CAN bus connectivity
