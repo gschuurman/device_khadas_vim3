@@ -101,20 +101,16 @@ DEVICE_MANIFEST_FILE += \
 # EVS (Exterior View System) - USB CAMERA
 # ==========================================
 
-# 1. De EVS Manager (De spin in het web)
 PRODUCT_PACKAGES += \
     android.hardware.automotive.evs.manager-service
 
-# 2. De Sample HAL (Die USB/V4L2 camera's ondersteunt)
+
 PRODUCT_PACKAGES += \
     android.hardware.automotive.evs-service.sample
 
-# 3. De Configuratie (Vertelt de HAL welke /dev/videoX hij moet pakken)
-PRODUCT_COPY_FILES += \
-    device/snappautomotive/vim3/evs_configuration.xml:vendor/etc/automotive/evs/evs_configuration.xml
-
 # 4. (Optioneel) De EVS App om te testen (zit vaak al in car.mk, maar voor de zekerheid)
 PRODUCT_PACKAGES += \
+    snapp_evs_configuration
     EvsApp
 
 
