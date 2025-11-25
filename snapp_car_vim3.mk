@@ -28,7 +28,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.heapgrowthlimit=256m \
     ro.boot.wificountrycode=00 \
     ro.config.media_vol_default=0 \
-    log.tag.CarTrustAgentUnlockEvent=I
+    log.tag.CarTrustAgentUnlockEvent=I \
+    android.car.drawer.unlimited=true \
+    android.car.hvac.demo=true \
+    com.android.car.radio.demo=true \
+    com.android.car.radio.demo.dual=true
 
 # Exclude the testing apps
 PRODUCT_IS_AUTOMOTIVE_SDK := true
@@ -86,32 +90,12 @@ PRODUCT_COPY_FILES += \
     device/generic/car/common/android.hardware.disable.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml \
     device/generic/car/common/android.hardware.disable.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
 
-PRODUCT_PROPERTY_OVERRIDES += \
-    android.car.drawer.unlimited=true \
-    android.car.hvac.demo=false \
-    com.android.car.radio.demo=true \
-    com.android.car.radio.demo.dual=true \
-#     ro.hardware.egl=mali
-
 PRODUCT_COPY_FILES += \
     packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
     packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
 
 DEVICE_MANIFEST_FILE += \
     device/snappautomotive/vim3/manifest.xml
-
-# EVS - Use the mocked EVS from the emulator builds. This can be replaced
-# with a full EVS HAL implementation to integrate with the VIM3 hardware
-# at a later date.
-# ENABLE_EVS_SAMPLE ?= false
-# ENABLE_EVS_SERVICE ?= true
-# ENABLE_MOCK_EVSHAL ?= true
-# ENABLE_CAREVSSERVICE_SAMPLE ?= false
-# ENABLE_SAMPLE_EVS_APP ?= false
-# ENABLE_CARTELEMETRY_SERVICE ?= false
-# CUSTOMIZE_EVS_SERVICE_PARAMETER := true
-# $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
-
 
 # ==========================================
 # EVS (Exterior View System) - USB CAMERA
@@ -158,11 +142,6 @@ include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
 PRODUCT_COPY_FILES += \
     device/google_car/common/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \
-
-PRODUCT_PROPERTY_OVERRIDES += \
-        ro.boot.wificountrycode=00 \
-        ro.config.media_vol_default=0 \
-        log.tag.CarTrustAgentUnlockEvent=I
 
 # Phone car targets don't support ramdump
 EXCLUDE_BUILD_RAMDUMP_UPLOADER_DEBUG_TOOL := true

@@ -1,0 +1,3 @@
+<resources>
+    <string name="updater_server_url" translatable="false">https://ota.schuurman-it.com/builds.json</string>
+</resources>
