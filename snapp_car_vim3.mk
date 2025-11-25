@@ -110,7 +110,7 @@ PRODUCT_PACKAGES += \
 
 # 4. (Optioneel) De EVS App om te testen (zit vaak al in car.mk, maar voor de zekerheid)
 PRODUCT_PACKAGES += \
-    snapp_evs_configuration
+    snapp_evs_configuration \
     EvsApp
 
 
