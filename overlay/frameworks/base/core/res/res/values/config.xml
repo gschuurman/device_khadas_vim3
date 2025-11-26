@@ -94,4 +94,10 @@
         <item>7</item>
     </integer-array>
 
+    <string-array name="config_locationProviderPackageNames" translatable="false">
+        <item>com.google.android.gms</item>
+        <item>org.microg.nlp.backend.ichnaea</item>
+        <item>org.microg.nlp.backend.nominatim</item>
+    </string-array>
+
 </resources>

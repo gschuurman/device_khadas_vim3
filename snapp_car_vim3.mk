@@ -175,8 +175,8 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service
 
-# # GAPPS (Altijd als laatste inherit)
-$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
+
+$(call inherit-product-if-exists, vendor/partner_gms/products/gms.mk)
 
 PRODUCT_CHARACTERISTICS := automotive
 ifeq ($(SNAPP_MODEL),)

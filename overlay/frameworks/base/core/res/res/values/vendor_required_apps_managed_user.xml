@@ -18,7 +18,7 @@
     <string-array translatable="false" name="vendor_required_apps_managed_user">
 
         <item>com.android.vending</item>
-        <item>com.google.android.apps.automotive.inputmethod</item>
+        <!-- <item>com.google.android.apps.automotive.inputmethod</item>
         <item>com.google.android.apps.automotive.sensing.sensorreplay.recordingapp</item>
         <item>com.google.android.apps.geo.autograph.vms.client.console.car</item>
         <item>com.google.android.apps.geo.autograph.vms.client.devapp</item>
@@ -34,7 +34,7 @@
         <item>com.google.android.car.setupwizard</item>
         <item>com.google.android.car.uxr.oas</item>
         <item>com.google.android.car.uxr.sample</item>
-        <item>com.google.android.embedded.projection</item>
+        <item>com.google.android.embedded.projection</item> -->
 
     </string-array>
 </resources>
