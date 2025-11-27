@@ -37,10 +37,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Exclude the testing apps
 PRODUCT_IS_AUTOMOTIVE_SDK := true
 
-PRODUCT_PACKAGE_OVERLAYS += device/snappautomotive/vim3/overlay
-
 # --- INHERITANCE ---
-$(call inherit-product, device/snappautomotive/common/additions.mk)
+$(call inherit-product, vendor/lineage/config/common.mk)
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
@@ -95,7 +93,7 @@ PRODUCT_COPY_FILES += \
     packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
 
 DEVICE_MANIFEST_FILE += \
-    device/snappautomotive/vim3/manifest.xml
+    device/khadas/vim3/manifest.xml
 
 # ==========================================
 # EVS (Exterior View System) - USB CAMERA
@@ -127,7 +125,7 @@ PRODUCT_PACKAGES_DEBUG += \
     android.hardware.automotive.occupant_awareness@1.0-service \
     android.hardware.automotive.occupant_awareness@1.0-service_mock
 
-BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
+
 
 # Audio Control
 PRODUCT_PACKAGES += \
@@ -175,12 +173,14 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service
 
-
 $(call inherit-product-if-exists, vendor/partner_gms/products/gms.mk)
 
 PRODUCT_CHARACTERISTICS := automotive
-ifeq ($(SNAPP_MODEL),)
-PRODUCT_MODEL := Snapp Automotive build of Android Automotive OS for VIM3
-else
-PRODUCT_MODEL := $(SNAPP_MODEL)
-endif
+
+PRODUCT_NAME := lineage_vim3
+PRODUCT_DEVICE := vim3
+PRODUCT_BRAND := Khadas
+PRODUCT_MODEL := VIM3 Pro
+PRODUCT_MANUFACTURER := Khadas
+
+PRODUCT_PACKAGE_OVERLAYS += device/khadas/vim3/overlay
