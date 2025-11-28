@@ -13,6 +13,23 @@ $(call inherit-product, vendor/lineage/config/common_car.mk)
 # Inherit device configuration
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
+PRODUCT_PACKAGES += \
+    android.hardware.automotive.vehicle@V3-default-service
+
+
+# Disable legacy HIDL Vehicle HAL 2.0
+PRODUCT_PACKAGES -= android.hardware.automotive.vehicle@2.0-service
+PRODUCT_PACKAGES -= android.hardware.automotive.vehicle@2.0-impl
+PRODUCT_PACKAGES -= android.hardware.automotive.vehicle@2.0-manager-lib
+
+# Make sure the build system knows we ONLY want AIDL VHAL
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.vehicle.hal.aidl.enabled=true \
+    ro.vehicle.hal.hidl.disable=true
+
+PRODUCT_PRODUCT_PROPERTIES += \
+    ro.vehicle.hal.hidl.disable=true
+
 # # 4. Jouw Snapp Customisaties
 # PRODUCT_PACKAGES += \
 #     android.hardware.automotive.vehicle@snap-service \
