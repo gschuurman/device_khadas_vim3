@@ -7,10 +7,12 @@ PRODUCT_PACKAGE_OVERLAYS += device/khadas/vim3/overlay
 DEVICE_MANIFEST_FILE += \
 	device/khadas/vim3/manifest.xml
 
-# GMS
-ifeq ($(WITH_GMS),true)
-	GMS_MAKEFILE=gms_minimal.mk
-	WITH_GMS_COMMS_SUITE := false
-endif
+PRODUCT_PACKAGES += \
+    android.hardware.bluetooth.socket-service.default \
+    android.hardware.bluetooth.audio-impl
+
+PRODUCT_PACKAGES += \
+    android.hardware.automotive.vehicle@snap-service \
+    snapp_evs_configuration
 
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
