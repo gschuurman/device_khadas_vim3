@@ -13,6 +13,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@snap-service \
-    snapp_evs_configuration
+    snapp_evs_configuration \
+    SystemUpdaterSample \
 
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)

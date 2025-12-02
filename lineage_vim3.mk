@@ -13,8 +13,6 @@ $(call inherit-product, vendor/lineage/config/common_car.mk)
 # Inherit device configuration
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
-PRODUCT_PACKAGES += \
-    android.hardware.automotive.vehicle@V3-emulator-service
 
 # Make sure the build system knows we ONLY want AIDL VHAL
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -25,13 +23,6 @@ PRODUCT_PRODUCT_PROPERTIES += \
     ro.vehicle.hal.hidl.disable=true
 
 WITH_GMS := true
-
-# # 4. Jouw Snapp Customisaties
-# PRODUCT_PACKAGES += \
-#     android.hardware.automotive.vehicle@snap-service \
-#     snapp_evs_configuration \
-#     SystemUpdaterSample \
-#     EvsApp
 
 # 5. Product Definities
 PRODUCT_BRAND := Khadas
