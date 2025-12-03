@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="config_renderHvac">false</bool>
+    
+    <bool name="config_hvacUiEnabled">false</bool>
+
+    <bool name="config_displayTemperatureInBottomBar">false</bool>
+    <bool name="config_displayTemperatureInTopBar">false</bool>
+</resources>

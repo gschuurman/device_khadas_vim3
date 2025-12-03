@@ -1,0 +1,12 @@
+service setup_mixer /vendor/bin/setup_mixer.sh
+    class main
+    user root
+    group root audio system
+    oneshot
+    disabled
+
+on property:sys.boot_completed=1
+    start setup_mixer
+
+on post-fs-data
+    chmod 0755 /vendor/bin/setup_mixer.sh
