@@ -20,3 +20,9 @@ include device/amlogic/yukawa/BoardConfig.mk
 # BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := erofs
 # BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_SEPOLICY_DIRS += device/khadas/vim3/sepolicy
+
+
+BOARD_SUPER_PARTITION_GROUPS := db_dynamic_partitions
+BOARD_DB_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor
+BOARD_SUPER_PARTITION_SIZE := $(shell echo $$(( 6144 * 1024 * 1024 )))
+BOARD_DB_DYNAMIC_PARTITIONS_SIZE := $(shell echo $$(( $(BOARD_SUPER_PARTITION_SIZE)/2 - (10 * 1024 * 1024) )))  # Reserve 10M for DAP metadata
