@@ -7,23 +7,24 @@
                     <device address="0">
                         <context context="MUSIC"/>
                         <context context="ANNOUNCEMENT"/>
+                        <profile name="HiFi" 
+                                 format="AUDIO_FORMAT_PCM_16_BIT"
+                                 samplingRates="48000" 
+                                 channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
                     </device>
                 </group>
-
                 <group>
                     <device address="0">
                         <context context="NAVIGATION"/>
                         <context context="VOICE_COMMAND"/>
                     </device>
                 </group>
-
                 <group>
                     <device address="0">
                         <context context="CALL"/>
                         <context context="RINGTONE"/>
                     </device>
                 </group>
-
                 <group>
                     <device address="0">
                         <context context="SYSTEM_SOUND"/>

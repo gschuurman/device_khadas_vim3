@@ -1,0 +1,5 @@
+<resources>
+    <bool name="config_show_sound_settings">true</bool>
+    
+    <bool name="config_show_balance_fader">true</bool> 
+</resources>

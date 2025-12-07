@@ -1,0 +1,4 @@
+type serial_shell, domain;
+allow serial_shell tty_device:chr_file rw_file_perms;
+allow serial_shell self:capability { sys_admin sys_boot };
+allow serial_shell rootfs:file execute_no_trans;

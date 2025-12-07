@@ -1,7 +1,11 @@
 # PWM (Backlight)
-/sys/class/pwm/pwmchip0/pwm0/duty_cycle    u:object_r:sysfs_pwm:s0
-/sys/class/pwm/pwmchip0/pwm0/enable        u:object_r:sysfs_pwm:s0
-/sys/class/pwm/pwmchip0/pwm0/period        u:object_r:sysfs_pwm:s0
+# Label voor de PWM bestanden (zodat we er naar mogen schrijven)
+/sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/duty_cycle    u:object_r:vendor_sysfs_pwm:s0
+/sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/enable        u:object_r:vendor_sysfs_pwm:s0
+/sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/period        u:object_r:vendor_sysfs_pwm:s0
 
-# GPIO (Reverse trigger) - Pas het nummer 496 aan als jouw kernel anders is!
-/sys/class/gpio/gpio496/value              u:object_r:sysfs_gpio:s0
+/dev/gpiochip[0-9]+    u:object_r:vendor_gpio_device:s0
+/vendor/bin/hw/android\.hardware\.automotive\.vehicle@schuurman-service    u:object_r:vendor_vehicle_schuurman_exec:s0
+
+
+/dev/ttyS4      u:object_r:tty_device:s0
