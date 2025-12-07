@@ -3,9 +3,14 @@
 /sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/duty_cycle    u:object_r:vendor_sysfs_pwm:s0
 /sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/enable        u:object_r:vendor_sysfs_pwm:s0
 /sys/class/pwm/pwmchip[0-9]+/pwm[0-9]+/period        u:object_r:vendor_sysfs_pwm:s0
+/sys/class/pwm/pwmchip[0-9]+/export    u:object_r:vendor_sysfs_pwm:s0
+/sys/class/pwm/pwmchip[0-9]+/unexport  u:object_r:vendor_sysfs_pwm:s0
 
 /dev/gpiochip[0-9]+    u:object_r:vendor_gpio_device:s0
 /vendor/bin/hw/android\.hardware\.automotive\.vehicle@schuurman-service    u:object_r:vendor_vehicle_schuurman_exec:s0
 
 
 /dev/ttyS4      u:object_r:tty_device:s0
+
+/vendor/bin/init\.vehicle\.sh      u:object_r:vendor_vehicle_setup_exec:s0
+

@@ -3,8 +3,8 @@ type vendor_vehicle_schuurman, domain;
 type vendor_vehicle_schuurman_exec, exec_type, vendor_file_type, file_type;
 
 # 2. Definieer de custom types
-type vendor_gpio_device, dev_type;          # Voor /dev/gpiochip*
-type vendor_sysfs_pwm, fs_type, sysfs_type; # Voor /sys/class/pwm/...
+type vendor_gpio_device, dev_type;
+type vendor_sysfs_pwm, fs_type, sysfs_type;
 
 # --- FIX 1: Gebruik de macro voor vendor properties ---
 # Oude regel (FOUT): type vendor_vehicle_prop, property_type;
@@ -15,16 +15,9 @@ init_daemon_domain(vendor_vehicle_schuurman)
 # 3. Standaard VHAL rechten
 hal_server_domain(vendor_vehicle_schuurman, hal_vehicle)
 
-# --- FIX 2: Verwijder net_domain ---
-# Oude regel (FOUT): net_domain(vendor_vehicle_schuurman)
-# (Deze regel veroorzaakte de tcp_socket/udp_socket neverallow errors)
-
-# 4. GPIO Toegang (Direct via kernel char device)
 allow vendor_vehicle_schuurman vendor_gpio_device:chr_file rw_file_perms;
 
-# 5. PWM Toegang
 allow vendor_vehicle_schuurman vendor_sysfs_pwm:file rw_file_perms;
 allow vendor_vehicle_schuurman sysfs:dir r_dir_perms;
 
-# 6. Property Toegang
 get_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)

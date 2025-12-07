@@ -1,0 +1,21 @@
+# Definieer het domein voor het setup script
+type vendor_vehicle_setup, domain;
+type vendor_vehicle_setup_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(vendor_vehicle_setup)
+
+# Script mag shells draaien (dit mag hier wél, want het is geen HAL)
+allow vendor_vehicle_setup vendor_shell_exec:file rx_file_perms;
+allow vendor_vehicle_setup vendor_toolbox_exec:file rx_file_perms;
+
+# Script mag PWM/GPIO bestanden beheren (chown/chmod)
+# Let op: 'vendor_sysfs_pwm' moet gedefinieerd zijn in vendor_vehicle_schuurman.te
+allow vendor_vehicle_setup vendor_sysfs_pwm:file rw_file_perms;
+allow vendor_vehicle_setup vendor_sysfs_pwm:dir r_dir_perms;
+allow vendor_vehicle_setup vendor_gpio_device:chr_file rw_file_perms;
+
+# Script moet properties kunnen lezen
+get_prop(vendor_vehicle_setup, vendor_vehicle_prop)
+
+# Script mag eigenaarschap wijzigen (chown)
+allow vendor_vehicle_setup self:capability { chown fowner fsetid };
