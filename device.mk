@@ -33,7 +33,14 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.gpio.offset=16 \
     ro.vendor.vehicle.pwm.period_ns=30518 \
-    ro.vendor.vehicle.pwm.force_write_period=true
+    ro.vendor.vehicle.pwm.force_write_period=false \
+    ro.secure=0 \
+    ro.adb.secure=0 \
+    ro.force.debuggable=1 \
+    ro.debuggable=1 \
+    persist.sys.usb.config=adb \
+    service.adb.root=1
+
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/init.serial.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.serial.rc
