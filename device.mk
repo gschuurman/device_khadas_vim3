@@ -32,11 +32,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.gpio.offset=16 \
-    ro.vendor.vehicle.path.pwm.duty=/sys/class/pwm/pwmchip1/pwm1/duty_cycle \
-    ro.vendor.vehicle.path.pwm.enable=/sys/class/pwm/pwmchip1/pwm1/enable \
-    ro.vendor.vehicle.path.pwm.period=/sys/class/pwm/pwmchip1/pwm1/period \
     ro.vendor.vehicle.pwm.period_ns=30518 \
-    ro.vendor.vehicle.pwm.force_write_period=false
+    ro.vendor.vehicle.pwm.force_write_period=true
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/init.serial.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.serial.rc

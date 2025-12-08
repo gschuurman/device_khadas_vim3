@@ -1,0 +1,3 @@
+# Label de PWM controller op adres 19000 (Dit is pwmchip0 / PWM_EF)
+genfscon sysfs /devices/platform/soc/ffd00000.bus/ffd19000.pwm/pwm/pwmchip  u:object_r:vendor_sysfs_pwm:s0
+genfscon sysfs /devices/platform/soc/ffd00000.bus/ffd19000.pwm/export       u:object_r:vendor_sysfs_pwm:s0

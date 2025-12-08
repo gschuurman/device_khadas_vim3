@@ -13,4 +13,3 @@
 /dev/ttyS4      u:object_r:tty_device:s0
 
 /vendor/bin/init\.vehicle\.sh      u:object_r:vendor_vehicle_setup_exec:s0
-
