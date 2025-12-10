@@ -1,5 +1,11 @@
+# Toegang tot video devices (/dev/video*)
 allow hal_evs_default video_device:chr_file rw_file_perms;
 allow hal_evs_default video_device:dir r_dir_perms;
 
+# Toegang tot USB devices (voor USB camera's)
 allow hal_evs_default usb_device:chr_file rw_file_perms;
 allow hal_evs_default usb_device:dir r_dir_perms;
+
+# Toegang tot graphics mapper (nodig om buffers te tonen op scherm)
+allow hal_evs_default gpu_device:chr_file rw_file_perms;
+hal_client_domain(hal_evs_default, hal_graphics_allocator)

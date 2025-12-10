@@ -1,31 +1,29 @@
-# 1. Definieer het domein voor het setup script
 type vendor_vehicle_setup, domain;
 type vendor_vehicle_setup_exec, exec_type, vendor_file_type, file_type;
 
 init_daemon_domain(vendor_vehicle_setup)
 
-# 2. Shell & Toolbox toegang (scripts draaien mag hier WEL)
+# Shell & Toolbox (om commando's als chown/chmod/restorecon uit te voeren)
 allow vendor_vehicle_setup vendor_shell_exec:file rx_file_perms;
 allow vendor_vehicle_setup vendor_toolbox_exec:file rx_file_perms;
 
-# 3. Hardware Toegang (schrijven naar PWM/GPIO)
+# PWM & GPIO toegang
 allow vendor_vehicle_setup vendor_sysfs_pwm:file rw_file_perms;
 allow vendor_vehicle_setup vendor_sysfs_pwm:dir r_dir_perms;
 allow vendor_vehicle_setup vendor_gpio_device:chr_file rw_file_perms;
 
-# 4. Property toegang (config lezen)
+# Properties
 get_prop(vendor_vehicle_setup, vendor_vehicle_prop)
 
-# 5. Capability (chown/chmod uitvoeren)
-allow vendor_vehicle_setup self:capability { chown fowner fsetid };
+# Capability (Eigenaar van bestanden wijzigen)
+allow vendor_vehicle_setup self:capability { chown fowner fsetid sys_admin };
 
-# 6. Relabeling Rechten (Cruciaal voor de fix!)
-# Dit staat toe dat het script een bestand dat als 'sysfs' begint, omzet naar 'vendor_sysfs_pwm'
+# --- RELABELING LOGICA (CRUCIAAL) ---
+# Sta toe dat het script bestanden in sysfs opzoekt en hun label wijzigt
 allow vendor_vehicle_setup sysfs:dir { r_dir_perms relabelfrom };
 allow vendor_vehicle_setup sysfs:file { getattr relabelfrom };
+allow vendor_vehicle_setup sysfs:lnk_file read;
 
+# Sta toe dat het label gewijzigd wordt NAAR vendor_sysfs_pwm
 allow vendor_vehicle_setup vendor_sysfs_pwm:dir { relabelto };
 allow vendor_vehicle_setup vendor_sysfs_pwm:file { relabelto };
-allow vendor_vehicle_setup sysfs:lnk_file read;
-allow vendor_vehicle_schuurman sysfs:lnk_file read;
-allow vendor_vehicle_schuurman vendor_sysfs_pwm:dir r_dir_perms;

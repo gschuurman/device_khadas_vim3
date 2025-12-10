@@ -1,0 +1,21 @@
+# Definieer het domein en de executable
+type bh1750d, domain;
+type bh1750d_exec, exec_type, vendor_file_type, file_type;
+
+# Zorg dat init de service mag starten
+init_daemon_domain(bh1750d)
+
+# --- VERWIJDERDE REGEL: type vendor_sensor_data_file ... (staat nu in file.te) ---
+
+# --- PERMISSIES ---
+
+# 1. Toegang tot I2C hardware (om de sensor uit te lezen)
+allow bh1750d vendor_i2c_device:chr_file rw_file_perms;
+
+# 2. Toegang om te schrijven naar /data/vendor/sensors
+# De daemon moet de map kunnen lezen/schrijven en bestanden aanmaken
+allow bh1750d vendor_sensor_data_file:dir create_dir_perms;
+allow bh1750d vendor_sensor_data_file:file create_file_perms;
+
+# (Optioneel) Logging naar logcat toestaan
+allow bh1750d kmsg_device:chr_file w_file_perms;

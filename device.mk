@@ -31,7 +31,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gpio.chip=gpiochip0 \
-    ro.vendor.vehicle.gpio.offset=16 \
+    ro.vendor.vehicle.gpio.offset=51 \
     ro.vendor.vehicle.pwm.period_ns=30518 \
     ro.vendor.vehicle.pwm.force_write_period=false \
     ro.secure=0 \

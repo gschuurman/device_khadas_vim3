@@ -1,0 +1,6 @@
+# Toegang voor de Audio HAL tot USB devices (Geluidskaart)
+allow hal_audio_default usb_device:dir r_dir_perms;
+allow hal_audio_default usb_device:chr_file rw_file_perms;
+
+# Eventueel property access als routing via properties wordt geregeld
+get_prop(hal_audio_default, vendor_vehicle_prop)

@@ -1,5 +1,13 @@
-# Definieer sysfs_pwm als een bestandstype dat in sysfs leeft
+# PWM in sysfs
 type sysfs_pwm, fs_type, sysfs_type;
+type vendor_sysfs_pwm, fs_type, sysfs_type;
 
-# Definieer voor de zekerheid ook sysfs_gpio (vaak ook niet standaard in AOSP)
+# GPIO in sysfs
 type sysfs_gpio, fs_type, sysfs_type;
+
+# Hardware devices
+type vendor_i2c_device, dev_type;
+type vendor_gpio_device, dev_type;
+
+# Data files
+type vendor_sensor_data_file, file_type, data_file_type;

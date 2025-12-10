@@ -1,16 +1,23 @@
+# Definieer het domein voor de Schuurman VHAL
 type vendor_vehicle_schuurman, domain;
 type vendor_vehicle_schuurman_exec, exec_type, vendor_file_type, file_type;
 
-type vendor_gpio_device, dev_type;
-type vendor_sysfs_pwm, fs_type, sysfs_type;
-
-vendor_internal_prop(vendor_vehicle_prop)
-
+# Initialisatie
 init_daemon_domain(vendor_vehicle_schuurman)
 hal_server_domain(vendor_vehicle_schuurman, hal_vehicle)
 
+# 1. Toegang tot GPIO (indien nodig voor signalen)
 allow vendor_vehicle_schuurman vendor_gpio_device:chr_file rw_file_perms;
+
+# 2. Toegang tot PWM (Backlight control)
+allow vendor_vehicle_schuurman vendor_sysfs_pwm:dir r_dir_perms;
 allow vendor_vehicle_schuurman vendor_sysfs_pwm:file rw_file_perms;
 allow vendor_vehicle_schuurman sysfs:dir r_dir_perms;
 
+# 3. Toegang tot Sensor Data (lezen van bestanden gemaakt door bh1750d)
+allow vendor_vehicle_schuurman vendor_sensor_data_file:dir search;
+allow vendor_vehicle_schuurman vendor_sensor_data_file:file r_file_perms;
+
+# 4. Properties (Lezen/Schrijven van voertuig properties)
 get_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)
+set_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)
