@@ -21,8 +21,7 @@ PRODUCT_PACKAGES += \
 
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
 
-# $(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
-# $(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
+$(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
 
 $(call inherit-product, device/khadas/vim3/audio.mk)
 
@@ -40,7 +39,3 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.debuggable=1 \
     persist.sys.usb.config=adb \
     service.adb.root=1
-
-
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/init.serial.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.serial.rc
