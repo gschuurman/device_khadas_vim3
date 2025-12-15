@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2024 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!-- Amlogic Yukawa Primary Audio HAL Module Audio Policy Configuration -->
+<module name="primary" halVersion="3.0">
+    <attachedDevices>
+        <item>HDMI Out</item>
+        <item>Built-In Mic</item>
+        <item>Echo Reference</item>
+    </attachedDevices>
+    <defaultOutputDevice>HDMI Out</defaultOutputDevice>
+
+    <mixPorts>
+        <!-- Primary output for internal speaker -->
+        <mixPort name="primary output" role="source" flags="AUDIO_OUTPUT_FLAG_PRIMARY">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </mixPort>
+
+        <!-- HDMI output -->
+        <mixPort name="HDMI output" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </mixPort>
+
+        <!-- Built-in microphone input (PDM) -->
+        <mixPort name="built-in mic" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_32_BIT"
+                     samplingRates="16000"
+                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+
+        <!-- Echo reference for AEC -->
+        <mixPort name="echo reference" role="sink">
+            <profile name="echo_reference" format="AUDIO_FORMAT_PCM_32_BIT"
+                     samplingRates="48000"
+                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+    </mixPorts>
+
+    <devicePorts>
+        <!-- Output devices -->
+        <devicePort tagName="HDMI Out" role="sink" type="AUDIO_DEVICE_OUT_AUX_LINE" address="">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
+
+        <!-- Input devices -->
+        <devicePort tagName="Built-In Mic" type="AUDIO_DEVICE_IN_BUILTIN_MIC" role="source" address="">
+            <profile name="" format="AUDIO_FORMAT_PCM_32_BIT"
+                     samplingRates="16000"
+                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+
+        <devicePort tagName="Echo Reference" type="AUDIO_DEVICE_IN_ECHO_REFERENCE" role="source">
+            <profile name="echo_reference" format="AUDIO_FORMAT_PCM_32_BIT"
+                     samplingRates="48000"
+                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+    </devicePorts>
+
+    <!-- Routes -->
+    <routes>
+        <route type="mix" sink="HDMI Out"
+               sources="primary output,HDMI output"/>
+        <route type="mix" sink="built-in mic"
+               sources="Built-In Mic"/>
+        <route type="mix" sink="echo reference"
+               sources="Echo Reference"/>
+    </routes>
+</module>

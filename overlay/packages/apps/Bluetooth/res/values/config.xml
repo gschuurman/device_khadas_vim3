@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="profile_supported_hfpclient">true</bool>
+    <bool name="hfp_client_connection_service_enabled">true</bool>
+    <bool name="profile_supported_pbapclient">true</bool>
+    <bool name="profile_supported_mapmce">true</bool>
+    <bool name="profile_supported_a2dp_sink">true</bool>
+    <bool name="profile_supported_a2dp">false</bool>
+    
+    <bool name="profile_supported_pan">false</bool>
+
+</resources>

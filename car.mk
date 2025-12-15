@@ -33,7 +33,6 @@ $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
 
 PRODUCT_PACKAGES += \
 	android.hardware.broadcastradio-service.default \
-	android.hardware.automotive.vehicle@V4-default-service \
 	android.hardware.automotive.remoteaccess@V2-default-service \
 	android.hardware.automotive.ivn@V1-default-service \
 	CarConnectivityOverlay \
@@ -91,29 +90,19 @@ $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
 # CAN bus support - We don't have a direct hardware interface on the
 # VIM3, but there are dongles which can provide CAN bus connectivity
 
-PRODUCT_PACKAGES += \
-	android.hardware.automotive.can@1.0-service
 PRODUCT_PACKAGES_DEBUG += \
-	canhalctrl \
-	canhaldump \
-	canhalsend \
 	android.hardware.automotive.occupant_awareness@1.0-service \
 	android.hardware.automotive.occupant_awareness@1.0-service_mock
 
 BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
-# Audio Control
-PRODUCT_PACKAGES += \
-	android.hardware.automotive.audiocontrol-service.example
 
-# Sepolicy for occupant awareness system
-include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
+# # Sepolicy for occupant awareness system
+# include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
 
-# Sepolicy for compute pipe system
-include packages/services/Car/cpp/computepipe/products/computepipe.mk
+# # Sepolicy for compute pipe system
+# include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
-PRODUCT_COPY_FILES += \
-    device/google_car/common/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \
 
 PRODUCT_PROPERTY_OVERRIDES += \
         ro.boot.wificountrycode=00 \
@@ -148,6 +137,11 @@ BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
 # Whitelisted packages per user type
 PRODUCT_COPY_FILES += \
     device/generic/car/common/preinstalled-packages-product-car-emulator.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/preinstalled-packages-product-car-emulator.xml
+
+PRODUCT_PACKAGES += \
+    ContactsProvider \
+    CallLogBackup \
+	Twelve
 
 PRODUCT_PRODUCT_PROPERTIES += \
         bluetooth.profile.asha.central.enabled=false \

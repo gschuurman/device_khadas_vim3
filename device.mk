@@ -17,9 +17,6 @@ $(call inherit-product, device/khadas/vim3/audio.mk)
 DEVICE_MANIFEST_FILE += \
 	device/khadas/vim3/manifest.xml
 
-# PRODUCT_PACKAGES += \
-#     android.hardware.bluetooth.socket-service.default \
-#     android.hardware.bluetooth.audio-impl
 
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@schuurman-service \
