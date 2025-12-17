@@ -44,4 +44,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # 2048 frames @ 48kHz = ~42ms per period, 4 periods = ~170ms buffer
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.audio.period_size=2048 \
-    ro.vendor.audio.period_count=4
+    ro.vendor.audio.period_count=4 \
+
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.hardware.type=automotive \
+    persist.audio.car_audio_service.enabled=true \
+    audio.usb.enabled=true \
+    persist.vendor.audio.use_aidl=true

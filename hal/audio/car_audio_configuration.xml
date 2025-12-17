@@ -1,49 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <carAudioConfiguration version="4">
     <deviceConfigurations>
-        <deviceConfiguration name="useCarVolumeGroupMuting" value="true" />
-        <deviceConfiguration name="useHalDuckingSignals" value="true" />
+        <!-- Disable advanced features for bring-up stability -->
+        <deviceConfiguration name="useCarVolumeGroupMuting" value="false"/>
+        <deviceConfiguration name="useHalDuckingSignals" value="false"/>
     </deviceConfigurations>
-    <activationVolumeConfigs>
-        <activationVolumeConfig name="activation_volume_on_boot_config">
-            <activationVolumeConfigEntry maxActivationVolumePercentage="90" invocationType="onBoot" />
-        </activationVolumeConfig>
-    </activationVolumeConfigs>
+
     <zones>
-        <zone name="primary zone" isPrimary="true" occupantZoneId="0">
+        <zone name="primary" isPrimary="true" occupantZoneId="0">
             <zoneConfigs>
-                <zoneConfig name="primary zone config 0" isDefault="true">
+                <zoneConfig name="default" isDefault="true">
                     <volumeGroups>
-                        <group maxActivationVolumePercentage="90" activationConfig="activation_volume_on_boot_config">
+                        <group>
                             <device address="bus0_media_out">
                                 <context context="music"/>
-                                <context context="announcement"/>
-                            </device>
-                        </group>
-                        <group>
-                            <device address="bus1_navigation_out">
                                 <context context="navigation"/>
-                            </device>
-                            <device address="bus2_voice_command_out">
                                 <context context="voice_command"/>
-                            </device>
-                        </group>
-                        <group>
-                            <device address="bus4_call_out">
                                 <context context="call"/>
-                            </device>
-                            <device address="bus3_call_ring_out">
                                 <context context="call_ring"/>
-                            </device>
-                        </group>
-                        <group>
-                            <device address="bus5_alarm_out">
                                 <context context="alarm"/>
-                            </device>
-                            <device address="bus6_notification_out">
                                 <context context="notification"/>
-                            </device>
-                            <device address="bus7_system_sound_out">
                                 <context context="system_sound"/>
                                 <context context="emergency"/>
                                 <context context="safety"/>

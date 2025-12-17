@@ -161,6 +161,8 @@ PRODUCT_PRODUCT_PROPERTIES += \
         bluetooth.profile.ccp.server.enabled=false \
         bluetooth.profile.vcp.controller.enabled=false
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.carrier=unknown
 
 # Include snappmaps into build to show a map
 PRODUCT_PACKAGES += \
