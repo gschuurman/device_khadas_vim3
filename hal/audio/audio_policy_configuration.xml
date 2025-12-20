@@ -5,7 +5,7 @@
 
     <modules>
         <!-- Primary Audio HAL (AIDL) -->
-        <xi:include href="primary_audio_policy_configuration.xml"/>
+    <xi:include href="primary_audio_policy_configuration.xml"/>
 
         <!-- Bluetooth Audio HAL (AIDL) -->
         <xi:include href="bluetooth_audio_policy_configuration.xml"/>

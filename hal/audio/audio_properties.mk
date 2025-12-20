@@ -6,7 +6,7 @@
 # Use card name for dynamic detection (handles USB devices changing card indices)
 # Fall back to card 0, device 0 if name not found
 
-AUDIO_CARD_NAME := KHADASVIM3
+AUDIO_CARD_NAME := ICUSBAUDIO7D
 
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.vendor.audio.primary.card_name=$(AUDIO_CARD_NAME) \
@@ -19,7 +19,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Audio HAL debug (set to true for verbose logging)
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.vendor.audio.hal.debug=false
+    persist.vendor.audio.hal.debug=true
 
 # Enable audio modules
 PRODUCT_PROPERTY_OVERRIDES += \

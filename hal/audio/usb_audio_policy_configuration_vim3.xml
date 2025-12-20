@@ -1,39 +1,50 @@
-<devicePorts>
-    <devicePort tagName="USB Device Out"
-        type="AUDIO_DEVICE_OUT_USB_DEVICE"
-        role="sink">
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="usb" halVersion="2.0">
+    <mixPorts>
+        <mixPort name="usb_device_output" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </mixPort>
+        <mixPort name="usb_headset_output" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </mixPort>
 
-        <gains>
-            <gain name="usb_device_gain"
-                mode="AUDIO_GAIN_MODE_JOINT"
-                channel_mask="AUDIO_CHANNEL_OUT_STEREO"
-                min_value_mb="-6000"
-                max_value_mb="0"
-                default_value_mb="-2000"
-                step_value_mb="100"
-                minValueMB="-6000"
-                maxValueMB="0"
-                defaultValueMB="-2000"
-                stepValueMB="100" />
-        </gains>
-    </devicePort>
+        <mixPort name="usb_device_input" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+        <mixPort name="usb_headset_input" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+    </mixPorts>
 
-    <devicePort tagName="USB Headset Out"
-        type="AUDIO_DEVICE_OUT_USB_HEADSET"
-        role="sink">
+    <devicePorts>
+        <devicePort tagName="USB Device Out" type="AUDIO_DEVICE_OUT_USB_DEVICE" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
+        <devicePort tagName="USB Headset Out" type="AUDIO_DEVICE_OUT_USB_HEADSET" role="sink">
+             <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
 
-        <gains>
-            <gain name="usb_headset_gain"
-                mode="AUDIO_GAIN_MODE_JOINT"
-                channel_mask="AUDIO_CHANNEL_OUT_STEREO"
-                min_value_mb="-6000"
-                max_value_mb="0"
-                default_value_mb="-2000"
-                step_value_mb="100"
-                minValueMB="-6000"
-                maxValueMB="0"
-                defaultValueMB="-2000"
-                stepValueMB="100" />
-        </gains>
-    </devicePort>
-</devicePorts>
+        <devicePort tagName="USB Device In" type="AUDIO_DEVICE_IN_USB_DEVICE" role="source" address="">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+        <devicePort tagName="USB Headset In" type="AUDIO_DEVICE_IN_USB_HEADSET" role="source" address="">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="44100,48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+    </devicePorts>
+
+    <routes>
+        <route type="mix" sink="USB Device Out" sources="usb_device_output"/>
+        <route type="mix" sink="USB Headset Out" sources="usb_headset_output"/>
+        
+        <route type="mix" sink="usb_device_input" sources="USB Device In"/>
+        <route type="mix" sink="usb_headset_input" sources="USB Headset In"/>
+    </routes>
+</module>
