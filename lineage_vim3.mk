@@ -10,7 +10,7 @@ $(call inherit-product, vendor/lineage/config/common.mk)
 # Inherit device configuration
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
-# WITH_GMS := true
+WITH_GMS := false
 
 # 5. Product Definities
 PRODUCT_BRAND := Khadas

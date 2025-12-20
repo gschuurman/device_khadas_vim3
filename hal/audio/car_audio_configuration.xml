@@ -1,34 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <carAudioConfiguration version="4">
+
     <deviceConfigurations>
-        <!-- Disable advanced features for bring-up stability -->
         <deviceConfiguration name="useCarVolumeGroupMuting" value="false"/>
         <deviceConfiguration name="useHalDuckingSignals" value="false"/>
     </deviceConfigurations>
 
     <zones>
-        <zone name="primary" isPrimary="true" occupantZoneId="0">
+        <zone name="primary"
+              id="0"
+              isPrimary="true"
+              occupantZoneId="0">
+
             <zoneConfigs>
                 <zoneConfig name="default" isDefault="true">
+
                     <volumeGroups>
-                        <group>
-                            <device address="bus0_media_out">
-                                <context context="music"/>
-                                <context context="navigation"/>
-                                <context context="voice_command"/>
-                                <context context="call"/>
-                                <context context="call_ring"/>
-                                <context context="alarm"/>
-                                <context context="notification"/>
-                                <context context="system_sound"/>
-                                <context context="emergency"/>
-                                <context context="safety"/>
-                                <context context="vehicle_status"/>
-                            </device>
+                        <group id="0">
+
+                            <devices>
+                                <device address="bus0_media_out"/>
+                            </devices>
+
+                            <contexts>
+                                <context context="media" deviceAddress="bus0_media_out"/>
+                                <context context="navigation" deviceAddress="bus0_media_out"/>
+                                <context context="voice_command" deviceAddress="bus0_media_out"/>
+                                <context context="call" deviceAddress="bus0_media_out"/>
+                                <context context="call_ring" deviceAddress="bus0_media_out"/>
+                                <context context="alarm" deviceAddress="bus0_media_out"/>
+                                <context context="notification" deviceAddress="bus0_media_out"/>
+                                <context context="system_sound" deviceAddress="bus0_media_out"/>
+                                <context context="emergency" deviceAddress="bus0_media_out"/>
+                                <context context="safety" deviceAddress="bus0_media_out"/>
+                                <context context="vehicle_status" deviceAddress="bus0_media_out"/>
+                            </contexts>
+
                         </group>
                     </volumeGroups>
+
                 </zoneConfig>
             </zoneConfigs>
+
         </zone>
     </zones>
+
 </carAudioConfiguration>
