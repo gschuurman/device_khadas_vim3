@@ -30,8 +30,8 @@ PRODUCT_COPY_FILES += \
 
 
 PRODUCT_COPY_FILES += \
-    device/khadas/vim3/hal/audio/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
-    device/khadas/vim3/hal/audio/usb_audio_policy_configuration_vim3.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration_vim3.xml \
+    device/khadas/vim3/hal/audio/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml
+#     device/khadas/vim3/hal/audio/usb_audio_policy_configuration_vim3.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration_vim3.xml \
 
 # Include BayLibre Audio HAL properties
 -include device/khadas/vim3/hal/audio/audio_properties.mk
