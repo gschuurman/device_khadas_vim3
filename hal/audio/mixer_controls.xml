@@ -1,94 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Amlogic Yukawa (S905D3/G12A) mixer controls configuration
-
-     Note: Amlogic SoCs often have limited ALSA mixer controls exposed.
-     The G12A audio subsystem (AUGE - Audio Generation) handles most
-     audio routing in hardware without exposing traditional volume controls.
-
-     This configuration provides multiple fallback options for compatibility.
-     If hardware controls are not available, volume will be controlled
-     in software by the audio framework.
--->
 <mixerControls>
-    <!-- Master volume control
-         Amlogic G12A may not expose a master volume control.
-         The HAL will gracefully handle missing controls.
-    -->
     <control function="MASTER_VOLUME" type="int">
-        <!-- Try HDMI volume first (if available) -->
-        <name>HDMI Playback Volume</name>
-        <name>TOHDMITX Playback Volume</name>
-        <!-- Generic fallbacks -->
-        <name>Master Playback Volume</name>
-        <name>PCM Playback Volume</name>
-    </control>
-
-    <!-- Master mute/switch control -->
-    <control function="MASTER_SWITCH" type="bool">
-        <name>HDMI Playback Switch</name>
-        <name>TOHDMITX Switch</name>
-        <name>Master Playback Switch</name>
-    </control>
-
-    <!-- Hardware volume control (per-device)
-         For Yukawa, this primarily affects HDMI audio output.
-    -->
-    <control function="HW_VOLUME" type="int">
-        <!-- HDMI audio controls -->
-        <name>HDMI Playback Volume</name>
-        <name>TOHDMITX Playback Volume</name>
-        <!-- I2S/TDM output controls (if codec present) -->
-        <name>TDMOUT_A Playback Volume</name>
-        <name>TDMOUT_B Playback Volume</name>
-        <name>DAC Playback Volume</name>
-        <!-- Generic fallbacks -->
-        <name>PCM Playback Volume</name>
         <name>Speaker Playback Volume</name>
-        <name>Headphone Playback Volume</name>
+        <name>Line Playback Volume</name>
+        <name>PCM Playback Volume</name>
+
     </control>
 
-    <!-- Microphone mute/switch control
-         Yukawa uses PDM (Pulse Density Modulation) microphones.
-    -->
-    <control function="MIC_SWITCH" type="bool">
-        <!-- PDM microphone controls -->
-        <name>PDM Capture Switch</name>
-        <name>TODDR_A Capture Switch</name>
-        <!-- Generic fallbacks -->
-        <name>Capture Switch</name>
-        <name>Mic Capture Switch</name>
+    <control function="MASTER_SWITCH" type="bool">
+        <name>Speaker Playback Switch</name>
+        <name>Line Playback Switch</name>
+        <name>Master Playback Switch</name>
+
     </control>
 
-    <!-- Microphone gain control -->
     <control function="MIC_GAIN" type="int">
-        <!-- PDM microphone gain -->
-        <name>PDM Capture Volume</name>
-        <name>TODDR_A Capture Volume</name>
-        <!-- ADC controls if available -->
-        <name>ADC Capture Volume</name>
-        <!-- Generic fallbacks -->
-        <name>Capture Volume</name>
         <name>Mic Capture Volume</name>
+        <name>PCM Capture Volume</name>
     </control>
 
-    <!-- Initialization controls - applied once at HAL startup -->
+    <control function="MIC_SWITCH" type="bool">
+        <name>Mic Capture Switch</name>
+        <name>PCM Capture Switch</name>
+    </control>
+
     <init>
-        <!-- Enable HDMI audio output -->
-        <set name="TOHDMITX Switch" value="1"/>
+        <set name="Line Playback Switch" value="1"/>
+        <set name="Line Playback Volume" value="8000"/>
 
-        <!-- Configure Amlogic G12A audio routing: FRDDR_A -> TDMOUT_A -> TOHDMITX -->
-        <set name="TOHDMITX I2S SRC" value="I2S A"/>
-        <set name="TDMOUT_A SRC SEL" value="IN 0"/>
-        <set name="FRDDR_A SRC 1 EN Switch" value="1"/>
-        <set name="FRDDR_A SINK 1 SEL" value="OUT 0"/>
+        <set name="Speaker Playback Switch" value="1"/>
+        <set name="Speaker Playback Volume" value="196"/>
 
-        <!-- Set TDMOUT_A volume to maximum for all lanes -->
-        <set name="TDMOUT_A Lane 0 Volume" value="255,255"/>
-        <set name="TDMOUT_A Lane 1 Volume" value="255,255"/>
-        <set name="TDMOUT_A Lane 2 Volume" value="255,255"/>
-        <set name="TDMOUT_A Lane 3 Volume" value="255,255"/>
-
-        <!-- Enable TDMOUT_A gain control -->
-        <set name="TDMOUT_A Gain Enable Switch" value="1"/>
+        <set name="Mic Capture Switch" value="1"/>
+        <set name="PCM Capture Switch" value="1"/>
     </init>
 </mixerControls>

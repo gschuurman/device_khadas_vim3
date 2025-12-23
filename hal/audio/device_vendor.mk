@@ -15,7 +15,7 @@ PRODUCT_PACKAGES += \
     android.hardware.bluetooth.audio-impl
 
 PRODUCT_PACKAGES += \
-    android.hardware.automotive.audiocontrol-service.example
+    android.hardware.automotive.audiocontrol-service
 
 # Copy BayLibre audio configuration files for Yukawa
 PRODUCT_COPY_FILES += \

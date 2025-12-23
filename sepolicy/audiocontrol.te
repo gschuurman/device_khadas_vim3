@@ -1,0 +1,15 @@
+type audiocontrol_service, domain, coredomain;
+type audiocontrol_service_exec, system_file_type, exec_type, file_type;
+
+# This is the line that gives you permission to be the server
+hal_server_domain(audiocontrol_service, hal_audiocontrol)
+
+# Allow init to start us
+init_daemon_domain(audiocontrol_service)
+
+# Allow us to use Binder
+binder_use(audiocontrol_service)
+
+# Allow us to talk to AudioFlinger (System Server)
+allow audiocontrol_service audioserver_service:service_manager find;
+allow audiocontrol_service audioserver:binder call;

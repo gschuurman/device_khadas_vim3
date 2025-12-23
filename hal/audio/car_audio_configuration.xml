@@ -1,39 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2020 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!--
+  Defines the audio configuration in a car, including
+    - Audio zones
+    - Zone configurations (in each audio zone)
+    - Volume groups (in each zone configuration)
+    - Context to audio bus mappings (in each volume group)
+  in the car environment.
+-->
 <carAudioConfiguration version="4">
-
     <deviceConfigurations>
-        <deviceConfiguration name="useCarVolumeGroupMuting" value="false"/>
-        <deviceConfiguration name="useHalDuckingSignals" value="false"/>
+        <deviceConfiguration name="useCarVolumeGroupMuting" value="true" />
+        <deviceConfiguration name="useHalDuckingSignals" value="true" />
     </deviceConfigurations>
-
-
+    <activationVolumeConfigs>
+        <activationVolumeConfig name="activation_volume_on_boot_config">
+            <activationVolumeConfigEntry maxActivationVolumePercentage="90" invocationType="onBoot" />
+        </activationVolumeConfig>
+        <activationVolumeConfig name="activation_volume_on_source_changed_config">
+            <activationVolumeConfigEntry minActivationVolumePercentage="20" maxActivationVolumePercentage="90" invocationType="onSourceChanged" />
+        </activationVolumeConfig>
+        <activationVolumeConfig name="activation_volume_on_playback_changed_config">
+            <activationVolumeConfigEntry minActivationVolumePercentage="20" maxActivationVolumePercentage="90" />
+        </activationVolumeConfig>
+    </activationVolumeConfigs>
     <zones>
-        <zone name="primary" isPrimary="true" occupantZoneId="0" id="0">
+        <zone name="primary zone" isPrimary="true" occupantZoneId="0">
             <zoneConfigs>
-                <zoneConfig name="default" isDefault="true">
+                <zoneConfig name="primary zone config 0" isDefault="true">
                     <volumeGroups>
-                        <group id="0">
+                        <group maxActivationVolumePercentage="90" activationConfig="activation_volume_on_boot_config">
                             <device address="bus0_media_out">
                                 <context context="music"/>
+                                <context context="announcement"/>
                             </device>
+                            <device address="bus6_notification_out">
+                                <context context="notification"/>
+                            </device>
+                        </group>
+                        <group minActivationVolumePercentage="20" activationConfig="activation_volume_on_source_changed_config">
                             <device address="bus1_navigation_out">
                                 <context context="navigation"/>
                             </device>
                             <device address="bus2_voice_command_out">
                                 <context context="voice_command"/>
                             </device>
-                            <device address="bus3_call_ring_out">
-                                <context context="call_ring"/>
-                            </device>
+                        </group>
+                        <group minActivationVolumePercentage="20" activationConfig="activation_volume_on_playback_changed_config">
                             <device address="bus4_call_out">
                                 <context context="call"/>
                             </device>
+                            <device address="bus3_call_ring_out">
+                                <context context="call_ring"/>
+                            </device>
+                        </group>
+                        <group activationConfig="activation_volume_on_source_changed_config">
                             <device address="bus5_alarm_out">
                                 <context context="alarm"/>
-                            </device>
-                            <device address="bus6_notification_out">
-                                <context context="notification"/>
-                                <context context="announcement"/>
                             </device>
                             <device address="bus7_system_sound_out">
                                 <context context="system_sound"/>
@@ -43,16 +80,25 @@
                             </device>
                         </group>
                     </volumeGroups>
-                <inputDevices>
-                    <device address="bottom_mic">
-                        <context context="voice_command"/>
-                        <context context="call"/>
-                        <context context="emergency"/>
-                    </device>
-                </inputDevices>
+                    <applyFadeConfigs>
+                        <fadeConfig name="relaxed fading" isDefault="true">
+                        </fadeConfig>
+                        <fadeConfig name="aggressive fading">
+                            <audioAttributes>
+                                <usage value="AUDIO_USAGE_VOICE_COMMUNICATION" />
+                                <usage value="AUDIO_USAGE_ANNOUNCEMENT" />
+                                <usage value="AUDIO_USAGE_VEHICLE_STATUS" />
+                                <usage value="AUDIO_USAGE_SAFETY" />
+                            </audioAttributes>
+                        </fadeConfig>
+                        <fadeConfig name="disabled fading">
+                            <audioAttributes>
+                                <usage value="AUDIO_USAGE_EMERGENCY" />
+                            </audioAttributes>
+                        </fadeConfig>
+                    </applyFadeConfigs>
                 </zoneConfig>
             </zoneConfigs>
         </zone>
     </zones>
-
 </carAudioConfiguration>

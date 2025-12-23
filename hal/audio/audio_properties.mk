@@ -30,8 +30,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Amlogic-specific audio properties
 # HDMI audio configuration
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.vendor.audio.hdmi.enabled=true \
-    persist.vendor.audio.usb.enabled=true
+    ro.vendor.audio.hdmi.enabled=true
 
 # Sample rate and buffer configuration
 # Amlogic G12A supports up to 192kHz for HDMI
