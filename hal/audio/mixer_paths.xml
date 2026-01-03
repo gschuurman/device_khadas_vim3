@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mixer>
+    <ctl name="Playback Channel Map" value="3 4 7 8 5 6 0 0" />
+    <ctl name="Speaker Playback Volume" value="160" />
+    <ctl name="Speaker Playback Switch" value="1" />
+    
+    <path name="bus0_media_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus1_navigation_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus2_voice_command_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus3_call_ring_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus4_call_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus5_alarm_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus6_notification_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+    <path name="bus7_system_sound_out">
+        <ctl name="Speaker Playback Switch" value="1" />
+    </path>
+
+</mixer>

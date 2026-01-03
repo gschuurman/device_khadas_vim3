@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<configuration version="1.0">
+    <productStrategies>
+        <productStrategy name="STRATEGY_MEDIA">
+            <attributesGroup streamType="AUDIO_STREAM_MUSIC" volumeGroup="group_media">
+                <attributes>
+                    <usage value="AUDIO_USAGE_MEDIA"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_GAME"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_ASSISTANT"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_ASSISTANCE_NAVIGATION_GUIDANCE"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_ASSISTANCE_SONIFICATION"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+
+        <productStrategy name="STRATEGY_PHONE">
+            <attributesGroup streamType="AUDIO_STREAM_VOICE_CALL" volumeGroup="group_call">
+                <attributes>
+                    <usage value="AUDIO_USAGE_VOICE_COMMUNICATION"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_VOICE_COMMUNICATION_SIGNALLING"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+
+        <productStrategy name="STRATEGY_SONIFICATION">
+            <attributesGroup streamType="AUDIO_STREAM_ALARM" volumeGroup="group_sonification">
+                <attributes>
+                    <usage value="AUDIO_USAGE_ALARM"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_NOTIFICATION"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_NOTIFICATION_TELEPHONY_RINGTONE"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_NOTIFICATION_COMMUNICATION_REQUEST"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_NOTIFICATION_COMMUNICATION_INSTANT"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_NOTIFICATION_EVENT"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_ASSISTANCE_ACCESSIBILITY"/>
+                </attributes>
+                <attributes>
+                    <usage value="AUDIO_USAGE_SYS_RESERVED"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+
+        <productStrategy name="STRATEGY_DTMF">
+            <attributesGroup streamType="AUDIO_STREAM_DTMF" volumeGroup="group_dtmf">
+                <attributes>
+                    <usage value="AUDIO_USAGE_VOICE_COMMUNICATION_SIGNALLING"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+
+        <productStrategy name="STRATEGY_TRANSMITTED_THROUGH_SPEAKER">
+            <attributesGroup streamType="AUDIO_STREAM_TTS" volumeGroup="group_tts">
+                <attributes>
+                    <content type="AUDIO_CONTENT_TYPE_SPEECH"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+
+        <productStrategy name="STRATEGY_ACCESSIBILITY">
+            <attributesGroup streamType="AUDIO_STREAM_ACCESSIBILITY" volumeGroup="group_accessibility">
+                <attributes>
+                    <usage value="AUDIO_USAGE_ASSISTANCE_ACCESSIBILITY"/>
+                </attributes>
+            </attributesGroup>
+        </productStrategy>
+    </productStrategies>
+
+    <volumeGroups>
+        <volumeGroup>
+            <name>group_media</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+        <volumeGroup>
+            <name>group_call</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+        <volumeGroup>
+            <name>group_sonification</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+        <volumeGroup>
+            <name>group_dtmf</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+        <volumeGroup>
+            <name>group_tts</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+        <volumeGroup>
+            <name>group_accessibility</name>
+            <indexMin>0</indexMin>
+            <indexMax>100</indexMax>
+        </volumeGroup>
+    </volumeGroups>
+</configuration>
