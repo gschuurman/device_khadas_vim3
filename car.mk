@@ -1,5 +1,5 @@
 TARGET_VIM3 := true
-TARGET_USE_TABLET_LAUNCHER := true
+PRODUCT_IS_AUTOMOTIVE := true
 
 # CarServiceHelperService accesses the hidden api in the system server.
 SYSTEM_OPTIMIZE_JAVA := false
@@ -20,12 +20,20 @@ GOOGLE_CAR_SERVICE_OVERLAY += CarServiceOverlayPhoneCarGoogle
 # Additional selinux policy
 BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
-# Override heap growth limit due to high display density on device
-PRODUCT_PROPERTY_OVERRIDES += \
-            dalvik.vm.heapgrowthlimit=256m
-
 # Exclude the testing apps
 PRODUCT_IS_AUTOMOTIVE_SDK := true
+
+PRODUCT_PRODUCT_PROPERTIES += \
+    dalvik.vm.systemserverheapsize=128m \
+    dalvik.vm.systemserverheapgrowthlimit=128m \
+    dalvik.vm.heapstartsize=16m \
+    dalvik.vm.heapgrowthlimit=256m \
+    dalvik.vm.heapsize=256m \
+    dalvik.vm.heapminfree=8m \
+    dalvik.vm.heapmaxfree=32m \
+    dalvik.vm.heaptargetutilization=0.75
+
+PRODUCT_SYSTEM_SERVER_COMPILER_FILTER := speed
 
 
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
@@ -67,10 +75,9 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	android.car.drawer.unlimited=true \
-	android.car.hvac.demo=true \
-	com.android.car.radio.demo=true \
-	com.android.car.radio.demo.dual=true \
-	ro.build.characteristics=automotive \
+	android.car.hvac.demo=dalse \
+	com.android.car.radio.demo=false \
+	com.android.car.radio.demo.dual=false \
 
 PRODUCT_COPY_FILES += \
 	packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
@@ -143,24 +150,6 @@ PRODUCT_PACKAGES += \
     ContactsProvider \
     CallLogBackup \
 	Twelve
-
-PRODUCT_PRODUCT_PROPERTIES += \
-        bluetooth.profile.asha.central.enabled=false \
-        bluetooth.profile.bap.broadcast.assist.enabled=false \
-        bluetooth.profile.bap.unicast.client.enabled=false \
-        bluetooth.profile.bas.client.enabled=false \
-        bluetooth.profile.csip.set_coordinator.enabled=false \
-        bluetooth.profile.hap.client.enabled=false \
-        bluetooth.profile.hfp.ag.enabled=false \
-        bluetooth.profile.hid.device.enabled=false \
-        bluetooth.profile.hid.host.enabled=false \
-        bluetooth.profile.map.server.enabled=false \
-        bluetooth.profile.mcp.server.enabled=false \
-        bluetooth.profile.opp.enabled=false \
-        bluetooth.profile.pbap.server.enabled=false \
-        bluetooth.profile.sap.server.enabled=false \
-        bluetooth.profile.ccp.server.enabled=false \
-        bluetooth.profile.vcp.controller.enabled=false
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.carrier=unknown
