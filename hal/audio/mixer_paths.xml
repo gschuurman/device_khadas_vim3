@@ -35,5 +35,4 @@
     <path name="bus7_system_sound_out">
         <ctl name="Speaker Playback Switch" value="1" />
     </path>
-
 </mixer>

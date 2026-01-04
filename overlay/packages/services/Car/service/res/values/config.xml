@@ -2,6 +2,23 @@
 <resources>
     <bool name="audioUseDynamicRouting">true</bool>
 
-    <bool name="audioUseCoreVolume">true</bool>
-    <bool name="audioUseCoreRouting">true</bool>
+    <bool name="audioUseCoreVolume">false</bool>
+
+    <bool name="audioUseCoreRouting">false</bool>
+
+    <bool name="audioUseCarVolumeGroupMuting">true</bool>
+
+    <bool name="audioUseHalDuckingSignals">true</bool>
+
+    <integer name="audioVolumeAdjustmentContextsVersion">1</integer>
+
+    <integer name="audioVolumeKeyEventTimeoutMs">3000</integer>
+
+
+    <bool name="enableActivityBlockingForSafety">false</bool>
+
+    <integer name="config_clusterHomeServiceMode">0</integer>
+
+    <string name="config_evsRearviewCameraId" translatable="false">/dev/video10</string>
+
 </resources>

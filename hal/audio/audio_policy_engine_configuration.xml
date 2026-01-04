@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <configuration version="1.0">
     <productStrategies>
+        <!-- Strategy 1: Media (Music, Games, Assistant) -->
         <productStrategy name="STRATEGY_MEDIA">
             <attributesGroup streamType="AUDIO_STREAM_MUSIC" volumeGroup="group_media">
                 <attributes>
@@ -21,6 +22,7 @@
             </attributesGroup>
         </productStrategy>
 
+        <!-- Strategy 2: Phone (Voice Calls) -->
         <productStrategy name="STRATEGY_PHONE">
             <attributesGroup streamType="AUDIO_STREAM_VOICE_CALL" volumeGroup="group_call">
                 <attributes>
@@ -32,6 +34,7 @@
             </attributesGroup>
         </productStrategy>
 
+        <!-- Strategy 3: Sonification (Alarms, Rings, System) -->
         <productStrategy name="STRATEGY_SONIFICATION">
             <attributesGroup streamType="AUDIO_STREAM_ALARM" volumeGroup="group_sonification">
                 <attributes>
@@ -61,6 +64,7 @@
             </attributesGroup>
         </productStrategy>
 
+        <!-- Strategy 4: DTMF (Touch Tones) -->
         <productStrategy name="STRATEGY_DTMF">
             <attributesGroup streamType="AUDIO_STREAM_DTMF" volumeGroup="group_dtmf">
                 <attributes>
@@ -69,6 +73,7 @@
             </attributesGroup>
         </productStrategy>
 
+        <!-- Strategy 5: TTS (Text-to-Speech) -->
         <productStrategy name="STRATEGY_TRANSMITTED_THROUGH_SPEAKER">
             <attributesGroup streamType="AUDIO_STREAM_TTS" volumeGroup="group_tts">
                 <attributes>
@@ -77,6 +82,7 @@
             </attributesGroup>
         </productStrategy>
 
+        <!-- Strategy 6: Accessibility -->
         <productStrategy name="STRATEGY_ACCESSIBILITY">
             <attributesGroup streamType="AUDIO_STREAM_ACCESSIBILITY" volumeGroup="group_accessibility">
                 <attributes>

@@ -70,6 +70,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	android.car.hvac.demo=true \
 	com.android.car.radio.demo=true \
 	com.android.car.radio.demo.dual=true \
+	ro.build.characteristics=automotive \
 
 PRODUCT_COPY_FILES += \
 	packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
