@@ -14,7 +14,7 @@
 
     <integer name="audioVolumeKeyEventTimeoutMs">3000</integer>
 
-    <bool name="audioUseFadeManagerConfiguration">true</bool>
+    <bool name="audioUseFadeManagerConfiguration">false</bool>
 
     <bool name="enableActivityBlockingForSafety">false</bool>
 

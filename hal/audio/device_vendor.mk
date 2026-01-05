@@ -16,7 +16,9 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     android.hardware.automotive.audiocontrol-service \
-    CarAudioTuner
+
+PRODUCT_PACKAGES += \
+    CarAudioTuner \
 
 # Copy BayLibre audio configuration files for Yukawa
 PRODUCT_COPY_FILES += \
@@ -30,6 +32,7 @@ PRODUCT_COPY_FILES += \
     device/khadas/vim3/hal/audio/bluetooth_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth_audio_policy_configuration.xml \
     device/khadas/vim3/hal/audio/audio_policy_engine_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_engine_configuration.xml \
     device/khadas/vim3/hal/audio/mixer_paths.xml:$(TARGET_COPY_OUT_VENDOR)/etc/mixer_paths.xml \
+    vendor/gschuurman/vehicle_interfaces/automotive/audiocontrol/conf/car_audio_fade_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_fade_configuration.xml \
 
 PRODUCT_COPY_FILES += \
     device/khadas/vim3/hal/audio/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml
