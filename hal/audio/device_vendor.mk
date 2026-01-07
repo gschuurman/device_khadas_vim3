@@ -17,8 +17,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.audiocontrol-service \
 
-PRODUCT_PACKAGES += \
-    CarAudioTuner \
+# PRODUCT_PACKAGES += \
+#     CarAudioTuner \
 
 # Copy BayLibre audio configuration files for Yukawa
 PRODUCT_COPY_FILES += \

@@ -19,11 +19,11 @@
         <mixPort name="primary output"
                 role="source"
                 flags="AUDIO_OUTPUT_FLAG_PRIMARY">
+            <!-- Enable 5.1 + stereo on primary output -->
             <profile format="AUDIO_FORMAT_PCM_16_BIT"
                     samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
         </mixPort>
-
 
         <mixPort name="primary input" role="sink">
             <profile format="AUDIO_FORMAT_PCM_16_BIT"
@@ -34,9 +34,10 @@
         <mixPort name="mixport_bus0_media_out"
                 role="source"
                 flags="AUDIO_OUTPUT_FLAG_PRIMARY">
+            <!-- Enable 5.1 + stereo on media bus -->
             <profile format="AUDIO_FORMAT_PCM_16_BIT"
                     samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
         </mixPort>
 
         <mixPort name="mixport_bus1_navigation_out" role="source">
@@ -68,9 +69,10 @@
         </devicePort>
 
         <devicePort tagName="bus0_media_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus0_media_out">
+            <!-- Enable 5.1 + stereo on media bus device -->
             <profile format="AUDIO_FORMAT_PCM_16_BIT"
                     samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
             <gains>
                 <gain name="gain_bus0_media"
                     mode="AUDIO_GAIN_MODE_JOINT"
