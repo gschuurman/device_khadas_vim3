@@ -4,14 +4,12 @@
         <name>Speaker Playback Volume</name>
         <name>Line Playback Volume</name>
         <name>PCM Playback Volume</name>
-
     </control>
 
     <control function="MASTER_SWITCH" type="bool">
         <name>Speaker Playback Switch</name>
         <name>Line Playback Switch</name>
         <name>Master Playback Switch</name>
-
     </control>
 
     <control function="MIC_GAIN" type="int">
@@ -25,11 +23,14 @@
     </control>
 
     <init>
-        <set name="Line Playback Switch" value="1"/>
-        <set name="Line Playback Volume" value="8000"/>
+        <set name="Line Playback Switch" value="0"/>
+        <set name="Line Playback Volume" value="0"/>
+
+        <set name="Mic Playback Switch" value="0"/>
+        <set name="Mic Playback Volume" value="0"/>
 
         <set name="Speaker Playback Switch" value="1"/>
-        <set name="Speaker Playback Volume" value="196"/>
+        <set name="Speaker Playback Volume" value="70"/>
 
         <set name="Mic Capture Switch" value="1"/>
         <set name="PCM Capture Switch" value="1"/>

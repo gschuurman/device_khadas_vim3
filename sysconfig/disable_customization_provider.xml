@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <component-override package="com.android.systemui">
+        <component class="com.android.systemui.keyguard.CustomizationProvider" enabled="false"/>
+    </component-override>
+</config>

@@ -22,4 +22,6 @@
 
     <string name="config_evsRearviewCameraId" translatable="false">/dev/video10</string>
 
+    <bool name="useDefaultBluetoothConnectionPolicy">true</bool>
+
 </resources>

@@ -29,7 +29,7 @@
     </deviceConfigurations>
     <activationVolumeConfigs>
         <activationVolumeConfig name="activation_volume_on_boot_config">
-            <activationVolumeConfigEntry maxActivationVolumePercentage="90" invocationType="onBoot" />
+            <activationVolumeConfigEntry maxActivationVolumePercentage="50" invocationType="onBoot" />
         </activationVolumeConfig>
         <activationVolumeConfig name="activation_volume_on_source_changed_config">
             <activationVolumeConfigEntry minActivationVolumePercentage="20" maxActivationVolumePercentage="90" invocationType="onSourceChanged" />
@@ -43,7 +43,7 @@
             <zoneConfigs>
                 <zoneConfig name="primary zone config 0" isDefault="true">
                     <volumeGroups>
-                        <group maxActivationVolumePercentage="90" activationConfig="activation_volume_on_boot_config">
+                        <group maxActivationVolumePercentage="50" activationConfig="activation_volume_on_boot_config">
                             <device address="bus0_media_out">
                                 <context context="music"/>
                                 <context context="announcement"/>

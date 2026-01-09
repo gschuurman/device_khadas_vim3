@@ -35,3 +35,27 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.debuggable=1 \
     persist.sys.usb.config=adb \
     service.adb.root=1
+
+
+PRODUCT_PACKAGES += ScreenPowerBridge
+
+# GPIO Configuration
+# Brightness Control (PWM) - Pin 51 (Used for reference or if switching to GPIO-based PWM later)
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.brightness.gpio.chip=gpiochip0 \
+    ro.vendor.vehicle.brightness.gpio.offset=51
+
+# Backlight Enable / Screen Power - Pin 53
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.backlight.enable.gpio.chip=gpiochip0 \
+    ro.vendor.vehicle.backlight.enable.gpio.offset=53
+
+# Reverse Gear Selection - (Not specified yet, default to -1 to disable)
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.gear.gpio.chip=gpiochip0 \
+    ro.vendor.vehicle.gear.gpio.offset=-1
+
+# PWM Configuration (Existing)
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.pwm.period_ns=30518 \
+    ro.vendor.vehicle.pwm.force_write_period=false

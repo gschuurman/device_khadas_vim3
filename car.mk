@@ -73,9 +73,12 @@ PRODUCT_COPY_FILES += \
 	device/generic/car/common/android.hardware.disable.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml \
 	device/generic/car/common/android.hardware.disable.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
 
+PRODUCT_COPY_FILES += \
+    device/khadas/vim3/sysconfig/disable_customization_provider.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/disable_customization_provider.xml
+
 PRODUCT_PROPERTY_OVERRIDES += \
 	android.car.drawer.unlimited=true \
-	android.car.hvac.demo=dalse \
+	android.car.hvac.demo=false \
 	com.android.car.radio.demo=false \
 	com.android.car.radio.demo.dual=false \
 
