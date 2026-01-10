@@ -19,16 +19,19 @@ DEVICE_MANIFEST_FILE += \
 
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@schuurman-service \
-    schuurman_evs_configuration  \
+
+# PRODUCT_PACKAGES += \
+#     schuurman_evs_configuration  \
+#     android.hardware.automotive.evs-aidl-vim3-service \
+#     cardisplayproxyd
+
+PRODUCT_COPY_FILES += \
+    device/khadas/vim3/external_camera_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/external_camera_config.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.timezone=Europe/Amsterdam
 
 PRODUCT_VENDOR_PROPERTIES += \
-    ro.vendor.vehicle.gpio.chip=gpiochip0 \
-    ro.vendor.vehicle.gpio.offset=51 \
-    ro.vendor.vehicle.pwm.period_ns=30518 \
-    ro.vendor.vehicle.pwm.force_write_period=false \
     ro.secure=0 \
     ro.adb.secure=0 \
     ro.force.debuggable=1 \
@@ -36,12 +39,11 @@ PRODUCT_VENDOR_PROPERTIES += \
     persist.sys.usb.config=adb \
     service.adb.root=1
 
-
 PRODUCT_PACKAGES += ScreenPowerBridge
 
 # GPIO Configuration
-# Brightness Control (PWM) - Pin 51 (Used for reference or if switching to GPIO-based PWM later)
 PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.brightness.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.brightness.gpio.offset=51
 
@@ -53,7 +55,7 @@ PRODUCT_VENDOR_PROPERTIES += \
 # Reverse Gear Selection - (Not specified yet, default to -1 to disable)
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gear.gpio.chip=gpiochip0 \
-    ro.vendor.vehicle.gear.gpio.offset=-1
+    ro.vendor.vehicle.gear.gpio.offset=51
 
 # PWM Configuration (Existing)
 PRODUCT_VENDOR_PROPERTIES += \

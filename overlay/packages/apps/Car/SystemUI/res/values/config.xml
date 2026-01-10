@@ -1,0 +1,6 @@
+<resources>
+    <!-- Empty disables RVC -->
+    <string name="config_rearViewCameraActivity" translatable="false">
+        com.schuurman.rvc/.RearViewCameraActivity
+    </string>
+</resources>

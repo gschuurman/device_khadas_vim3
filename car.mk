@@ -86,20 +86,21 @@ PRODUCT_COPY_FILES += \
 	packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
 	packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
 
-# EVS - Use the mocked EVS from the emulator builds. This can be replaced
-# with a full EVS HAL implementation to integrate with the VIM3 hardware
-# at a later date.
-ENABLE_EVS_SAMPLE ?= false
-ENABLE_EVS_SERVICE ?= true
-ENABLE_MOCK_EVSHAL ?= false
-ENABLE_CAREVSSERVICE_SAMPLE ?= false
-ENABLE_SAMPLE_EVS_APP ?= false
+ENABLE_CAMERA_SERVICE := true
 ENABLE_CARTELEMETRY_SERVICE ?= false
-CUSTOMIZE_EVS_SERVICE_PARAMETER := true
-$(call inherit-product, device/generic/car/emulator/evs/evs.mk)
+ENABLE_EVS_SERVICE := false
+ENABLE_EVS_SAMPLE := false
+ENABLE_MOCK_EVSHAL := false
+ENABLE_CAREVSSERVICE_SAMPLE := false
+ENABLE_SAMPLE_EVS_APP := false
+CUSTOMIZE_EVS_SERVICE_PARAMETER := false
+# $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
 
 # CAN bus support - We don't have a direct hardware interface on the
 # VIM3, but there are dongles which can provide CAN bus connectivity
+
+PRODUCT_PACKAGES += \
+	RearViewCamera
 
 PRODUCT_PACKAGES_DEBUG += \
 	android.hardware.automotive.occupant_awareness@1.0-service \
@@ -107,17 +108,14 @@ PRODUCT_PACKAGES_DEBUG += \
 
 BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
-
 # # Sepolicy for occupant awareness system
 # include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
 
 # # Sepolicy for compute pipe system
 # include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
-
 PRODUCT_PROPERTY_OVERRIDES += \
         ro.boot.wificountrycode=00 \
-        ro.config.media_vol_default=0 \
         log.tag.CarTrustAgentUnlockEvent=I
 
 # Phone car targets don't support ramdump
