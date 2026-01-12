@@ -43,16 +43,16 @@ PRODUCT_PACKAGES += ScreenPowerBridge
 
 # GPIO Configuration
 PRODUCT_VENDOR_PROPERTIES += \
-    ro.vendor.vehicle.gpio.chip=gpiochip0 \
-    ro.vendor.vehicle.brightness.gpio.chip=gpiochip0 \
-    ro.vendor.vehicle.brightness.gpio.offset=51
+    ro.vendor.vehicle.gpio.chip=gpiochip0
 
 # Backlight Enable / Screen Power - Pin 53
+# GPIOA_4 (Physical pin 33)
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.backlight.enable.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.backlight.enable.gpio.offset=53
 
 # Reverse Gear Selection - (Not specified yet, default to -1 to disable)
+# GPIOA_2 (Physical pin 32)
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gear.gpio.chip=gpiochip0 \
     ro.vendor.vehicle.gear.gpio.offset=51
