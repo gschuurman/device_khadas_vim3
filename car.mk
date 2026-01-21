@@ -94,13 +94,6 @@ ENABLE_MOCK_EVSHAL := false
 ENABLE_CAREVSSERVICE_SAMPLE := false
 ENABLE_SAMPLE_EVS_APP := false
 CUSTOMIZE_EVS_SERVICE_PARAMETER := false
-# $(call inherit-product, device/generic/car/emulator/evs/evs.mk)
-
-# CAN bus support - We don't have a direct hardware interface on the
-# VIM3, but there are dongles which can provide CAN bus connectivity
-
-PRODUCT_PACKAGES += \
-	RearViewCamera
 
 PRODUCT_PACKAGES_DEBUG += \
 	android.hardware.automotive.occupant_awareness@1.0-service \

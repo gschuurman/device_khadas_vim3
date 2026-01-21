@@ -1,1 +1,0 @@
-$(call inherit-product, device/khadas/vim3/hal/audio/device_vendor.mk)

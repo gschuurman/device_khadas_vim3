@@ -10,7 +10,9 @@ $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
 
 $(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
 
-$(call inherit-product, device/khadas/vim3/audio.mk)
+$(call inherit-product, device/khadas/vim3/hal/audio/device_vendor.mk)
+
+$(call inherit-product, device/khadas/vim3/hal/camera/camera.mk)
 
 
 DEVICE_MANIFEST_FILE += \
@@ -20,13 +22,6 @@ DEVICE_MANIFEST_FILE += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@schuurman-service \
 
-# PRODUCT_PACKAGES += \
-#     schuurman_evs_configuration  \
-#     android.hardware.automotive.evs-aidl-vim3-service \
-#     cardisplayproxyd
-
-PRODUCT_COPY_FILES += \
-    device/khadas/vim3/external_camera_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/external_camera_config.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.timezone=Europe/Amsterdam
@@ -39,7 +34,6 @@ PRODUCT_VENDOR_PROPERTIES += \
     persist.sys.usb.config=adb \
     service.adb.root=1
 
-PRODUCT_PACKAGES += ScreenPowerBridge
 
 # GPIO Configuration
 PRODUCT_VENDOR_PROPERTIES += \

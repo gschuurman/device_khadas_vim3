@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Camera configuration for Khadas VIM3 with UVC camera
+     Place in device/khadas/vim3/camera_config.xml -->
+<CameraConfiguration>
+    <!-- External USB camera (UVC) configuration -->
+    <ExternalCamera>
+        <!-- Mark as system camera to restrict 3P app access -->
+        <SystemCamera>true</SystemCamera>
+        
+        <!-- Camera facing (external for UVC) -->
+        <Facing>external</Facing>
+        
+        <!-- Default resolution -->
+        <Resolution>
+            <Width>1280</Width>
+            <Height>720</Height>
+        </Resolution>
+        
+        <!-- Supported formats -->
+        <SupportedFormats>
+            <Format>YUV_420_888</Format>
+            <Format>JPEG</Format>
+        </SupportedFormats>
+        
+        <!-- Frame rates -->
+        <FrameRates>
+            <FrameRate>30</FrameRate>
+            <FrameRate>60</FrameRate>
+        </FrameRates>
+        
+        <!-- Auto-exposure and auto-focus -->
+        <AutoExposure>true</AutoExposure>
+        <AutoFocus>true</AutoFocus>
+        
+        <!-- UVC specific settings -->
+        <UVC>
+            <VendorId>0x0</VendorId> <!-- Match any UVC device -->
+            <ProductId>0x0</ProductId>
+        </UVC>
+    </ExternalCamera>
+</CameraConfiguration>
