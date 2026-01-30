@@ -1,0 +1,6 @@
+# Google backend identity (safe on Android 16)
+ro.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:14/UAA1.250512.001/13479943:user/release-keys
+ro.build.description=sdk_gcar_arm64-user 14 UAA1.250512.001 13479943 release-keys
+
+# Mirror for modern GSF lookups
+ro.system.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:14/UAA1.250512.001/13479943:user/release-keys

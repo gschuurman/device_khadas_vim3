@@ -19,7 +19,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Audio HAL debug (set to true for verbose logging)
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.vendor.audio.hal.debug=true
+    persist.vendor.audio.hal.debug=false
 
 # Enable audio modules
 PRODUCT_PROPERTY_OVERRIDES += \

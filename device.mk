@@ -8,7 +8,9 @@ $(call inherit-product, device/khadas/vim3/car.mk)
 
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
 
-$(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
+# $(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
+
+$(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
 
 $(call inherit-product, device/khadas/vim3/hal/audio/device_vendor.mk)
 
@@ -55,3 +57,20 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.pwm.period_ns=30518 \
     ro.vendor.vehicle.pwm.force_write_period=false
+
+
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.zram.mark_idle_delay_mins=60 \
+    ro.zram.first_wb_delay_mins=1440 \
+    vendor.zram.size=50%
+
+# Stop LMK from killing background services so aggressively
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.lmk.critical_upgrade=false \
+    ro.lmk.upgrade_pressure=40 \
+    ro.lmk.downgrade_pressure=60 \
+    ro.lmk.kill_heaviest_task=true
+
+
+PRODUCT_PACKAGES += android.hardware.gnss-service.usb
+PRODUCT_PACKAGES += android.hardware.gnss-service.usb.rc

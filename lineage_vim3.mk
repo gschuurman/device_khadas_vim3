@@ -18,3 +18,6 @@ PRODUCT_DEVICE := vim3
 PRODUCT_MANUFACTURER := Khadas
 PRODUCT_MODEL := VIM3 Automotive
 PRODUCT_NAME := lineage_vim3
+
+PRODUCT_BUILD_TYPE := user
+PRODUCT_BUILD_TAGS := release-keys

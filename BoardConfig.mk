@@ -24,3 +24,8 @@ BOARD_EROFS_PCLUSTER_SIZE := 65536
 # BOARD_DB_DYNAMIC_PARTITIONS_SIZE := $(shell echo $$(( $(BOARD_SUPER_PARTITION_SIZE)/2 - (10 * 1024 * 1024) )))  # Reserve 10M for DAP metadata
 
 BOARD_KERNEL_CMDLINE += console=ttyS4,115200
+
+DEVICE_PATH := device/khadas/vim3
+
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop

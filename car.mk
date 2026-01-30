@@ -23,6 +23,15 @@ BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 # Exclude the testing apps
 PRODUCT_IS_AUTOMOTIVE_SDK := true
 
+ENABLE_CAMERA_SERVICE := true
+ENABLE_CARTELEMETRY_SERVICE ?= false
+ENABLE_EVS_SERVICE := false
+ENABLE_EVS_SAMPLE := false
+ENABLE_MOCK_EVSHAL := false
+ENABLE_CAREVSSERVICE_SAMPLE := false
+ENABLE_SAMPLE_EVS_APP := false
+CUSTOMIZE_EVS_SERVICE_PARAMETER := false
+
 PRODUCT_PRODUCT_PROPERTIES += \
     dalvik.vm.systemserverheapsize=128m \
     dalvik.vm.systemserverheapgrowthlimit=128m \
@@ -86,26 +95,12 @@ PRODUCT_COPY_FILES += \
 	packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
 	packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
 
-ENABLE_CAMERA_SERVICE := true
-ENABLE_CARTELEMETRY_SERVICE ?= false
-ENABLE_EVS_SERVICE := false
-ENABLE_EVS_SAMPLE := false
-ENABLE_MOCK_EVSHAL := false
-ENABLE_CAREVSSERVICE_SAMPLE := false
-ENABLE_SAMPLE_EVS_APP := false
-CUSTOMIZE_EVS_SERVICE_PARAMETER := false
 
 PRODUCT_PACKAGES_DEBUG += \
 	android.hardware.automotive.occupant_awareness@1.0-service \
 	android.hardware.automotive.occupant_awareness@1.0-service_mock
 
 BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
-
-# # Sepolicy for occupant awareness system
-# include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
-
-# # Sepolicy for compute pipe system
-# include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
 PRODUCT_PROPERTY_OVERRIDES += \
         ro.boot.wificountrycode=00 \
@@ -128,10 +123,15 @@ PRODUCT_PACKAGES_DEBUG += \
 # Sepolicy for occupant awareness system
 include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
 
+PRODUCT_PRODUCT_PROPERTIES += \
+    ro.wifi.country_code=NL \
+    persist.wifi.country_code=NL \
+	persist.wifi.softap.band=2 \
+	persist.wifi.softap.channel=36 \
+
 PRODUCT_PROPERTY_OVERRIDES += \
-        ro.boot.wificountrycode=00 \
-        ro.config.media_vol_default=0 \
-        log.tag.CarTrustAgentUnlockEvent=I
+        log.tag.CarTrustAgentUnlockEvent=I \
+        log.tag.AHAL_StreamAlsa=E \
 
 # Additional selinux policy
 BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
@@ -148,6 +148,3 @@ PRODUCT_PACKAGES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.carrier=unknown
 
-# Include snappmaps into build to show a map
-PRODUCT_PACKAGES += \
-	osmdroid \

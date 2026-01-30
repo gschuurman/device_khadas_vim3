@@ -67,4 +67,11 @@
         <item>org.microg.nlp.backend.nominatim</item>
     </string-array>
 
+    <string-array name="config_webViewProviderPackages" translatable="false">
+        <item>com.google.android.webview</item>
+        <item>com.android.webview</item>
+    </string-array>
+
+    <string name="config_webViewPackageName" translatable="false">com.google.android.webview</string>
+
 </resources>

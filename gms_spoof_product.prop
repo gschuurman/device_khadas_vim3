@@ -1,0 +1,5 @@
+ro.product.brand=google
+ro.product.device=emulator_car64_arm64
+ro.product.manufacturer=Google
+ro.product.model=car_generic
+ro.product.name=car_generic
