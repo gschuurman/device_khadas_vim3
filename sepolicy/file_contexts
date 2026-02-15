@@ -15,7 +15,5 @@
 /vendor/bin/bh1750d                         u:object_r:bh1750d_exec:s0
 /data/vendor/sensors(/.*)?                  u:object_r:vendor_sensor_data_file:s0
 
-# --- Debugging ---
-/dev/ttyS4                                  u:object_r:tty_device:s0
 
 /system_ext/bin/hw/android\.hardware\.automotive\.audiocontrol-service   u:object_r:audiocontrol_service_exec:s0

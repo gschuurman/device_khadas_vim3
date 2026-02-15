@@ -40,6 +40,11 @@
     </activationVolumeConfigs>
     <zones>
         <zone name="primary zone" isPrimary="true" occupantZoneId="0">
+            <externalSources>
+            <externalSource name="Bluetooth_A2DP" address="bt_a2dp_source_address">
+                    <context context="music"/>
+                </externalSource>
+            </externalSources>
             <zoneConfigs>
                 <zoneConfig name="primary zone config 0" isDefault="true">
                     <volumeGroups>
