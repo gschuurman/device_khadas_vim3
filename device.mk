@@ -35,6 +35,9 @@ PRODUCT_VENDOR_PROPERTIES += \
     service.adb.root=1
 
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    log.tag.drmhwc=SILENT
+
 # GPIO Configuration
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gpio.chip=gpiochip0
