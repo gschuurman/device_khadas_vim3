@@ -1,0 +1,4 @@
+<resources>
+    <bool name="profile_supported_hfpclient">true</bool>
+    <bool name="profile_supported_pbapclient">true</bool>
+</resources>

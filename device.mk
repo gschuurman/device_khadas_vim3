@@ -1,14 +1,13 @@
 PRODUCT_IS_AUTOMOTIVE := true
 TARGET_VIM3 := true
 PRODUCT_DISPLAY_DENSITY := 100
+PRODUCT_INIT_BOOT_IMAGE_HEADER_VERSION := 4
 
 PRODUCT_PACKAGE_OVERLAYS += device/khadas/vim3/overlay
 
 $(call inherit-product, device/khadas/vim3/car.mk)
 
 $(call inherit-product, device/amlogic/yukawa/yukawa.mk)
-
-# $(call inherit-product, vendor/partner_gms/products/gms_64bit_only.mk)
 
 $(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
 
@@ -34,6 +33,9 @@ PRODUCT_VENDOR_PROPERTIES += \
     persist.sys.usb.config=adb \
     service.adb.root=1
 
+
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.radio.noril=true
 
 PRODUCT_PROPERTY_OVERRIDES += \
     log.tag.drmhwc=SILENT
@@ -66,8 +68,16 @@ PRODUCT_PACKAGES += \
     com.android.tethering \
     NetworkStack \
     CaptivePortalLogin \
-    TelephonyProvider \
-    MmsService \
     Telecom \
     TeleService \
-    ContactsProvider
+    TelephonyProvider \
+    MmsService \
+    ContactsProvider\
+    liblargeparcelablejni
+
+PRODUCT_VENDOR_PROPERTIES += \
+    persist.sys.powerstats.enabled=false
+
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.software.companion_device_setup.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.software.companion_device_setup.xml \
+    frameworks/native/data/etc/car_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/car_core_hardware.xml
