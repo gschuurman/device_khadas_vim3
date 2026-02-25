@@ -8,9 +8,14 @@ TARGET_NO_KERNEL := true
 
 TARGET_SELINUX_ENFORCE := false
 
+
 include device/amlogic/yukawa/BoardConfig.mk
 
-BOARD_SEPOLICY_DIRS += device/khadas/vim3/sepolicy
+BOARD_SEPOLICY_DIRS += \
+	device/khadas/vim3/sepolicy
+
+BOARD_VENDOR_SEPOLICY_DIRS += \
+    vendor/gschuurman/vehicle_interfaces/usb_gnss_hal/android.hardware.gnss-service.usb/sepolicy/vendor
 
 BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
@@ -20,6 +25,12 @@ TARGET_USERIMAGES_USE_EROFS := true
 BOARD_EROFS_COMPRESSOR := lz4hc
 BOARD_EROFS_PCLUSTER_SIZE := 65536
 
+BOARD_VIRTUAL_AB_ENABLE := true
+BOARD_VIRTUAL_AB_COMPRESSION := true
+
+# Tells the build to expect VAB payload pre-optimization
+PRODUCT_VIRTUAL_AB_OTAPREOPT_PAYLOAD := true
+
 # BOARD_SUPER_PARTITION_SIZE := $(shell echo $$(( 6144 * 1024 * 1024 )))
 # BOARD_DB_DYNAMIC_PARTITIONS_SIZE := $(shell echo $$(( $(BOARD_SUPER_PARTITION_SIZE)/2 - (10 * 1024 * 1024) )))  # Reserve 10M for DAP metadata
 
@@ -27,5 +38,5 @@ BOARD_EROFS_PCLUSTER_SIZE := 65536
 
 DEVICE_PATH := device/khadas/vim3
 
-TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
-TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
+# TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
+# TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop

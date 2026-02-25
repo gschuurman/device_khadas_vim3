@@ -61,5 +61,7 @@
     <bool name="config_wifi_disable_bt_coexistence_scan_mode">true</bool>
     <bool name="config_wifi_bt_coex_scan_low_latency_enabled">false</bool>
     <bool name="config_vdmEnabled">true</bool>
-
+    
+    <bool name="config_carNightGlobalSetting">true</bool>
+    <bool name="config_uiThemeToggle">true</bool>
 </resources>

@@ -2,7 +2,7 @@ TARGET_VIM3 := true
 PRODUCT_IS_AUTOMOTIVE := true
 
 # CarServiceHelperService accesses the hidden api in the system server.
-SYSTEM_OPTIMIZE_JAVA := false
+SYSTEM_OPTIMIZE_JAVA := true
 
 DEVICE_FRAMEWORK_MANIFEST_FILE += device/google_car/common/manifest.xml
 
@@ -46,7 +46,22 @@ PRODUCT_SYSTEM_SERVER_COMPILER_FILTER := speed
 
 
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
+$(call inherit-product-if-exists, packages/services/Car/car_product/rro/ThemeSamples/product.mk)
+$(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sample_rros.mk)
+
+PRODUCT_PACKAGES += \
+    CarSettingsIntelligence
+
+$(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
+
+PRODUCT_PUBLIC_SEPOLICY_DIRS += packages/services/Car/car_product/sepolicy/public
+PRODUCT_PRIVATE_SEPOLICY_DIRS += packages/services/Car/car_product/sepolicy/private
+PRODUCT_PUBLIC_SEPOLICY_DIRS += packages/services/Car/cpp/power/sepolicy/public
+PRODUCT_PRIVATE_SEPOLICY_DIRS += packages/services/Car/cpp/power/sepolicy/private
+PRODUCT_PUBLIC_SEPOLICY_DIRS += packages/services/Car/cpp/watchdog/sepolicy/public
+PRODUCT_PRIVATE_SEPOLICY_DIRS += packages/services/Car/cpp/watchdog/sepolicy/private
+
 
 PRODUCT_PACKAGES += \
 	android.hardware.broadcastradio-service.default \
@@ -115,7 +130,6 @@ PRODUCT_PRODUCT_PROPERTIES += \
         persist.eab.supported=0
 
 # Occupant Awareness
-
 PRODUCT_PACKAGES_DEBUG += \
 	android.hardware.automotive.occupant_awareness@1.0-service \
 	android.hardware.automotive.occupant_awareness@1.0-service_mock
@@ -145,6 +159,8 @@ PRODUCT_PACKAGES += \
     CallLogBackup \
 		Twelve
 
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.carrier=unknown
-
+PRODUCT_PACKAGES += \
+    EmbeddedKitchenSinkApp \
+    curl \
+    CarHotwordDetectionServiceOne \
+    AaosCustomizationTool \
