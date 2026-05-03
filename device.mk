@@ -78,6 +78,11 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.pwm.period_ns=30518 \
     ro.vendor.vehicle.pwm.force_write_period=false
 
+# Display DPMS path for backlight-off on screen sleep
+# card1 = VIM3 HDMI output, connector name HDMI-A-1
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.vehicle.display.dpms_path=/sys/class/drm/card1-HDMI-A-1/dpms
+
 PRODUCT_PACKAGES += android.hardware.gnss-service.usb
 PRODUCT_PACKAGES += android.hardware.gnss-service.usb.rc
 
@@ -103,3 +108,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.subscription.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.subscription.xml \
     frameworks/native/data/etc/android.hardware.telephony.messaging.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.messaging.xml \
     frameworks/native/data/etc/android.hardware.telephony.gsm.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.gsm.xml
+
+PRODUCT_PACKAGES += \
+    Vim3PowerFrameworkOverlay \
+    init.wifi_fix.rc
