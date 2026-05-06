@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<powerPolicy version="1.0">
+    <policies>
+        <policy id="custom_initial_on">
+            <component id="POWER_COMPONENT_AUDIO">on</component>
+            <component id="POWER_COMPONENT_BLUETOOTH">on</component>
+            <component id="POWER_COMPONENT_WIFI">on</component>
+            <component id="POWER_COMPONENT_DISPLAY">on</component>
+            <component id="POWER_COMPONENT_MEDIA">off</component>
+            <component id="POWER_COMPONENT_CELLULAR">off</component>
+            <component id="POWER_COMPONENT_ETHERNET">off</component>
+            <component id="POWER_COMPONENT_PROJECTION">on</component>
+            <component id="POWER_COMPONENT_NFC">off</component>
+            <component id="POWER_COMPONENT_INPUT">off</component>
+            <component id="POWER_COMPONENT_VOICE_INTERACTION">off</component>
+            <component id="POWER_COMPONENT_VISUAL_INTERACTION">off</component>
+            <component id="POWER_COMPONENT_TRUSTED_DEVICE_DETECTION">off</component>
+            <component id="POWER_COMPONENT_LOCATION">off</component>
+            <component id="POWER_COMPONENT_MICROPHONE">off</component>
+        </policy>
+    </policies>
+    <policyGroups defaultPolicyGroup="default_group">
+        <policyGroup id="default_group">
+            <defaultPolicy state="WaitForVHAL" id="custom_initial_on"/>
+            <defaultPolicy state="On" id="system_power_policy_all_on"/>
+        </policyGroup>
+    </policyGroups>
+    <systemPolicyOverrides>
+        <policy id="system_power_policy_initial_on">
+            <component id="POWER_COMPONENT_BLUETOOTH">on</component>
+            <component id="POWER_COMPONENT_WIFI">on</component>
+            <component id="POWER_COMPONENT_PROJECTION">on</component>
+        </policy>
+    </systemPolicyOverrides>
+</powerPolicy>

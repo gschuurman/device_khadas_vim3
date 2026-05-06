@@ -118,7 +118,6 @@ PRODUCT_PACKAGES_DEBUG += \
 BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	ro.boot.wificountrycode=00 \
 	log.tag.CarTrustAgentUnlockEvent=I
 
 # Phone car targets don't support ramdump
@@ -137,15 +136,10 @@ PRODUCT_PACKAGES_DEBUG += \
 # Sepolicy for occupant awareness system
 include packages/services/Car/car_product/occupant_awareness/OccupantAwareness.mk
 
-PRODUCT_PRODUCT_PROPERTIES += \
-	ro.wifi.country_code=NL \
-	persist.wifi.country_code=NL \
-	persist.wifi.softap.band=2 \
-	persist.wifi.softap.channel=36 \
-
 PRODUCT_PROPERTY_OVERRIDES += \
 	log.tag.CarTrustAgentUnlockEvent=I \
 	log.tag.AHAL_StreamAlsa=E \
+	log.tag.android.hardware.gnss-service.usb=E \
 
 # Additional selinux policy
 BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
@@ -157,10 +151,21 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     ContactsProvider \
     CallLogBackup \
-		Twelve
+	Twelve
 
 PRODUCT_PACKAGES += \
     EmbeddedKitchenSinkApp \
     curl \
     CarHotwordDetectionServiceOne \
-    AaosCustomizationTool \
+    AaosCustomizationTool
+
+
+PRODUCT_COPY_FILES += \
+    device/khadas/vim3/power_policy.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/power_policy.xml \
+    device/khadas/vim3/car_ux_restrictions_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_ux_restrictions_config.xml
+
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.car.powerpolicy.group_id=default_group
+
+PRODUCT_PACKAGES += \
+	init.wifi_fix.rc

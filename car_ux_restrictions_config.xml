@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UxRestrictions xmlns:car="http://schemas.android.com/apk/res-auto">
+    <RestrictionMapping>
+        <!-- Unknown state (no VHAL) treated as parked — unrestricted -->
+        <DrivingState car:state="unknown">
+            <Restrictions car:requiresDistractionOptimization="false"
+                          car:uxr="UX_RESTRICTIONS_BASELINE"/>
+        </DrivingState>
+        <DrivingState car:state="parked">
+            <Restrictions car:requiresDistractionOptimization="false"
+                          car:uxr="UX_RESTRICTIONS_BASELINE"/>
+        </DrivingState>
+        <DrivingState car:state="idling">
+            <Restrictions car:requiresDistractionOptimization="false"
+                          car:uxr="UX_RESTRICTIONS_BASELINE"/>
+        </DrivingState>
+        <DrivingState car:state="moving">
+            <Restrictions car:requiresDistractionOptimization="true"
+                          car:uxr="UX_RESTRICTIONS_FULLY_RESTRICTED"/>
+        </DrivingState>
+    </RestrictionMapping>
+</UxRestrictions>

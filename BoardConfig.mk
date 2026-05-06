@@ -3,6 +3,7 @@ TARGET_DEV_BOARD := vim3
 TARGET_BOOTLOADER_BOARD_NAME := vim3
 
 BOARD_KERNEL_IMAGE_NAME := Image.lz4
+BOARD_KERNEL_VERSION := 6.12.52-android16-6-maybe-dirty-4k
 
 TARGET_NO_KERNEL := true
 
@@ -37,6 +38,8 @@ PRODUCT_VIRTUAL_AB_OTAPREOPT_PAYLOAD := true
 # BOARD_KERNEL_CMDLINE += console=ttyS4,115200
 
 DEVICE_PATH := device/khadas/vim3
+
+BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 
 # TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
 # TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop

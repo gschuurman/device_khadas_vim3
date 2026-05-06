@@ -17,6 +17,8 @@ $(call inherit-product, device/khadas/vim3/hal/audio/device_vendor.mk)
 
 $(call inherit-product, device/khadas/vim3/hal/camera/camera.mk)
 
+$(call inherit-product, device/khadas/vim3/hal/display/display_wake.mk)
+
 
 DEVICE_MANIFEST_FILE += \
 	device/khadas/vim3/manifest.xml
@@ -48,7 +50,8 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.secure=0 \
     ro.adb.secure=0 \
     persist.sys.usb.config=adb \
-    service.adb.root=1
+    service.adb.root=1 \
+    service.adb.tcp.port=5555
 
 
 PRODUCT_VENDOR_PROPERTIES += \
@@ -100,9 +103,14 @@ PRODUCT_PACKAGES += \
 PRODUCT_VENDOR_PROPERTIES += \
     persist.sys.powerstats.enabled=false
 
+# WiFi country code — NL enables 5GHz channels 36-64 and 100-165 (ETSI regulatory domain)
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.boot.wificountrycode=NL
+
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.companion_device_setup.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.software.companion_device_setup.xml \
     frameworks/native/data/etc/car_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/car_core_hardware.xml
+
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.subscription.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.subscription.xml \
@@ -111,4 +119,21 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_PACKAGES += \
     Vim3PowerFrameworkOverlay \
-    init.wifi_fix.rc
+    AndroidAutoProjectionRro \
+    ScreenOffService
+
+# OPTIMIZATIONS FOR WIRELESS ANDROID AUTO
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml
+
+PRODUCT_PACKAGES += \
+    wpa_supplicant \
+    wpa_supplicant.conf
+
+PRODUCT_SYSTEM_PROPERTIES += \
+    android.car.internal.version.platform=1
+
+# Ensure GMS is installed for the right user
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.fw.multiuser.headless_system_user=true
+

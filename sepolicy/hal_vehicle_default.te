@@ -21,3 +21,8 @@ allow vendor_vehicle_schuurman vendor_sensor_data_file:file r_file_perms;
 # 4. Properties (Lezen/Schrijven van voertuig properties)
 get_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)
 set_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)
+
+# 5. Input devices (touch-to-wake: read touch events, write wakeup injection)
+allow vendor_vehicle_schuurman input_device:chr_file { read open ioctl getattr };
+allow vendor_vehicle_schuurman input_device:chr_file { write };
+allow vendor_vehicle_schuurman input_device:dir r_dir_perms;
