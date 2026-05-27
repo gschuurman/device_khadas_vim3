@@ -13,3 +13,7 @@ binder_use(audiocontrol_service)
 # Allow us to talk to AudioFlinger (System Server)
 allow audiocontrol_service audioserver_service:service_manager find;
 allow audiocontrol_service audioserver:binder call;
+
+# Allow CarAudioService (carservice_app) to call our binder interface
+binder_call(carservice_app, audiocontrol_service)
+allow carservice_app hal_audiocontrol_service:service_manager find;

@@ -107,6 +107,13 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_VENDOR_PROPERTIES += \
     ro.boot.wificountrycode=NL
 
+# WiFi regulatory database — cfg80211 requires this to apply the NL country rules.
+# Without it the kernel falls back to world domain (country 00) which marks all
+# 5 GHz channels NO-IR, making 5 GHz completely non-functional.
+# Module: external/linux-firmware-mainline/wireless-regdb/Android.bp
+# Installs: regulatory.db + regulatory.db.p7s → /vendor/firmware/
+PRODUCT_PACKAGES += wireless-regdb
+
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.companion_device_setup.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.software.companion_device_setup.xml \
     frameworks/native/data/etc/car_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/car_core_hardware.xml

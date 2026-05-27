@@ -17,6 +17,18 @@ get_prop(vendor_vehicle_setup, vendor_vehicle_prop)
 
 # Capability (Eigenaar van bestanden wijzigen)
 allow vendor_vehicle_setup self:capability { chown fowner fsetid sys_admin };
+# dac_override is blocked by platform neverallow; dontaudit suppresses the audit in permissive mode
+dontaudit vendor_vehicle_setup self:capability dac_override;
+
+# restorecon needs to read SELinux file_contexts from system
+allow vendor_vehicle_setup file_contexts_file:file { read open getattr };
+
+# grep reading /sys/firmware/devicetree paths
+allow vendor_vehicle_setup sysfs:file { read open getattr };
+
+# chown/chmod need setattr on PWM and GPIO sysfs nodes
+allow vendor_vehicle_setup vendor_sysfs_pwm:file setattr;
+allow vendor_vehicle_setup vendor_gpio_device:chr_file setattr;
 
 # --- RELABELING LOGICA (CRUCIAAL) ---
 # Sta toe dat het script bestanden in sysfs opzoekt en hun label wijzigt

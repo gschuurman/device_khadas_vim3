@@ -26,3 +26,7 @@ set_prop(vendor_vehicle_schuurman, vendor_vehicle_prop)
 allow vendor_vehicle_schuurman input_device:chr_file { read open ioctl getattr };
 allow vendor_vehicle_schuurman input_device:chr_file { write };
 allow vendor_vehicle_schuurman input_device:dir r_dir_perms;
+
+# 6. VPU sysfs for HDMI DPMS state (display power management)
+allow vendor_vehicle_schuurman sysfs_vpu:dir { search };
+allow vendor_vehicle_schuurman sysfs_vpu:file { read open getattr };

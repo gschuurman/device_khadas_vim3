@@ -42,7 +42,6 @@ PRODUCT_PRODUCT_PROPERTIES += \
     dalvik.vm.heapmaxfree=32m \
     dalvik.vm.heaptargetutilization=0.75
 
-PRODUCT_SYSTEM_SERVER_COMPILER_FILTER := speed
 
 
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
@@ -110,15 +109,6 @@ PRODUCT_COPY_FILES += \
 	packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \
 	packages/services/Car/car_product/init/init.car.rc:root/init.car.rc
 
-
-PRODUCT_PACKAGES_DEBUG += \
-	android.hardware.automotive.occupant_awareness@1.0-service \
-	android.hardware.automotive.occupant_awareness@1.0-service_mock
-
-BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
-
-PRODUCT_PROPERTY_OVERRIDES += \
-	log.tag.CarTrustAgentUnlockEvent=I
 
 # Phone car targets don't support ramdump
 EXCLUDE_BUILD_RAMDUMP_UPLOADER_DEBUG_TOOL := true

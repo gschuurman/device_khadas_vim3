@@ -17,3 +17,7 @@
 
 
 /system_ext/bin/hw/android\.hardware\.automotive\.audiocontrol-service   u:object_r:audiocontrol_service_exec:s0
+/system/system_ext/bin/hw/android\.hardware\.automotive\.audiocontrol-service   u:object_r:audiocontrol_service_exec:s0
+
+# Occupant awareness HAL
+/vendor/bin/hw/android\.hardware\.automotive\.occupant_awareness@1\.0-service   u:object_r:hal_occupant_awareness_default_exec:s0
