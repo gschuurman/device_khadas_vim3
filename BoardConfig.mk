@@ -24,7 +24,7 @@ TARGET_DTB_LIST_WILDCARD := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-
 # DTBO — pack from the dtbo compiled as part of the main kernel build
 # (dtb-y += meson-g12b-a311d-khadas-vim3-android.dtbo in the amlogic DTS Makefile)
 TARGET_NEEDS_DTBOIMAGE := true
-BOARD_CUSTOM_DTBOIMG_MK := device/khadas/vim3/build/tasks/dtboimage.mk
+BOARD_CUSTOM_DTBOIMG_MK := device/khadas/vim3/build/dtboimage.mk
 BOARD_PREBUILT_DTBOIMAGE = $(TARGET_OUT_INTERMEDIATES)/dtbo-kernel.img
 
 # ---------------------------------------------------------------------------
