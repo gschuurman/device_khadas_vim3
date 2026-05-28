@@ -15,8 +15,8 @@ include device/amlogic/yukawa/BoardConfig.mk
 TARGET_KERNEL_SOURCE := kernel/khadas/vim3
 TARGET_KERNEL_CONFIG := \
     gki_defconfig \
-    amlogic_gki.fragment
-TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.fragment
+    amlogic_gki.config
+TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.config
 
 # DTB path within KERNEL_OUT for boot image assembly
 TARGET_DTB_LIST_WILDCARD := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3
