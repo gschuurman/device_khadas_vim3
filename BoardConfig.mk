@@ -3,14 +3,42 @@ TARGET_DEV_BOARD := vim3
 TARGET_BOOTLOADER_BOARD_NAME := vim3
 
 BOARD_KERNEL_IMAGE_NAME := Image.lz4
-BOARD_KERNEL_VERSION := 6.12.52-android16-6-maybe-dirty-4k
-
-TARGET_NO_KERNEL := true
 
 TARGET_SELINUX_ENFORCE := false
 
 
 include device/amlogic/yukawa/BoardConfig.mk
+
+# ---------------------------------------------------------------------------
+# Kernel — inline build from kernel/khadas/vim3 (GKI android16-6.12 ACK)
+# ---------------------------------------------------------------------------
+TARGET_KERNEL_SOURCE := kernel/khadas/vim3
+TARGET_KERNEL_CONFIG := \
+    gki_defconfig \
+    amlogic_gki.fragment
+TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.fragment
+
+# DTB path within KERNEL_OUT for boot image assembly
+TARGET_DTB_LIST_WILDCARD := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3
+
+# ---------------------------------------------------------------------------
+# Kernel modules — aligned with vim3_overlay/BUILD.bazel module lists
+# ---------------------------------------------------------------------------
+BOOT_KERNEL_MODULES := $(strip $(shell cat device/khadas/vim3/modules.load.vendor_boot))
+
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := $(strip $(shell cat device/khadas/vim3/modules.load.vendor_boot))
+
+SYSTEM_KERNEL_MODULES := $(strip $(shell cat device/khadas/vim3/modules.load.system_dlkm))
+BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat device/khadas/vim3/modules.load.system_dlkm))
+
+BOARD_VENDOR_KERNEL_MODULES_LOAD := $(strip $(shell cat device/khadas/vim3/modules.load.vendor_dlkm))
+
+# Clear prebuilt-path module vars set by yukawa/BoardConfig.mk;
+# the inline kernel build populates partitions via BOOT/SYSTEM/VENDOR_KERNEL_MODULES above.
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES :=
+BOARD_VENDOR_DLKM_MODULES :=
+BOARD_SYSTEM_DLKM_MODULES :=
+BOARD_VENDOR_KERNEL_MODULES :=
 
 BOARD_SEPOLICY_DIRS += \
 	device/khadas/vim3/sepolicy

@@ -1,0 +1,12 @@
+[
+  {
+    "repository": "android_kernel_khadas_vim3",
+    "branch": "android16-6.12",
+    "path": "kernel/khadas/vim3"
+  },
+  {
+    "repository": "android_kernel_khadas_vim3_overlay",
+    "branch": "lineage-23.2",
+    "path": "kernel/khadas/vim3_overlay"
+  }
+]
