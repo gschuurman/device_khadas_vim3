@@ -1,4 +1,4 @@
-# Audio properties for Amlogic Yukawa (Khadas VIM3/VIM3L)
+# Audio properties for VIM3 (Amlogic A311D / yukawa platform)
 #
 # These properties configure the BayLibre Generic Audio HAL for Yukawa.
 

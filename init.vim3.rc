@@ -37,7 +37,7 @@ on init
     write /proc/sys/net/ipv4/udp_mem "65536 131072 262144"
     write /proc/sys/net/ipv4/tcp_fastopen 3
 
-    # VM: tuned for 4GB device (previous values were for 2GB VIM3L)
+    # VM: tuned for VIM3 (4GB)
     write /proc/sys/vm/vfs_cache_pressure 80
     write /proc/sys/vm/dirty_background_ratio 5
     write /proc/sys/vm/dirty_ratio 15
