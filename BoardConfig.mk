@@ -21,9 +21,10 @@ TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.config
 # DTB path within KERNEL_OUT for boot image assembly
 TARGET_DTB_LIST_WILDCARD := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3
 
-# DTBO — build inline from vim3_overlay android DTS (via .dtso symlink in kernel tree)
-BOARD_KERNEL_SEPARATED_DTBO := true
-TARGET_KERNEL_DTB := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3-android.dtbo
+# DTBO — pack from the dtbo compiled as part of the main kernel build
+# (dtb-y += meson-g12b-a311d-khadas-vim3-android.dtbo in the amlogic DTS Makefile)
+TARGET_NEEDS_DTBOIMAGE := true
+BOARD_CUSTOM_DTBOIMG_MK := device/khadas/vim3/build/tasks/dtboimage.mk
 BOARD_PREBUILT_DTBOIMAGE = $(TARGET_OUT_INTERMEDIATES)/dtbo-kernel.img
 
 # ---------------------------------------------------------------------------
