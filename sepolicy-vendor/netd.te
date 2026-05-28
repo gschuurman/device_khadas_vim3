@@ -1,0 +1,6 @@
+# required to run xtest
+userdebug_or_eng(`
+  allow netd tee:fd use;
+  allow netd tee:tcp_socket { getopt read setopt write };
+  allow netd tee:udp_socket { getopt read setopt write };
+')

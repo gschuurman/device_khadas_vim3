@@ -1,0 +1,15 @@
+gpu_access(surfaceflinger)
+
+# Allow surfaceflinger to find graphics mapper service
+allow surfaceflinger hal_graphics_mapper_service:service_manager find;
+
+# Allow surfaceflinger to access DRM device
+allow surfaceflinger gpu_device:chr_file { open read write ioctl map };
+allow surfaceflinger gpu_device:dir { open read search };
+
+allow surfaceflinger hal_graphics_composer_default:dir search;
+allow surfaceflinger hal_graphics_composer_default:file r_file_perms;
+
+# Vendor property access is suppressed - surfaceflinger gets config via HALs
+# Direct access to vendor properties violates Treble neverallow rules
+

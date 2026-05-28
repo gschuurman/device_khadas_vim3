@@ -1,0 +1,12 @@
+# Allow all coredomain processes to read vendor_graphics_prop
+# Required by gralloc/mesa for GPU rendering operations
+# This includes surfaceflinger, bootanim, system_server, apps, etc.
+get_prop(coredomain, vendor_graphics_prop)
+
+# Suppress audits for vendor_default_prop access by apps (Treble compliance)
+# These are accessed by mesa/gralloc but we cannot allow due to neverallow
+dontaudit coredomain vendor_default_prop:file { read open getattr map };
+
+# Suppress audit for isolated_app trying to find content_capture_service
+# This is blocked by neverallow in isolated_app_all.te
+dontaudit isolated_app content_capture_service:service_manager find;

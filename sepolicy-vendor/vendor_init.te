@@ -1,0 +1,37 @@
+allow vendor_init self:capability sys_module;
+allow vendor_init vendor_file:system { module_load };
+allow vendor_init vendor_init:key write;
+
+allow vendor_init proc_dirty:file write;
+allow vendor_init proc_sched:file write;
+allow vendor_init proc_watermark_boost_factor:file write;
+allow vendor_init system_prop:file read;
+
+# Allow vendor_init to set vehicle-specific vendor properties
+set_prop(vendor_init, vendor_vehicle_prop)
+
+recovery_only(`
+	allow vendor_init rootfs:dir { read };
+	allow vendor_init rootfs:system { module_load };
+');
+
+set_prop(vendor_init, vendor_graphics_prop)
+
+# Suppress system prop sets that belong to the system side (Treble: vendor_init must not set these)
+dontaudit vendor_init wifi_prop:property_service set;
+dontaudit vendor_init wifi_prop:file read;
+dontaudit vendor_init build_prop:property_service set;
+dontaudit vendor_init default_prop:property_service set;
+dontaudit vendor_init persist_wm_debug_prop:property_service set;
+dontaudit vendor_init userdebug_or_eng_prop:property_service set;
+dontaudit vendor_init system_prop:property_service set;
+dontaudit vendor_init shell_prop:property_service set;
+dontaudit vendor_init audio_prop:property_service set;
+dontaudit vendor_init timezone_prop:property_service set;
+
+# Allow writing to /proc/sys/vm/vfs_cache_pressure
+allow vendor_init proc:file write;
+
+userdebug_or_eng(`
+set_prop(vendor_init, logpersistd_logging_prop)
+');

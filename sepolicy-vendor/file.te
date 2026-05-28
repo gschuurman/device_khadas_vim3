@@ -1,0 +1,15 @@
+type sysfs_power_supply, fs_type, sysfs_type;
+type mediadrm_vendor_data_file, file_type, data_file_type;
+
+# /data
+type nanohub_lock_file, file_type, data_file_type;
+type sensor_vendor_data_file, file_type, data_file_type, mlstrustedobject;
+
+# /sys
+type sysfs_nanoapp_cmd, sysfs_type, fs_type;
+type sysfs_vpu, sysfs_type, fs_type;
+
+# /vendor/firmware
+type vendor_firmware_file, vendor_file_type, file_type;
+
+type sysfs_mmc, fs_type, sysfs_type;

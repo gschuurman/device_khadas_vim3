@@ -1,0 +1,103 @@
+import init.yukawa.usb.rc
+
+on early-init
+    mount debugfs /sys/kernel/debug /sys/kernel/debug mode=755
+
+    # Lock both CPU clusters to performance during boot for fast startup
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor performance
+
+    # I/O: BFQ for low-latency, higher queue depth for eMMC
+    write /sys/block/mmcblk1/queue/iostats 0
+    write /sys/block/mmcblk1/queue/scheduler bfq
+    write /sys/block/mmcblk1/queue/nr_requests 256
+    write /sys/block/mmcblk1/queue/iosched/slice_idle 0
+    # 256KB read-ahead improves sequential eMMC reads (map tiles, media)
+    write /sys/block/mmcblk1/queue/read_ahead_kb 256
+
+on init
+    write /proc/sys/vm/page-cluster 0
+    # Low swappiness: keep navigation tiles and audio buffers in RAM
+    write /proc/sys/vm/swappiness 20
+
+    setprop ro.boot.hardware.revision ${ro.revision}
+
+    # Network: tuned for navigation + hotspot streaming on 4GB device
+    write /proc/sys/net/core/rmem_default 262144
+    write /proc/sys/net/core/rmem_max 8388608
+    write /proc/sys/net/core/wmem_default 262144
+    write /proc/sys/net/core/wmem_max 4194304
+    write /proc/sys/net/core/optmem_max 65536
+    write /proc/sys/net/core/netdev_max_backlog 3000
+    # tcp_rmem: generous receive window for map tile downloads
+    write /proc/sys/net/ipv4/tcp_rmem "4096 262144 8388608"
+    # tcp_wmem: 4MB max (was 512KB, too low for hotspot throughput)
+    write /proc/sys/net/ipv4/tcp_wmem "4096 65536 4194304"
+    write /proc/sys/net/ipv4/tcp_mem "65536 131072 262144"
+    write /proc/sys/net/ipv4/udp_mem "65536 131072 262144"
+    write /proc/sys/net/ipv4/tcp_fastopen 3
+
+    # VM: tuned for 4GB device (previous values were for 2GB VIM3L)
+    write /proc/sys/vm/vfs_cache_pressure 80
+    write /proc/sys/vm/dirty_background_ratio 5
+    write /proc/sys/vm/dirty_ratio 15
+    write /proc/sys/vm/min_free_kbytes 32768
+    write /proc/sys/vm/extra_free_kbytes 16384
+    write /proc/sys/vm/watermark_boost_factor 0
+    write /proc/sys/vm/compaction_proactiveness 0
+
+    start watchdogd
+
+on boot
+    chmod 0755 /sys/kernel/debug
+    chown system system /sys/kernel/debug
+    chmod 0222 /sys/kernel/debug/tracing/trace_marker
+    write /sys/kernel/debug/tracing/tracing_on 0
+
+    # Switch CPU clusters to schedutil post-boot (EAS works best with schedutil on both)
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor schedutil
+
+
+    # Background app limit: 16 for 4GB device (was 4, tuned for 2GB)
+    setprop ro.sys.fw.bg_apps_limit 16
+    setprop ro.vendor.perf.cores_online 4
+
+    setprop debug.sf.nobootanimation 1
+    setprop persist.sys.ui.hw 0
+
+on early-fs
+    # Start bootanimation class before mount
+    start bootanim
+    class_start animation
+   
+    mount_all --early
+
+on post-fs
+    chown root shell /sys/kernel/tracing/options
+    chown root shell /sys/kernel/tracing/events
+    chown root shell /sys/kernel/tracing/events/sched
+    chown root shell /sys/kernel/tracing/events/sched/sched_switch
+    chown root shell /sys/kernel/tracing/events/sched/sched_wakeup
+
+on late-fs
+    mount_all --late
+    exec_start load_zram_modules
+    # LZ4 decompresses ~2x faster than LZO at similar ratio — lower swap latency
+    write /sys/block/zram0/comp_algorithm lz4
+    swapon_all
+
+service load_zram_modules /vendor/bin/modprobe -a -d /system_dlkm/lib/modules zsmalloc zram
+    class core
+    user root
+    group root
+    disabled
+    oneshot
+    seclabel u:r:modprobe:s0
+
+on post-fs-data
+    # Create the directories used by the Wireless subsystem
+    mkdir /data/vendor/wifi 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa/sockets 0770 wifi wifi
+

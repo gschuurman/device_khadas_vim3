@@ -1,0 +1,34 @@
+modalias_handling enabled
+
+subsystem usbmisc
+    devname uevent_devname
+
+# Bluetooth
+/dev/rfkill                                                                  0660   bluetooth  bluetooth
+
+/dev/mali0	0666 system graphics
+/dev/dma_heap/system      0666   system     graphics
+/dev/dma_heap/linux,cma   0666   system     graphics
+/dev/dma_heap/reserved    0666   system     graphics
+/dev/dri/card0            0660   system     graphics
+/dev/dri/card1            0660   system     graphics
+/dev/dri/card2            0660   system     graphics
+/dev/dri/renderD128       0666   system     graphics
+/dev/cec0	0666 system graphics
+/dev/i2c-0	0666 system system
+/dev/nanohub              0660   system     system
+/dev/nanohub_comms        0660   system     system
+
+/dev/bus/usb/*/*          0660   system     system
+
+/dev/video0               0660   system     camera
+/dev/video1               0660   system     camera
+/dev/video2               0660   system     camera
+/dev/video3               0660   system     camera
+
+# Storage: for factory reset protection feature
+/dev/block/by-name/frp                                 0660    system       system
+
+/sys/class/udc*                          current_speed 0644    system       system
+
+/dev/ttyAML*  0660  system  system

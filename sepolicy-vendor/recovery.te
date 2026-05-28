@@ -1,0 +1,11 @@
+set_prop(recovery, boottime_public_prop)
+
+vendor_internal_prop(vendor_boottime_public_prop)
+get_prop(vendor_boottime_public_prop, boottime_public_prop)
+
+recovery_only(`
+	allow recovery gpu_device:chr_file { map open read write ioctl };
+	allow recovery cache_file:dir { mounton };
+	allow recovery self:capability { fsetid };
+	allow recovery { adbd_config_prop adbd_prop apexd_prop apk_verity_prop }:file { open getattr map };
+');

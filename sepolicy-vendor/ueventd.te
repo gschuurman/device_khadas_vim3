@@ -1,0 +1,14 @@
+allow ueventd self:key write;
+allow ueventd tmpfs:lnk_file read;
+
+# Allow insmod on vendor, system and system_dlkm partitions
+allow ueventd self:capability sys_module;
+allow ueventd system_dlkm_file:dir r_dir_perms;
+allow ueventd system_dlkm_file:file r_file_perms;
+allow ueventd system_dlkm_file:system module_load;
+allow ueventd system_file:system module_load;
+allow ueventd vendor_file:system module_load;
+
+recovery_only(`
+    allow ueventd self:capability {sys_module sys_nice};
+');

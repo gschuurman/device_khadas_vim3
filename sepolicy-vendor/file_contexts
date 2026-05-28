@@ -1,0 +1,89 @@
+# devices
+/dev/ttyAML0           u:object_r:console_device:s0
+/dev/mali0             u:object_r:gpu_device:s0
+/dev/dri/card0         u:object_r:gpu_device:s0
+/dev/dri/card1         u:object_r:gpu_device:s0
+/dev/dri/renderD128    u:object_r:gpu_device:s0
+/dev/dri               u:object_r:gpu_device:s0
+/dev/block/zram0       u:object_r:swap_block_device:s0
+/dev/cec0              u:object_r:cec_device:s0
+/dev/i2c-0             u:object_r:led_device:s0
+/dev/nanohub           u:object_r:sensors_device:s0
+/dev/nanohub_comms     u:object_r:sensors_device:s0
+/dev/dma_heap/linux,cma u:object_r:dmabuf_cma_heap_device:s0
+/dev/block/by-name/frp  u:object_r:frp_block_device:s0
+/dev/rfkill            u:object_r:rfkill_device:s0
+
+# video devices
+/dev/media[0-4]        u:object_r:video_device:s0
+/dev/v4l-subdev.*      u:object_r:video_device:s0
+
+
+/sys/devices/platform/soc/ffe03000.sd/mmc_host(/.*)?             u:object_r:sysfs_suspend_stats:s0
+/sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/wakeup(/.*)? u:object_r:sysfs_suspend_stats:s0
+/sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/alarmtimer.0.auto(/.*)? u:object_r:sysfs_suspend_stats:s0
+/sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/wakeup1(/.*)? u:object_r:sysfs_suspend_stats:s0
+/sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/hctosys       u:object_r:sysfs_rtc:s0
+/sys/devices/platform/soc/ffd00000.bus/ffd24000.serial(/.*)?     u:object_r:sysfs_suspend_stats:s0
+/sys/devices/platform/soc/ffe09000.usb/ff500000.usb(/.*)?        u:object_r:sysfs_suspend_stats:s0
+
+# files in /vendor
+/(vendor|system/vendor)/lib(64)?/hw/gralloc\.yukawa\.so u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/hw/android\.hardware\.health@2\.0-impl-2\.1-cuttlefish\.so u:object_r:same_process_hal_file:s0
+/(vendor|system/vendor)/firmware(/.*)?        u:object_r:vendor_firmware_file:s0
+
+/vendor/bin/hw/android\.hardware\.composer\.hwc3-service\.drm   u:object_r:hal_graphics_composer_default_exec:s0
+
+#Block devices
+/dev/block/platform/soc/ffe07000.mmc/by-name/userdata                 u:object_r:userdata_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/misc                     u:object_r:misc_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/super                    u:object_r:super_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/boot(_[ab])?             u:object_r:boot_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/init_boot_(_[ab])?       u:object_r:boot_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/vendor_boot(_[ab])?      u:object_r:boot_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/dtbo(_[ab])?             u:object_r:dtbo_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/vbmeta(_[ab])?           u:object_r:vbmeta_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/metadata                 u:object_r:metadata_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/frp                      u:object_r:frp_block_device:s0
+
+
+#############################
+# Vendor files
+#
+# Security
+/vendor/bin/hw/android\.hardware\.gatekeeper@1\.0-service\.software    u:object_r:hal_gatekeeper_default_exec:s0
+/vendor/bin/hw/android\.hardware\.security\.keymint-service\.nonsecure  u:object_r:hal_keymint_default_exec:s0
+/vendor/bin/hw/android\.hardware\.authsecret-service.example u:object_r:hal_authsecret_default_exec:s0
+
+/vendor/bin/hw/android\.hardware\.drm(@[0-9]+\.[0-9]+)?-service\.widevine    u:object_r:hal_drm_widevine_exec:s0
+/vendor/bin/hw/android\.hardware\.drm@[0-9]+\.[0-9]+-service\.clearkey     u:object_r:hal_drm_clearkey_exec:s0
+/data/vendor/mediadrm(/.*)?    u:object_r:mediadrm_vendor_data_file:s0
+
+# Health
+/vendor/bin/hw/android\.hardware\.health-service\.cuttlefish u:object_r:hal_health_default_exec:s0
+/vendor/bin/hw/android\.hardware\.health\.storage-service\.cuttlefish u:object_r:hal_health_storage_default_exec:s0
+
+# egl
+/vendor/lib(64)?/egl/libGLES_mesa\.so                                    u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/egl/libGLESv1_CM\.so                                    u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/egl/libGLESv2\.so                                       u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/egl/libgallium_dri\.so                                  u:object_r:same_process_hal_file:s0
+# vulkan
+/vendor/lib(64)?/hw/vulkan\.mesa\.so                                     u:object_r:same_process_hal_file:s0
+
+# minigbm
+/vendor/bin/hw/android\.hardware\.graphics\.allocator-service\.minigbm         u:object_r:hal_graphics_allocator_default_exec:s0
+/vendor/lib(64)?/hw/android\.hardware\.graphics\.mapper@4\.0-impl\.minigbm\.so u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/hw/gralloc\.minigbm\.so                                       u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/hw/mapper\.minigbm\.so                                        u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/libminigbm_gralloc.so                                         u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/libminigbm_gralloc4_utils.so                                  u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/libgbm_mesa.so                                                u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/libgbm_mesa_wrapper.so                                        u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/gbm/dri_gbm\.so                                               u:object_r:same_process_hal_file:s0
+/vendor/lib(64)?/libdrm\.so                                                     u:object_r:same_process_hal_file:s0
+/vendor/bin/hw/android\.hardware\.graphics\.allocator@4\.0-service\.minigbm		u:object_r:hal_graphics_allocator_default_exec:s0
+/vendor/bin/hw/android\.hardware\.graphics\.allocator@4\.0-service\.minigbm_msm		u:object_r:hal_graphics_allocator_default_exec:s0
+
+# Camera HAL
+/vendor/bin/hw/android\.hardware\.camera\.provider-V1-external-service          u:object_r:hal_camera_default_exec:s0

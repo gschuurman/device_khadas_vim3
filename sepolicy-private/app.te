@@ -1,0 +1,3 @@
+# gpu_access macro references vendor types (sysfs_vpu) which are not accessible from product partition
+# Graphics access for apps is already handled in vendor sepolicy
+# Product partition apps inherit vendor sepolicy rules

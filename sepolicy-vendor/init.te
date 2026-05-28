@@ -1,0 +1,21 @@
+# init.yukawa.usb.rc writes to /config/* to set up USB
+allow init configfs:dir create_dir_perms;
+allow init configfs:file write;
+allow init configfs:lnk_file { create unlink };
+# for symlink /sdcard /mnt/sdcard
+allow init tmpfs:lnk_file create;
+allow init configfs:lnk_file create;
+
+dontaudit init kernel:system module_request;
+
+allow init functionfs:dir { mounton };
+allow init boot_block_device:lnk_file relabelto;
+allow init misc_block_device:blk_file { write };
+allow init vbmeta_block_device:lnk_file { relabelto };
+dontaudit init debugfs_mmc:file { read open setattr };
+allow init mnt_vendor_file:dir mounton;
+allow init sysfs_mmc:file { open write };
+
+# Allow init to setup boot tracing in debugfs
+allow init debugfs_bootreceiver_tracing:dir { add_name write };
+allow init debugfs_bootreceiver_tracing:file create_file_perms;

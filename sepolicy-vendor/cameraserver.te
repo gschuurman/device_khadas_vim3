@@ -1,0 +1,2 @@
+gpu_access(cameraserver)
+allow cameraserver gpu_device:chr_file { ioctl map open read write };

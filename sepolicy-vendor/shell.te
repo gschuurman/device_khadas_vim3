@@ -1,0 +1,17 @@
+allow shell sysfs_power_supply:dir { open read search };
+allow shell serial_device:chr_file { getattr ioctl read write };
+
+get_prop(shell, device_config_runtime_native_boot_prop)
+
+# Suppress audits for kernel syslog read (dmesg) - neverallow prevents direct allow
+dontaudit shell kernel:system syslog_read;
+
+# Suppress audits for vendor property access via getprop (Treble compliance)
+dontaudit shell aac_drc_prop:file { open getattr map };
+dontaudit shell ab_update_gki_prop:file { open getattr };
+
+# Vendor property access via shell violates Treble neverallow
+# Use getprop from vendor context if needed
+
+# b/303346666
+dontaudit shell adbd:{ socket vsock_socket } rw_socket_perms_no_ioctl;

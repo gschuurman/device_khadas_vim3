@@ -1,0 +1,10 @@
+type cec_device, dev_type;
+
+allow domain cec_device:chr_file rw_file_perms;
+
+type led_device, dev_type;
+
+type vbmeta_block_device, dev_type;
+
+# rfkill device for Bluetooth and WiFi radio control
+type rfkill_device, dev_type;

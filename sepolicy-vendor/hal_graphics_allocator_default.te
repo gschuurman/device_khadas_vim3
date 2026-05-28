@@ -1,0 +1,14 @@
+type dmabuf_cma_heap_device, dmabuf_heap_device_type, dev_type;
+gpu_access(hal_graphics_allocator_default);
+
+allow hal_graphics_allocator_default gpu_device:dir getattr;
+allow hal_graphics_allocator_default graphics_device:dir search;
+allow hal_graphics_allocator_default graphics_device:chr_file { open read write ioctl map rw_file_perms};
+allow hal_graphics_allocator_default dmabuf_system_heap_device:chr_file r_file_perms;
+allow hal_graphics_allocator_default dmabuf_cma_heap_device:chr_file r_file_perms;
+
+get_prop(hal_graphics_allocator_default, vendor_graphics_prop)
+
+# Vendor HAL cannot access system properties (Treble violation)
+# Suppress audits for default_prop access
+dontaudit hal_graphics_allocator_default default_prop:file { read open getattr map };

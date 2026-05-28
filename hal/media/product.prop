@@ -1,0 +1,5 @@
+# Codec2: create input surface on the framework side
+debug.stagefright.c2inputsurface=-1
+
+# Use AIDL for media.c2 HAL
+media.c2.hal.selection=aidl

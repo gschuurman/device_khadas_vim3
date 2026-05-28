@@ -1,0 +1,5 @@
+# Allow untrusted_app_30 to access graphics services for rendering
+allow untrusted_app_30 hal_graphics_mapper_service:service_manager find;
+
+# Suppress audits for vendor_default_prop access (Treble compliance)
+dontaudit untrusted_app_30 vendor_default_prop:file { open getattr read map };

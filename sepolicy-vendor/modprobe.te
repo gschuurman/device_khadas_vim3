@@ -1,0 +1,7 @@
+# modprobe needs access to vendor toolbox and libraries for module loading
+# but neverallow rules prevent allowing execute/entrypoint on vendor files
+# Suppress audits instead
+
+dontaudit modprobe vendor_toolbox_exec:file { entrypoint read execute map getattr };
+dontaudit modprobe vendor_file:dir read;
+dontaudit modprobe same_process_hal_file:file { read open getattr map execute };

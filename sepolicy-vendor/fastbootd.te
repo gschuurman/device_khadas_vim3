@@ -1,0 +1,11 @@
+allow fastbootd sysfs_power_supply:dir { open read };
+
+allow fastbootd {
+	userdata_block_device
+	cache_block_device
+	misc_block_device
+	super_block_device
+	vbmeta_block_device
+	recovery_block_device
+	boot_block_device
+}:blk_file { getattr open read write ioctl };

@@ -1,0 +1,12 @@
+allow appdomain same_process_hal_file:file { read execute_no_trans };
+allow { untrusted_app untrusted_app_25 untrusted_app_27 untrusted_app_29 untrusted_app_30 platform_app priv_app system_app } same_process_hal_file:file { read execute_no_trans };
+
+# Allow apps to find graphics mapper service
+allow { platform_app priv_app system_app } hal_graphics_mapper_service:service_manager find;
+
+# Allow apps to read sysfs uevent files for GPU and VPU
+allow { platform_app priv_app system_app } sysfs_gpu:file { getattr open read };
+allow { platform_app priv_app system_app } sysfs_vpu:file { getattr open read };
+
+# Suppress rootfs dir read from untrusted apps (root detection in apps like HeadUnit Revived)
+dontaudit untrusted_app rootfs:dir read;

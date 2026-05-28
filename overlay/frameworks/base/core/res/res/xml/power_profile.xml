@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Power profile for Khadas VIM3 (Amlogic A311D)
+    SoC: A311D (G12B)
+    CPUs: 2x Cortex-A53 @ 1.8 GHz max + 4x Cortex-A73 @ 2.208 GHz max
+-->
+<device name="Android">
+    <!-- All values are rough estimates based on A53/A73 datasheets -->
+
+    <!-- Screen brightness power consumption -->
+    <item name="screen.on">150</item>
+    <item name="screen.full">250</item>
+
+    <!-- CPU power consumption at different speeds (mA) -->
+    <!-- Cluster 0: Cortex-A53 (LITTLE) - cpu0,1 -->
+    <array name="cpu.clusters.cores">
+        <value>2</value> <!-- 2 LITTLE cores -->
+        <value>4</value> <!-- 4 big cores -->
+    </array>
+
+    <!-- LITTLE cluster (A53) power at different speeds -->
+    <array name="cpu.core_speeds.cluster0">
+        <value>1000000</value> <!-- 1.0 GHz -->
+        <value>1200000</value> <!-- 1.2 GHz -->
+        <value>1398000</value> <!-- 1.398 GHz -->
+        <value>1512000</value> <!-- 1.512 GHz -->
+        <value>1608000</value> <!-- 1.608 GHz -->
+        <value>1704000</value> <!-- 1.704 GHz -->
+        <value>1800000</value> <!-- 1.8 GHz -->
+    </array>
+
+    <array name="cpu.core_power.cluster0">
+        <value>25</value>  <!-- 1.0 GHz -->
+        <value>30</value>  <!-- 1.2 GHz -->
+        <value>38</value>  <!-- 1.398 GHz -->
+        <value>45</value>  <!-- 1.512 GHz -->
+        <value>52</value>  <!-- 1.608 GHz -->
+        <value>60</value>  <!-- 1.704 GHz -->
+        <value>70</value>  <!-- 1.8 GHz -->
+    </array>
+
+    <!-- big cluster (A73) power at different speeds -->
+    <array name="cpu.core_speeds.cluster1">
+        <value>1000000</value> <!-- 1.0 GHz -->
+        <value>1200000</value> <!-- 1.2 GHz -->
+        <value>1398000</value> <!-- 1.398 GHz -->
+        <value>1512000</value> <!-- 1.512 GHz -->
+        <value>1608000</value> <!-- 1.608 GHz -->
+        <value>1704000</value> <!-- 1.704 GHz -->
+        <value>1800000</value> <!-- 1.8 GHz -->
+        <value>1908000</value> <!-- 1.908 GHz -->
+        <value>2016000</value> <!-- 2.016 GHz -->
+        <value>2108000</value> <!-- 2.108 GHz -->
+        <value>2208000</value> <!-- 2.208 GHz -->
+    </array>
+
+    <array name="cpu.core_power.cluster1">
+        <value>65</value>   <!-- 1.0 GHz -->
+        <value>80</value>   <!-- 1.2 GHz -->
+        <value>98</value>   <!-- 1.398 GHz -->
+        <value>115</value>  <!-- 1.512 GHz -->
+        <value>135</value>  <!-- 1.608 GHz -->
+        <value>155</value>  <!-- 1.704 GHz -->
+        <value>180</value>  <!-- 1.8 GHz -->
+        <value>210</value>  <!-- 1.908 GHz -->
+        <value>245</value>  <!-- 2.016 GHz -->
+        <value>285</value>  <!-- 2.108 GHz -->
+        <value>330</value>  <!-- 2.208 GHz -->
+    </array>
+
+    <!-- Additional CPU power consumption -->
+    <item name="cpu.suspend">5</item>
+    <item name="cpu.idle">4</item>
+    <item name="cpu.awake">8</item>
+
+    <!-- WiFi -->
+    <item name="wifi.on">2</item>
+    <item name="wifi.active">120</item>
+    <item name="wifi.scan">150</item>
+
+    <!-- Bluetooth -->
+    <item name="bluetooth.active">50</item>
+    <item name="bluetooth.on">2</item>
+
+    <!-- Radio (not present on VIM3) -->
+    <item name="radio.active">0</item>
+    <item name="radio.scanning">0</item>
+
+    <!-- GPS (not present on VIM3) -->
+    <item name="gps.on">0</item>
+
+    <!-- Audio -->
+    <item name="audio">20</item>
+    <item name="video">50</item>
+
+    <!-- Camera -->
+    <item name="camera.flashlight">150</item>
+    <item name="camera.avg">400</item>
+</device>

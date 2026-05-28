@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<display-settings>
+    <config identifier="0" />
+
+    <!-- Display settings (local:0 DSI  -  local:1 HDMI) -->
+    <display
+        name="local:1"
+        shouldShowSystemDecors="true"
+        shouldShowIme="true" />
+</display-settings>

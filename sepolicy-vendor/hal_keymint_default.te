@@ -1,0 +1,3 @@
+# Allow hal_keymint to read serialno property for device identification
+# This is needed for key derivation and attestation
+get_prop(hal_keymint_default, serialno_prop)

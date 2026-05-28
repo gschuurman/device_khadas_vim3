@@ -1,0 +1,60 @@
+# CPU affinity configuration for VIM3 (A311D - big.LITTLE)
+# cpu0-1: Cortex-A53 (LITTLE) @ 1.8 GHz max
+# cpu2-5: Cortex-A73 (big) @ 2.208 GHz max
+# Strategy: Aggressively use big cores for better performance
+
+on init
+    # Configure cpusets for big.LITTLE architecture
+    # Background tasks: LITTLE cores only for power efficiency
+    write /dev/cpuset/background/cpus 0-1
+    write /dev/cpuset/system-background/cpus 0-1
+    write /dev/cpuset/restricted/cpus 0-1
+
+    # Foreground apps: big cores ONLY for maximum performance
+    write /dev/cpuset/foreground/cpus 2-5
+    write /dev/cpuset/foreground_window/cpus 2-5
+
+    # Top-app: big cores ONLY for maximum responsiveness
+    write /dev/cpuset/top-app/cpus 2-5
+
+    # Camera daemon: High performance on big cores
+    write /dev/cpuset/camera-daemon/cpus 2-5
+    write /dev/cpuset/camera-daemon-high-group/cpus 2-5
+    write /dev/cpuset/camera-daemon-mid-group/cpus 2-5
+    write /dev/cpuset/camera-daemon-mid-high-group/cpus 2-5
+
+on boot
+    # Force critical system services to big cores early in boot
+    # This improves boot time and initial responsiveness
+    # Services will be moved by ActivityManager later based on their cgroups
+
+on init
+    # VIM3-specific optimizations (A311D, LPDDR4/4X)
+    write /sys/block/mmcblk0/queue/read_ahead_kb 2048
+    write /sys/block/dm-0/queue/read_ahead_kb 2048
+    write /sys/block/dm-1/queue/read_ahead_kb 2048
+    write /dev/sys/fs/by-name/userdata/data_io_flag 56
+    write /dev/sys/fs/by-name/userdata/node_io_flag 56
+    write /proc/sys/vm/extra_free_kbytes 32768
+    write /proc/sys/kernel/sched_util_clamp_min_rt_default 0
+
+    # change permissions and default values for camera-daemon cpu controller
+    chown system system /dev/cpuctl/camera-daemon/cgroup.procs
+
+    mkdir /dev/cpuset/camera-daemon-high-group
+    write /dev/cpuset/camera-daemon-high-group/mems 0
+    chown system system /dev/cpuset/camera-daemon-high-group/tasks
+    chmod 0664 /dev/cpuset/camera-daemon-high-group/tasks
+
+    mkdir /dev/cpuset/camera-daemon-mid-group
+    write /dev/cpuset/camera-daemon-mid-group/mems 0
+    chown system system /dev/cpuset/camera-daemon-mid-group/tasks
+    chmod 0664 /dev/cpuset/camera-daemon-mid-group/tasks
+
+    mkdir /dev/cpuset/camera-daemon-mid-high-group
+    write /dev/cpuset/camera-daemon-mid-high-group/mems 0
+    chown system system /dev/cpuset/camera-daemon-mid-high-group/tasks
+    chmod 0664 /dev/cpuset/camera-daemon-mid-high-group/tasks
+
+    chown system system /dev/cpuset/cgroup.procs
+

@@ -1,0 +1,14 @@
+# src                                                    mnt_point      type    mnt_flags   fs_mgr_flags
+system                                                   /system        erofs   ro          wait,avb=vbmeta,slotselect,logical,first_stage_mount
+vendor                                                   /vendor        erofs   ro          wait,avb,slotselect,logical,first_stage_mount
+vendor_dlkm                                              /vendor_dlkm   erofs   ro          wait,avb=vbmeta_vendor_dlkm,slotselect,logical,first_stage_mount
+system_dlkm                                              /system_dlkm   erofs   ro          wait,avb=vbmeta_system_dlkm,slotselect,logical,first_stage_mount
+/dev/block/platform/soc/@sdio_node@/by-name/vendor_boot  /vendor_boot   emmc    defaults    recoveryonly,slotselect
+/dev/block/platform/soc/@sdio_node@/by-name/boot         /boot          emmc    defaults    recoveryonly,slotselect,first_stage_mount,avb=boot
+/dev/block/platform/soc/@sdio_node@/by-name/init_boot    /init_boot     emmc    defaults    recoveryonly,slotselect,first_stage_mount,avb=init_boot
+/dev/block/platform/soc/@sdio_node@/by-name/metadata     /metadata      f2fs    noatime,nosuid,nodev,sync  wait,check,formattable,first_stage_mount
+/dev/block/platform/soc/@sdio_node@/by-name/userdata     /data          f2fs    noatime,nosuid,nodev,discard,reserve_root=32768,fsync_mode=nobarrier  latemount,wait,check,quota,fileencryption=aes-256-xts:aes-256-cts,keydirectory=/metadata/vold/metadata_encryption,reservedsize=32M,checkpoint=fs,formattable
+/dev/block/platform/soc/@sdio_node@/by-name/misc         /misc          emmc    defaults    defaults
+/dev/block/zram0                                         none           swap    defaults    zramsize=1073741824,max_comp_streams=4,swapprio=100
+*/block/mmcblk0*                                         auto           auto    defaults    voldmanaged=sdcard1:auto
+*/block/sd*                                              auto           auto    defaults    voldmanaged=usb:auto,noemulatedsd

@@ -1,0 +1,7 @@
+dontaudit bootanim system_data_file:dir r_dir_perms;
+gpu_access(bootanim);
+
+# Allow bootanim to find graphics mapper service
+allow bootanim hal_graphics_mapper_service:service_manager find;
+dontaudit bootanim vendor_default_prop:file { getattr map open };
+

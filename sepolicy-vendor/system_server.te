@@ -1,0 +1,18 @@
+gpu_access(system_server)
+allow system_server sysfs:dir { read open };
+dontaudit system_server  sysfs:file { read open };
+# Can be removed once https://android-review.googlesource.com/c/platform/system/sepolicy/*/2636345 is in system/sepolicy
+allow system_server cgroup:dir create_dir_perms;
+# Can be removed once https://android-review.googlesource.com/c/platform/system/sepolicy/*/2689227 is in system/sepolicy
+allow system_server cgroup:file setattr;
+
+# Allow system_server to find graphics mapper for display management
+allow system_server hal_graphics_mapper_service:service_manager find;
+
+# Allow system_server to read USB device attributes for InputReader
+# Note: USB devices are labeled as sysfs_suspend_stats in file_contexts
+allow system_server sysfs_suspend_stats:file { getattr open read };
+
+# Allow system_server (WifiManager) to read wifi HAL properties
+get_prop(system_server, wifi_hal_prop)
+
