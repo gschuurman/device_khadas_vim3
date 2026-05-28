@@ -18,16 +18,16 @@ package {
 }
 
 genrule {
-    name: "gen_fstab_yukawa_mmc_avb",
+    name: "gen_fstab_vim3_mmc_avb",
     srcs: ["fstab.in.avb"],
-    out: ["fstab.yukawa"],
+    out: ["fstab.vim3"],
     cmd: "sed -e s/@sdio_node@/ffe07000.mmc/ -e s/@id_mmc@/1/ $(in) > $(out)",
 }
 
 
 prebuilt_etc {
-    name: "fstab.yukawa.mmc.avb",
-    src: ":gen_fstab_yukawa_mmc_avb",
+    name: "fstab.vim3.mmc.avb",
+    src: ":gen_fstab_vim3_mmc_avb",
     vendor: true,
     vendor_ramdisk_available: true,
 }

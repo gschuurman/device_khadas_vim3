@@ -36,7 +36,7 @@ ifneq (,$(wildcard $(YUKAWA_VENDOR_PATH)/bt-wifi-firmware))
       $(warning Please run: ./device/khadas/vim3/fetch-vendor-package.sh)
   endif
 else
-  $(warning Missing yukawa vendor package!)
+  $(warning Missing VIM3 vendor package!)
   $(warning Please run: ./device/khadas/vim3/fetch-vendor-package.sh)
 endif
 
@@ -145,17 +145,17 @@ PRODUCT_COPY_FILES += \
 # =============================================================================
 
 PRODUCT_PACKAGES += \
-    fstab.yukawa.mmc.avb \
-    fstab.yukawa.mmc.avb.vendor_ramdisk
+    fstab.vim3.mmc.avb \
+    fstab.vim3.mmc.avb.vendor_ramdisk
 
 # =============================================================================
 # Init / boot scripts and ueventd
 # =============================================================================
 
 PRODUCT_COPY_FILES += \
-    device/khadas/vim3/init.yukawa.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.yukawa.rc \
-    device/khadas/vim3/init.yukawa.usb.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.yukawa.usb.rc \
-    device/khadas/vim3/init.recovery.hardware.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.yukawa.rc \
+    device/khadas/vim3/init.vim3.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.vim3.rc \
+    device/khadas/vim3/init.vim3.usb.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.vim3.usb.rc \
+    device/khadas/vim3/init.recovery.hardware.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.vim3.rc \
     device/khadas/vim3/ueventd.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc
 
 # =============================================================================
@@ -163,7 +163,7 @@ PRODUCT_COPY_FILES += \
 # =============================================================================
 
 PRODUCT_COPY_FILES += \
-    device/khadas/vim3/permissions/yukawa.xml:/system/etc/sysconfig/yukawa.xml
+    device/khadas/vim3/permissions/vim3.xml:/system/etc/sysconfig/vim3.xml
 
 PRODUCT_COPY_FILES += \
     device/khadas/vim3/permissions/android.software.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.xml \

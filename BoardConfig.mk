@@ -155,9 +155,9 @@ BOARD_KERNEL_CMDLINE += log_buf_len=1M
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
 BOARD_KERNEL_CMDLINE += cma=576M
 
-BOARD_BOOTCONFIG += androidboot.hardware=yukawa
+BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
-BOARD_BOOTCONFIG += androidboot.fstab_suffix=yukawa.mmc.avb
+BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.mmc.avb
 BOARD_BOOTCONFIG += androidboot.load_modules_parallel=true
 
 ifneq ($(TARGET_SELINUX_ENFORCE), true)
@@ -218,7 +218,7 @@ BOARD_AVB_VENDOR_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 BOARD_AVB_VENDOR_DLKM_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 BOARD_AVB_SYSTEM_DLKM_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 
-TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_yukawa_mmc_avb
+TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vim3_mmc_avb
 
 # =============================================================================
 # VIM3 kernel — inline build from kernel/khadas/vim3 (GKI android16-6.12 ACK)

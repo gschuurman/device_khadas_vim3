@@ -1,4 +1,4 @@
-import init.yukawa.usb.rc
+import init.vim3.usb.rc
 
 on early-init
     mount debugfs /sys/kernel/debug /sys/kernel/debug mode=755
