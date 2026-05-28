@@ -124,11 +124,6 @@ PRODUCT_PACKAGES += \
     CallLogBackup \
     Twelve
 
-PRODUCT_PACKAGES += \
-    EmbeddedKitchenSinkApp \
-    curl \
-    CarHotwordDetectionServiceOne \
-    AaosCustomizationTool
 
 PRODUCT_SYSTEM_PROPERTIES += \
     android.car.internal.version.platform=1 \
