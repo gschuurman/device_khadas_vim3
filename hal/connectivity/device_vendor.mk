@@ -1,4 +1,8 @@
-# Bluetooth
+# =============================================================================
+# Bluetooth and WiFi HAL — BCM4359 (brcmfmac kernel driver + bcmdhd userspace)
+# =============================================================================
+
+# Bluetooth service
 PRODUCT_PACKAGES += android.hardware.bluetooth-service.default
 
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -22,20 +26,20 @@ PRODUCT_PROPERTY_OVERRIDES += \
     bluetooth.profile.pan.panu.enabled=true \
     bluetooth.profile.vcp.controller.enabled=true
 
-PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
-    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
+# WiFi service and supplicant
+PRODUCT_PACKAGES += \
+    libwpa_client \
+    wificond \
+    wpa_cli \
+    hostapd \
+    wpa_supplicant \
+    wpa_supplicant.conf
 
-# WiFi
-PRODUCT_PACKAGES += libwpa_client wificond wpa_cli
-PRODUCT_PACKAGES += hostapd
-PRODUCT_PACKAGES += wpa_supplicant
-PRODUCT_PACKAGES += wpa_supplicant.conf
-PRODUCT_PROPERTY_OVERRIDES += wifi.interface=wlan0 \
-                              wifi.supplicant_scan_interval=15
+PRODUCT_PROPERTY_OVERRIDES += \
+    wifi.interface=wlan0 \
+    wifi.supplicant_scan_interval=15
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.xml \
-    frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
     device/khadas/vim3/hal/connectivity/wifi/wpa_supplicant_overlay.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/wpa_supplicant_overlay.conf \
     device/khadas/vim3/hal/connectivity/wifi/p2p_supplicant_overlay.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/p2p_supplicant_overlay.conf

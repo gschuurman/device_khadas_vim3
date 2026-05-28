@@ -1,18 +1,13 @@
-
-# Inherit some common AOSP stuff
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
-
-$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
-
-# Inherit some common Lineage stuff.
-$(call inherit-product, vendor/lineage/config/common.mk)
-
-# Inherit device configuration
+# Inherit device configuration (brings in car.mk, vehicle.mk, wireless.mk, etc.)
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
-WITH_GMS := false
+# LineageOS common configuration
+$(call inherit-product, vendor/lineage/config/common.mk)
 
-# 5. Product Definities
+# Google Automotive Apps
+$(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
+
+# Product identity
 PRODUCT_BRAND := Khadas
 PRODUCT_DEVICE := vim3
 PRODUCT_MANUFACTURER := Khadas
@@ -21,3 +16,5 @@ PRODUCT_NAME := lineage_vim3
 
 PRODUCT_BUILD_TYPE := user
 PRODUCT_BUILD_TAGS := release-keys
+
+WITH_GMS := false
