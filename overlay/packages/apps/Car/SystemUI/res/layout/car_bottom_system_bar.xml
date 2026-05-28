@@ -81,6 +81,30 @@
             android:layout_height="match_parent"
             android:layout_weight="1"/>
 
+        <com.android.systemui.car.systembar.CarSystemBarButton
+            android:id="@+id/vol_down"
+            android:contentDescription="Volume down"
+            style="@style/SystemBarButton"
+            systemui:icon="@drawable/car_ic_media_volume_down"
+            systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_DOWN;package=com.schuurman.vim3.volumecontrol;end"
+            systemui:broadcast="true"/>
+
+        <com.android.systemui.car.systembar.CarSystemBarButton
+            android:id="@+id/vol_mute"
+            android:contentDescription="Mute"
+            style="@style/SystemBarButton"
+            systemui:icon="@drawable/car_ic_media_volume_off"
+            systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_MUTE;package=com.schuurman.vim3.volumecontrol;end"
+            systemui:broadcast="true"/>
+
+        <com.android.systemui.car.systembar.CarSystemBarButton
+            android:id="@+id/vol_up"
+            android:contentDescription="Volume up"
+            style="@style/SystemBarButton"
+            systemui:icon="@drawable/car_ic_media_volume_up"
+            systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_UP;package=com.schuurman.vim3.volumecontrol;end"
+            systemui:broadcast="true"/>
+
         <com.android.systemui.car.systembar.AssistantButton
             android:id="@+id/assistant"
             android:contentDescription="@string/system_bar_assistant_label"

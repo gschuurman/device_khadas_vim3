@@ -44,3 +44,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     ScreenOffService \
     Vim3PowerFrameworkOverlay
+
+# Volume control receiver (up / down / mute buttons in the system bar)
+PRODUCT_PACKAGES += \
+    VolumeControl
