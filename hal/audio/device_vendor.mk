@@ -1,4 +1,8 @@
 # BayLibre Generic Audio HAL configuration for Yukawa
+
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.audio.low_latency.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.audio.low_latency.xml
+
 PRODUCT_PACKAGES += \
     tinyplay2 \
     tinycap2 \

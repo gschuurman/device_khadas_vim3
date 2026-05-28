@@ -18,6 +18,10 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml
 
+# WiFi Aware (NAN) — enables faster peer discovery for Wireless Android Auto
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.wifi.aware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.aware.xml
+
 # Android Auto Projection RRO
 PRODUCT_PACKAGES += \
     AndroidAutoProjectionRro

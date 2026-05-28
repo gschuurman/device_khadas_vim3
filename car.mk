@@ -52,6 +52,7 @@ BOARD_SEPOLICY_DIRS += device/google_car/common/sepolicy
 BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
 
 PRODUCT_PACKAGES += \
+    CarNotification \
     android.hardware.broadcastradio-service.default \
     android.hardware.automotive.remoteaccess@V2-default-service \
     android.hardware.automotive.ivn@V1-default-service \
@@ -132,3 +133,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_SYSTEM_PROPERTIES += \
     android.car.internal.version.platform=1 \
     ro.fw.multiuser.headless_system_user=true
+
+PRODUCT_PRODUCT_PROPERTIES += \
+    persist.settings.large_screen_opt.enabled=true
