@@ -1,0 +1,12 @@
+#####################################
+# gpu_access(client_domain)
+# Allow client_domain to communicate with the GPU
+define(`gpu_access', `
+allow $1 gpu_device:dir { open read search };
+allow $1 sysfs_gpu:dir search;
+allow $1 sysfs_gpu:file { getattr open read };
+allow $1 sysfs_vpu:dir search;
+allow $1 sysfs_vpu:file { getattr open read };
+dontaudit $1 graphics_device:chr_file getattr;
+dontaudit $1 vendor_default_prop:file { open getattr read map };
+')

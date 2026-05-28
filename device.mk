@@ -1,5 +1,6 @@
 PRODUCT_IS_AUTOMOTIVE := true
 TARGET_VIM3 := true
+TARGET_DEV_BOARD := vim3
 PRODUCT_DISPLAY_DENSITY := 100
 PRODUCT_INIT_BOOT_IMAGE_HEADER_VERSION := 4
 
@@ -68,9 +69,6 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/developer_gsi_keys.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
 
 PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD := lz4
-
-# pKVM — VIM3 has 4 GB RAM, enable virtualization
-$(call inherit-product-if-exists, packages/modules/Virtualization/apex/product_packages.mk)
 
 PRODUCT_RUNTIMES := runtime_libart_default
 
@@ -283,9 +281,6 @@ $(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
 # =============================================================================
 # VIM3-specific packages and properties
 # =============================================================================
-
-DEVICE_MANIFEST_FILE += \
-    device/khadas/vim3/manifest.xml
 
 BOARD_VENDOR_RAMDISK_PACKAGES += \
     snapuserd \
