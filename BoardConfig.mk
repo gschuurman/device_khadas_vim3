@@ -2,7 +2,7 @@ TARGET_VIM3 := true
 TARGET_DEV_BOARD := vim3
 TARGET_BOOTLOADER_BOARD_NAME := vim3
 
-BOARD_KERNEL_IMAGE_NAME := Image.lz4
+BOARD_KERNEL_IMAGE_NAME := Image
 
 TARGET_SELINUX_ENFORCE := false
 
@@ -59,7 +59,7 @@ BOARD_VNDK_VERSION := current
 BOARD_AVB_ENABLE := true
 BOARD_AVB_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
-BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_KEY_PATH := device/khadas/vim3/avb/vim3_avb.pem
 
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_KERNEL := false
@@ -154,6 +154,9 @@ BOARD_KERNEL_CMDLINE += log_buf_len=1M
 # Disable: FWSUP (0x2000) to fix WPA2 handshake, SAE (0x80000) unsupported by 2017 fw, WOWL (0x8) causes scan storms
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
 BOARD_KERNEL_CMDLINE += cma=576M
+# Override compiled-in kvm-arm.mode=protected — GICv2 + pKVM protected mode
+# hangs A73 secondary CPUs in EL2 init; nvhe works fine for host KVM use.
+BOARD_KERNEL_CMDLINE += kvm-arm.mode=nvhe
 
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
@@ -187,13 +190,13 @@ PRODUCT_PRIVATE_SEPOLICY_DIRS += \
 DEVICE_MANIFEST_FILE += device/khadas/vim3/manifest.xml
 
 # Enable chained vbmeta for boot images
-BOARD_AVB_BOOT_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_BOOT_KEY_PATH := device/khadas/vim3/avb/vim3_avb.pem
 BOARD_AVB_BOOT_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_BOOT_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_BOOT_ROLLBACK_INDEX_LOCATION := 2
 
 # Enable chained vbmeta for init_boot images
-BOARD_AVB_INIT_BOOT_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_INIT_BOOT_KEY_PATH := device/khadas/vim3/avb/vim3_avb.pem
 BOARD_AVB_INIT_BOOT_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_INIT_BOOT_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_INIT_BOOT_ROLLBACK_INDEX_LOCATION := 3
@@ -201,14 +204,14 @@ BOARD_AVB_INIT_BOOT_ROLLBACK_INDEX_LOCATION := 3
 # Enabled chained vbmeta for vendor_dlkm
 BOARD_AVB_VBMETA_CUSTOM_PARTITIONS := vendor_dlkm system_dlkm
 BOARD_AVB_VBMETA_VENDOR_DLKM := vendor_dlkm
-BOARD_AVB_VBMETA_VENDOR_DLKM_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_VBMETA_VENDOR_DLKM_KEY_PATH := device/khadas/vim3/avb/vim3_avb.pem
 BOARD_AVB_VBMETA_VENDOR_DLKM_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_VBMETA_VENDOR_DLKM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_VBMETA_VENDOR_DLKM_ROLLBACK_INDEX_LOCATION := 4
 
 # Enabled chained vbmeta for system_dlkm
 BOARD_AVB_VBMETA_SYSTEM_DLKM := system_dlkm
-BOARD_AVB_VBMETA_SYSTEM_DLKM_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_VBMETA_SYSTEM_DLKM_KEY_PATH := device/khadas/vim3/avb/vim3_avb.pem
 BOARD_AVB_VBMETA_SYSTEM_DLKM_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_VBMETA_SYSTEM_DLKM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_VBMETA_SYSTEM_DLKM_ROLLBACK_INDEX_LOCATION := 5
@@ -230,8 +233,9 @@ TARGET_KERNEL_CONFIG := \
     amlogic_gki.config
 TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.config
 
-# DTB path within KERNEL_OUT for boot image assembly
-TARGET_DTB_LIST_WILDCARD := arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3
+# Paths relative to $(DTB_OUT)/arch/arm64/boot/dts/ — order matters: U-Boot adtb_idx=1 selects index 1.
+# Mirrors original vendor_boot layout: VIM3L at index 0, VIM3 (HDMI) at index 1.
+TARGET_DTB_LIST_WILDCARD := amlogic/meson-sm1-khadas-vim3l amlogic/meson-g12b-a311d-khadas-vim3
 
 # DTBO — pack from the dtbo compiled as part of the main kernel build
 TARGET_NEEDS_DTBOIMAGE := true
