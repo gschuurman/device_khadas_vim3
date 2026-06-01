@@ -154,10 +154,6 @@ BOARD_KERNEL_CMDLINE += log_buf_len=1M
 # Disable: FWSUP (0x2000) to fix WPA2 handshake, SAE (0x80000) unsupported by 2017 fw, WOWL (0x8) causes scan storms
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
 BOARD_KERNEL_CMDLINE += cma=576M
-# Override compiled-in kvm-arm.mode=protected — GICv2 + pKVM protected mode
-# hangs A73 secondary CPUs in EL2 init; nvhe works fine for host KVM use.
-BOARD_KERNEL_CMDLINE += kvm-arm.mode=nvhe
-
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
 BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.mmc.avb
