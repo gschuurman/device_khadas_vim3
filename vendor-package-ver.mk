@@ -1,2 +1,1 @@
-EXPECTED_YUKAWA_VENDOR_VERSION := 20251218
-YUKAWA_VENDOR_PATH := vendor/amlogic/yukawa
+VENDOR_VIM3_PATH := vendor/khadas/vim3

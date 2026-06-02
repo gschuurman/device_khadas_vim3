@@ -8,5 +8,10 @@
     "repository": "android_kernel_khadas_vim3_overlay",
     "branch": "lineage-23.2",
     "path": "kernel/khadas/vim3_overlay"
+  },
+  {
+    "repository": "vendor_khadas_vim3",
+    "branch": "lineage-23.2",
+    "path": "vendor/khadas/vim3"
   }
 ]

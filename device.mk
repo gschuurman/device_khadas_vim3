@@ -27,26 +27,7 @@ $(call inherit-product, device/khadas/vim3/developer.mk)
 # =============================================================================
 
 include device/khadas/vim3/vendor-package-ver.mk
-ifneq (,$(wildcard $(YUKAWA_VENDOR_PATH)/bt-wifi-firmware))
-  ifneq (,$(wildcard $(YUKAWA_VENDOR_PATH)/bt-wifi-firmware/$(EXPECTED_YUKAWA_VENDOR_VERSION)/version.mk))
-    include $(YUKAWA_VENDOR_PATH)/bt-wifi-firmware/$(EXPECTED_YUKAWA_VENDOR_VERSION)/version.mk
-    ifneq ($(TARGET_YUKAWA_VENDOR_VERSION), $(EXPECTED_YUKAWA_VENDOR_VERSION))
-      $(warning TARGET_YUKAWA_VENDOR_VERSION ($(TARGET_YUKAWA_VENDOR_VERSION)) does not match.)
-      $(warning Please run: ./device/khadas/vim3/fetch-vendor-package.sh)
-    endif
-  else
-      $(warning TARGET_YUKAWA_VENDOR_VERSION undefined.)
-      $(warning Please run: ./device/khadas/vim3/fetch-vendor-package.sh)
-  endif
-else
-  $(warning Missing VIM3 vendor package!)
-  $(warning Please run: ./device/khadas/vim3/fetch-vendor-package.sh)
-endif
-
-$(call inherit-product-if-exists, $(YUKAWA_VENDOR_PATH)/bt-wifi-firmware/$(EXPECTED_YUKAWA_VENDOR_VERSION)/vendor.mk)
-$(call inherit-product-if-exists, $(YUKAWA_VENDOR_PATH)/video_firmware/$(EXPECTED_YUKAWA_VENDOR_VERSION)/vendor.mk)
-$(call inherit-product-if-exists, $(YUKAWA_VENDOR_PATH)/gpu/$(EXPECTED_YUKAWA_VENDOR_VERSION)/vendor.mk)
-$(call inherit-product-if-exists, $(YUKAWA_VENDOR_PATH)/bootloader/$(EXPECTED_YUKAWA_VENDOR_VERSION)/vendor.mk)
+$(call inherit-product-if-exists, $(VENDOR_VIM3_PATH)/vendor.mk)
 
 # =============================================================================
 # Soong namespaces

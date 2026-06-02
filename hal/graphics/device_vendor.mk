@@ -1,5 +1,5 @@
 # Select the correct Mesa variant for VIM3 (A311D = Cortex-A73)
-PRODUCT_SOONG_NAMESPACES += vendor/amlogic/yukawa/gpu/$(EXPECTED_YUKAWA_VENDOR_VERSION)/mesa/a73
+PRODUCT_SOONG_NAMESPACES += vendor/khadas/vim3/gpu/mesa/a73
 PRODUCT_SOONG_NAMESPACES += external/minigbm/gbm_mesa_driver/a73
 PRODUCT_PACKAGES += libgbm_mesa_wrapper_a73
 
@@ -59,4 +59,3 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_VENDOR_PROPERTIES += \
     ro.opengles.version=196864
 
-$(call inherit-product-if-exists, $(YUKAWA_VENDOR_PATH)/gpu/$(EXPECTED_YUKAWA_VENDOR_VERSION)/vendor.mk)
