@@ -153,6 +153,8 @@ BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M
 # Disable: FWSUP (0x2000) to fix WPA2 handshake, SAE (0x80000) unsupported by 2017 fw, WOWL (0x8) causes scan storms
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
+# Create p2p0 virtual interface at driver init (required by Android wpa_supplicant P2P stack)
+BOARD_KERNEL_CMDLINE += brcmfmac.p2pon=1
 BOARD_KERNEL_CMDLINE += cma=576M
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
