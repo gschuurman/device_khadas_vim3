@@ -2,7 +2,9 @@
 # AAOS platform setup — car service stack and car-level configuration
 # =============================================================================
 
-SYSTEM_OPTIMIZE_JAVA := true
+# CarServiceHelperService accesses hidden APIs in system_server — R8 must not strip them.
+# Google's pre_google_car.mk explicitly sets this false for the same reason.
+SYSTEM_OPTIMIZE_JAVA := false
 
 DEVICE_FRAMEWORK_MANIFEST_FILE += device/google_car/common/manifest.xml
 
