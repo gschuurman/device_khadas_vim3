@@ -20,7 +20,7 @@ allow carservice_app sysfs_fs_ext4_features:dir { search read open };
 allow carservice_app sysfs_fs_ext4_features:file { getattr open read };
 
 # Silence noisy probes that are harmless
-dontaudit gmscore_app adbd_prop:file { getattr map open read };
+# (adbd_prop is a private system type — not referenceable from vendor policy)
 dontaudit priv_app device:dir open;
 
 # Suppress rootfs dir read from untrusted apps (root detection in apps like HeadUnit Revived)

@@ -22,6 +22,3 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.aware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.aware.xml
 
-# WiFi stability fix RC (loaded by init from vendor/etc/init/)
-PRODUCT_PACKAGES += \
-    init.wifi_fix.rc
