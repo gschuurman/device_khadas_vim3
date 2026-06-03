@@ -2,3 +2,5 @@ allow hal_thermal_default sysfs_thermal:dir r_dir_perms;
 allow hal_thermal_default sysfs_thermal:file rw_file_perms;
 allow hal_thermal_default sysfs_thermal:lnk_file read;
 allow hal_thermal_default proc_stat:file r_file_perms;
+# /sys/class/thermal dir itself is labeled generic sysfs, not sysfs_thermal
+allow hal_thermal_default sysfs:dir r_dir_perms;

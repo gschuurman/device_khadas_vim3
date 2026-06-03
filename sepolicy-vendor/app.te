@@ -5,9 +5,23 @@ allow { untrusted_app untrusted_app_25 untrusted_app_27 untrusted_app_29 untrust
 allow { platform_app priv_app system_app } hal_graphics_mapper_service:service_manager find;
 
 # Allow apps to read sysfs uevent files for GPU and VPU
+# Note: AOSP system/sepolicy already covers appdomain for sysfs_gpu; these cover vendor-only types
 allow { platform_app priv_app system_app } sysfs_gpu:file { getattr open read };
 allow { untrusted_app untrusted_app_25 untrusted_app_27 untrusted_app_29 untrusted_app_30 platform_app priv_app system_app } sysfs_vpu:dir search;
 allow { untrusted_app untrusted_app_25 untrusted_app_27 untrusted_app_29 untrusted_app_30 platform_app priv_app system_app } sysfs_vpu:file { getattr open read };
+
+# gmscore_app probes GPU/VPU hardware for capability enumeration
+allow gmscore_app sysfs_gpu:file { getattr open read };
+allow gmscore_app sysfs_vpu:dir search;
+allow gmscore_app sysfs_vpu:file { getattr open read };
+
+# CarService reads /sys/fs/ext4/<dev>/lifetime_write_kbytes for storage health diagnostics
+allow carservice_app sysfs_fs_ext4_features:dir { search read open };
+allow carservice_app sysfs_fs_ext4_features:file { getattr open read };
+
+# Silence noisy probes that are harmless
+dontaudit gmscore_app adbd_prop:file { getattr map open read };
+dontaudit priv_app device:dir open;
 
 # Suppress rootfs dir read from untrusted apps (root detection in apps like HeadUnit Revived)
 dontaudit untrusted_app rootfs:dir read;

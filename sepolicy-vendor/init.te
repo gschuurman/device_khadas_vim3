@@ -19,3 +19,12 @@ allow init sysfs_mmc:file { open write };
 # Allow init to setup boot tracing in debugfs
 allow init debugfs_bootreceiver_tracing:dir { add_name write };
 allow init debugfs_bootreceiver_tracing:file create_file_perms;
+
+# init.wifi_fix.rc runs 'cmd wifi set-wifi-enabled' at boot_completed via exec_background.
+# cmd stays in the init domain (no transition), so these binder/exec rules are needed.
+allow init system_file:file execute_no_trans;
+allow init servicemanager:binder { call transfer };
+allow init system_server:binder { call transfer };
+allow system_server init:binder call;
+allow servicemanager init:binder transfer;
+allow init wifi_service:service_manager find;

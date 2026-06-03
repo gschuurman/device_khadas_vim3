@@ -19,11 +19,23 @@
 /dev/v4l-subdev.*      u:object_r:video_device:s0
 
 
+# GPU sysfs — labeled so AOSP system policy allow rules for sysfs_gpu take effect
+# (surfaceflinger, bootanim, appdomain, graphics HALs already allowed in AOSP system/sepolicy)
+/sys/devices/platform/soc/ffe40000\.gpu(/.*)?                                           u:object_r:sysfs_gpu:s0
+
+# eMMC sysfs — init writes to queue/discard_max_bytes at boot for tuning
+/sys/devices/platform/soc/ffe07000\.mmc(/.*)?                                           u:object_r:sysfs_mmc:s0
+
+# ext4 per-filesystem stats — CarService reads lifetime_write_kbytes for storage diagnostics
+/sys/fs/ext4(/.*)?                                                                       u:object_r:sysfs_fs_ext4_features:s0
+
 /sys/devices/platform/soc/ffe03000.sd/mmc_host(/.*)?             u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/wakeup(/.*)? u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/alarmtimer.0.auto(/.*)? u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/wakeup1(/.*)? u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc0/hctosys       u:object_r:sysfs_rtc:s0
+# rtc1 alarmtimer wakeup — system_suspend reads this for wakeup source name
+/sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc1/alarmtimer.0.auto(/.*)?  u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ffd00000.bus/ffd24000.serial(/.*)?     u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ffe09000.usb/ff500000.usb(/.*)?        u:object_r:sysfs_suspend_stats:s0
 
