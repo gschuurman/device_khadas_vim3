@@ -27,7 +27,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
     bluetooth.profile.vcp.controller.enabled=true
 
 # WiFi service and supplicant
+# android.hardware.wifi-service is the IWifi vendor HAL. Without it the framework
+# logs "Vendor Hal not supported" and cannot create the dynamic p2p0 interface, so
+# WiFi-Direct/P2P stays disabled (wpa_supplicant: "Could not read interface p2p0
+# flags: No such device"), which breaks wireless Android Auto. The AOSP AIDL HAL
+# manages STA/AP/P2P iface creation over nl80211 and works with the brcmfmac driver.
 PRODUCT_PACKAGES += \
+    android.hardware.wifi-service \
     libwpa_client \
     wificond \
     wpa_cli \

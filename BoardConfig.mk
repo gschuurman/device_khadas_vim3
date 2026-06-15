@@ -153,8 +153,11 @@ BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M
 # Disable: FWSUP (0x2000) to fix WPA2 handshake, SAE (0x80000) unsupported by 2017 fw, WOWL (0x8) causes scan storms
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
-# Create p2p0 virtual interface at driver init (required by Android wpa_supplicant P2P stack)
-BOARD_KERNEL_CMDLINE += brcmfmac.p2pon=1
+# Do NOT set brcmfmac.p2pon=1: the hardware allows only one P2P-device interface
+# (#{ P2P-device } <= 1), and p2pon=1 pre-claims it at driver init. That makes the
+# Android wpa_supplicant P2P stack's attempt to create its own p2p0 fail with EBUSY,
+# leaving WiFi-Direct stuck disabled (breaks wireless Android Auto). With p2pon unset,
+# the framework creates p2p0 on demand and P2P works.
 BOARD_KERNEL_CMDLINE += cma=576M
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
