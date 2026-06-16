@@ -42,10 +42,26 @@ BOARD_INSTALL_OPENCL := true
 # BT configs
 BOARD_HAVE_BLUETOOTH := true
 
-# WiFi - brcmfmac (mainline kernel) with bcmdhd libs for compatibility
+# WiFi - mainline brcmfmac kernel driver (BCM4359).
+# IMPORTANT: do NOT use lib_driver_cmd_bcmdhd here. That private-command library
+# issues bcmdhd-proprietary ioctls (SIOCDEVPRIVATE+1: SET_AP_WPS_P2P_IE, COUNTRY,
+# BTCOEXMODE, SETSUSPENDMODE, ...) that the brcmfmac driver does not implement, so
+# every call fails. After DRV_NUMBER_SEQUENTIAL_ERRORS failures the lib raises
+# CTRL-EVENT-DRIVER-STATE HANGED. STA tolerates it, but during WiFi-Direct GO/AP
+# bring-up the SET_AP_WPS_P2P_IE failure + HANGED aborts hostapd interface setup
+# ("Unable to setup interface" -> P2P-GROUP-FORMATION-FAILURE), breaking wireless
+# Android Auto. lib_driver_cmd_fallback is a no-op stub (cmds return success, no
+# ioctl, no HANGED); WPS/P2P IEs then ride the standard NL80211 beacon brcmfmac
+# supports. (Root-caused live 2026-06-16; see project-wireless-android-auto memory.)
+# lib_driver_cmd_fallback lives in its own soong_namespace
+# (external/wpa_supplicant_8/wpa_supplicant/wpa_supplicant), which the root namespace
+# cannot resolve by bare name. That namespace also redefines the wpa_supplicant/hostapd
+# binaries, so it can NOT be added to PRODUCT_SOONG_NAMESPACES (kati: "hostapd already
+# defined"). Reference the lib by fully-qualified //namespace:module path instead, as
+# device/generic/goldfish does for its private lib.
 BOARD_WLAN_DEVICE := bcmdhd
-BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_bcmdhd
-BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_bcmdhd
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB := //external/wpa_supplicant_8/wpa_supplicant/wpa_supplicant:lib_driver_cmd_fallback
+BOARD_HOSTAPD_PRIVATE_LIB := //external/wpa_supplicant_8/wpa_supplicant/wpa_supplicant:lib_driver_cmd_fallback
 WPA_SUPPLICANT_VERSION := VER_0_8_X
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_HOSTAPD_DRIVER := NL80211
@@ -153,11 +169,12 @@ BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M
 # Disable: FWSUP (0x2000) to fix WPA2 handshake, SAE (0x80000) unsupported by 2017 fw, WOWL (0x8) causes scan storms
 BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
-# Do NOT set brcmfmac.p2pon=1: the hardware allows only one P2P-device interface
-# (#{ P2P-device } <= 1), and p2pon=1 pre-claims it at driver init. That makes the
-# Android wpa_supplicant P2P stack's attempt to create its own p2p0 fail with EBUSY,
-# leaving WiFi-Direct stuck disabled (breaks wireless Android Auto). With p2pon unset,
-# the framework creates p2p0 on demand and P2P works.
+# Do NOT set brcmfmac.p2pon=1. It does NOT fix WiFi-Direct (tested live 2026-06-15):
+# on this firmware (BCM4359, brcmfmac 2017) p2pon=1 does not create a static p2p0
+# netdev at init, and even p2pon=1 plus a manually-created p2p0 still fails to bring
+# P2P up. The real WiFi-Direct fix is wifi.direct.interface=p2p-dev-wlan0, set in
+# hal/connectivity/device_vendor.mk (the brcmfmac P2P-device is a non-netdev wdev, not
+# a p2p0 netdev). Leave p2pon unset so brcmfmac uses its dynamic P2P-device model.
 BOARD_KERNEL_CMDLINE += cma=576M
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
