@@ -1,0 +1,12 @@
+// apply_ota: shell helper to apply an A/B OTA zip via update_engine over adb,
+// without recovery or UI. Installed to /system/bin/apply_ota. Run it as root
+// (`adb root` -> the userdebug su domain works under both permissive and
+// enforcing). See apply_ota.sh for usage. NOTE: a non-root shell cannot apply an
+// OTA under enforcing SELinux - update_engine and the pushed package in
+// /data/local/tmp are reachable only by core/allowlisted domains, and that
+// allowlist can't be extended from the device tree. So no init service / custom
+// sepolicy is shipped; under permissive a non-root run still works incidentally.
+sh_binary {
+    name: "apply_ota",
+    src: "apply_ota.sh",
+}

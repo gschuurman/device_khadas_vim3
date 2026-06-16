@@ -96,7 +96,8 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES_DEBUG += \
     bootctl \
-    update_engine_client
+    update_engine_client \
+    apply_ota
 
 PRODUCT_PACKAGES += \
     com.android.hardware.boot \
