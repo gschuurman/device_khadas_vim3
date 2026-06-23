@@ -55,7 +55,7 @@ BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
 
 PRODUCT_PACKAGES += \
     CarNotification \
-    android.hardware.broadcastradio-service.default \
+    android.hardware.broadcastradio-service.rtlsdr \
     android.hardware.automotive.remoteaccess@V2-default-service \
     android.hardware.automotive.ivn@V1-default-service \
     CarConnectivityOverlay \

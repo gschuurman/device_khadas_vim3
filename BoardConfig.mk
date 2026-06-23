@@ -176,6 +176,16 @@ BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
 # hal/connectivity/device_vendor.mk (the brcmfmac P2P-device is a non-netdev wdev, not
 # a p2p0 netdev). Leave p2pon unset so brcmfmac uses its dynamic P2P-device model.
 BOARD_KERNEL_CMDLINE += cma=576M
+# Pin ALSA card indices so they're deterministic across boots/replug. snd-aloop and
+# snd-usb-audio are both built-in (=y), so their module params go on the kernel cmdline.
+# snd-aloop (native radio loopback) -> card 7. USB audio pinned by VID:PID:
+#   ICUSBAUDIO7D (0d8c:0102, car media output) -> card 5
+#   MS210x       (534d:0021, HDMI capture)      -> card 6
+# Onboard axg sound card loads later as a module and takes a low free index (0).
+# NOTE: media output is also name-resolved (persist.vendor.audio.primary.card_name) so it
+# tracks ICUSBAUDIO7D regardless; these pins just make the whole layout predictable.
+BOARD_KERNEL_CMDLINE += snd_aloop.index=7
+BOARD_KERNEL_CMDLINE += snd_usb_audio.vid=0x0d8c,0x534d snd_usb_audio.pid=0x0102,0x0021 snd_usb_audio.index=5,6
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
 BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.mmc.avb

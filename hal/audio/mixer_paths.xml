@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <mixer>
     <ctl name="Playback Channel Map" value="3 4 7 8 5 6 0 0" />
-    <ctl name="Speaker Playback Volume" value="70" />
+    <ctl name="Speaker Playback Volume" value="196 196 196 196 196 196 196 196" />
     <ctl name="Speaker Playback Switch" value="1" />
     
     <path name="bus0_media_out">

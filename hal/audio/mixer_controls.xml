@@ -30,7 +30,11 @@
         <set name="Mic Playback Volume" value="0"/>
 
         <set name="Speaker Playback Switch" value="1"/>
-        <set name="Speaker Playback Volume" value="70"/>
+        <!-- 8-channel control (FL FR FC LFE RL RR SL SR). MUST list all 8 values:
+             the parser sets only the channels it's given a (comma-separated) token for,
+             so a single "70" set ONLY FL and left FR..SR at the hw default (196),
+             which made all audio lean right. Keep all channels equal for L/R balance. -->
+        <set name="Speaker Playback Volume" value="196,196,196,196,196,196,196,196"/>
 
         <set name="Mic Capture Switch" value="1"/>
         <set name="PCM Capture Switch" value="1"/>

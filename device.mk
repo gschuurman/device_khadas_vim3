@@ -169,6 +169,7 @@ $(call inherit-product, device/khadas/vim3/hal/camera/camera.mk)
 $(call inherit-product, device/khadas/vim3/hal/audio/device_vendor.mk)
 $(call inherit-product, device/khadas/vim3/hal/media/device_vendor.mk)
 $(call inherit-product, device/khadas/vim3/hal/display/display_wake.mk)
+$(call inherit-product, device/khadas/vim3/hal/broadcastradio/device_vendor.mk)
 
 # Thermal HAL
 PRODUCT_PACKAGES += \

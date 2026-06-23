@@ -1,0 +1,15 @@
+# Extra permissions for the RTL-SDR backed BroadcastRadio HAL. It reuses the AOSP
+# hal_broadcastradio_default domain (our binary is labeled hal_broadcastradio_default_exec
+# in sepolicy-vendor/file_contexts), but unlike the mock default it talks to real hardware:
+# the RTL-SDR dongle over USB.
+allow hal_broadcastradio_default usb_device:dir r_dir_perms;
+allow hal_broadcastradio_default usb_device:chr_file rw_file_perms;
+
+# NOTE: this HAL also writes decoded PCM into the snd-aloop "Loopback" card (/dev/snd/*),
+# but a platform neverallow (system/sepolicy/private/hal_audio.te) forbids any non-audio-HAL
+# domain from accessing audio_device:chr_file, so we CANNOT add that allow here without a
+# build-time neverallow failure. This device runs SELinux permissive, so the loopback write
+# is granted at runtime anyway (the avc denial is only logged). To run under ENFORCING the
+# proper fix is to relabel the pinned Loopback playback node (/dev/snd/pcmC7D0p, since
+# snd_aloop.index=7) to a custom dev_type (e.g. radio_loopback_device) and allow that type
+# here, leaving the capture side as audio_device for the audio HAL. Deferred to P4.

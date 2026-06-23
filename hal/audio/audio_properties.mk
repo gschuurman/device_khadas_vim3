@@ -3,13 +3,17 @@
 # These properties configure the BayLibre Generic Audio HAL for Yukawa.
 
 # ALSA card and device configuration
-# Use card name for dynamic detection (handles USB devices changing card indices)
-# Fall back to card 0, device 0 if name not found
+# Primary resolution is by NAME (PrimaryMixer::getAlsaCard greps /proc/asound/cards).
+# Card indices are also pinned in BoardConfig.mk (snd_usb_audio ... index=5,6; snd_aloop
+# index=7) so ICUSBAUDIO7D=5, MS210x=6, Loopback=7, onboard axg=0. The explicit
+# persist.vendor.audio.primary.card=5 is the FALLBACK if name resolution ever misses, so we
+# fall back to ICUSBAUDIO7D (card 5) rather than the HAL default card 0 (= onboard axg).
 
 AUDIO_CARD_NAME := ICUSBAUDIO7D
 
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.vendor.audio.primary.card_name=$(AUDIO_CARD_NAME) \
+    persist.vendor.audio.primary.card=5 \
     persist.vendor.audio.primary.device=0
 
 # Mixer controls configuration file location

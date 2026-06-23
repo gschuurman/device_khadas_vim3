@@ -1,0 +1,71 @@
+//
+// Copyright (C) 2026 The LineageOS Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// NOTE: this binary statically links librtlsdr (GPLv2), so the shipped
+// android.hardware.broadcastradio-service.rtlsdr binary is effectively GPLv2.
+
+cc_binary {
+    name: "android.hardware.broadcastradio-service.rtlsdr",
+    relative_install_path: "hw",
+    vendor: true,
+    init_rc: ["broadcastradio-rtlsdr.rc"],
+    vintf_fragments: ["broadcastradio-rtlsdr.xml"],
+    defaults: [
+        "latest_android_hardware_broadcastradio_ndk_static",
+    ],
+    srcs: [
+        "main.cpp",
+        "BroadcastRadio.cpp",
+        "DeviceManager.cpp",
+        "RtlSdrSource.cpp",
+        "LoopbackSink.cpp",
+        "WelleDab.cpp",
+    ],
+    static_libs: [
+        "android.hardware.broadcastradio@common-utils-aidl-lib-latest",
+        "android.hardware.broadcastradio@common-utils-lib",
+        "librtlsdr",
+        "librtlsdr_convenience",
+        "libfmdemod",
+        "libwellecore",
+    ],
+    shared_libs: [
+        "libbase",
+        "libbinder_ndk",
+        "liblog",
+        "libcutils",
+        "libusb",
+        "libtinyalsa",
+    ],
+    // welle-core (libwellecore) throws internally; keep exception unwinding in the
+    // HAL TUs that call into it. RTTI is intentionally left OFF: it's per-TU and the
+    // HAL never dynamic_casts welle types, while enabling it makes BroadcastRadio's
+    // vtable reference typeinfo for BnBroadcastRadio (built -fno-rtti by the AIDL
+    // backend) -> undefined-symbol at link.
+    cppflags: [
+        "-fexceptions",
+    ],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        // Must match libwellecore: welle headers (fft.h etc.) are header-only gated on
+        // these. Without -DKISSFFT, fft.h pulls in <fftw3.h> which we don't ship.
+        "-DKISSFFT",
+        "-DOPT_GENERIC",
+        // welle's ringbuffer.h uses assignment-to-volatile (pre-C++20 idiom).
+        "-Wno-deprecated-volatile",
+    ],
+}

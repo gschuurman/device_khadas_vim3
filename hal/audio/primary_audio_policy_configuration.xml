@@ -11,6 +11,7 @@
         <item>bus6_notification_out</item>
         <item>bus7_system_sound_out</item>
         <item>Built-In Mic</item>
+        <item>FM Tuner</item>
     </attachedDevices>
 
     <defaultOutputDevice>bus0_media_out</defaultOutputDevice>
@@ -26,6 +27,13 @@
         </mixPort>
 
         <mixPort name="primary input" role="sink">
+            <profile format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="48000"
+                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+
+        <!-- Native radio: capture port for the FM/DAB tuner (fed via snd-aloop Loopback). -->
+        <mixPort name="fm_tuner input" role="sink">
             <profile format="AUDIO_FORMAT_PCM_16_BIT"
                      samplingRates="48000"
                      channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
@@ -65,6 +73,13 @@
 
     <devicePorts>
         <devicePort tagName="Built-In Mic" type="AUDIO_DEVICE_IN_BUILTIN_MIC" role="source" address="bottom_mic">
+            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+
+        <!-- Native radio FM/DAB tuner source. The audio HAL captures this from the
+             snd-aloop "Loopback" card (resolved by name in StreamPrimary; the CARD_7_DEV_1
+             address mirrors the pinned snd_aloop.index=7, device 1 = capture side). -->
+        <devicePort tagName="FM Tuner" type="AUDIO_DEVICE_IN_FM_TUNER" role="source" address="CARD_7_DEV_1">
             <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
         </devicePort>
 
@@ -133,6 +148,7 @@
 
     <routes>
         <route type="mix" sink="primary input" sources="Built-In Mic"/>
+        <route type="mix" sink="fm_tuner input" sources="FM Tuner"/>
         <route type="mix" sink="bus0_media_out" sources="mixport_bus0_media_out"/>
         <route type="mix" sink="bus1_navigation_out" sources="mixport_bus1_navigation_out"/>
         <route type="mix" sink="bus2_voice_command_out" sources="mixport_bus2_voice_command_out"/>

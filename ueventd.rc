@@ -19,7 +19,10 @@ subsystem usbmisc
 /dev/nanohub              0660   system     system
 /dev/nanohub_comms        0660   system     system
 
-/dev/bus/usb/*/*          0660   system     system
+# Group 'usb' (not 'system') so vendor USB HALs running as that group can open
+# device nodes (e.g. the RTL-SDR BroadcastRadio HAL, user audioserver group usb).
+# Owner stays 'system' so the AAOS USB host framework keeps access as owner.
+/dev/bus/usb/*/*          0660   system     usb
 
 /dev/video0               0660   system     camera
 /dev/video1               0660   system     camera
