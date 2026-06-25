@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Touch-friendly background for the bottom-bar volume buttons.
+
+  The default @drawable/nav_bar_button_background only ripples on rotary
+  state_focused / state_selected, so on a touchscreen the volume buttons gave
+  no press feedback. A bare ripple responds to plain state_pressed (touch) too.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/car_ui_ripple_color">
+    <item android:drawable="@drawable/nav_bar_button_background_unselected" />
+</ripple>

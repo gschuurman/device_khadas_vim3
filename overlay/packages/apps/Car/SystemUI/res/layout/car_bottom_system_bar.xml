@@ -42,6 +42,7 @@
             android:id="@+id/vol_down"
             android:contentDescription="Volume down"
             style="@style/SystemBarButton"
+            android:background="@drawable/vol_bar_button_background"
             systemui:icon="@drawable/car_ic_media_volume_down"
             systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_DOWN;package=com.schuurman.vim3.volumecontrol;end"
             systemui:broadcast="true"/>
@@ -50,6 +51,7 @@
             android:id="@+id/vol_mute"
             android:contentDescription="Mute"
             style="@style/SystemBarButton"
+            android:background="@drawable/vol_bar_button_background"
             systemui:icon="@drawable/car_ic_media_volume_off"
             systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_MUTE;package=com.schuurman.vim3.volumecontrol;end"
             systemui:broadcast="true"/>
@@ -58,6 +60,7 @@
             android:id="@+id/vol_up"
             android:contentDescription="Volume up"
             style="@style/SystemBarButton"
+            android:background="@drawable/vol_bar_button_background"
             systemui:icon="@drawable/car_ic_media_volume_up"
             systemui:intent="intent:#Intent;action=com.schuurman.vim3.volumecontrol.VOLUME_UP;package=com.schuurman.vim3.volumecontrol;end"
             systemui:broadcast="true"/>
