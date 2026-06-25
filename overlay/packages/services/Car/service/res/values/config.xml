@@ -8,6 +8,11 @@
 
     <bool name="audioUseCarVolumeGroupMuting">true</bool>
 
+    <!-- Enforce the onBoot activation-volume cap from car_audio_configuration.xml
+         (maxActivationVolumePercentage=50). Without this CarAudioService logs
+         "Use min/max activation volume? false" and ignores the boot cap. -->
+    <bool name="audioUseMinMaxActivationVolume">true</bool>
+
     <bool name="audioUseHalDuckingSignals">true</bool>
 
     <integer name="audioVolumeAdjustmentContextsVersion">1</integer>
