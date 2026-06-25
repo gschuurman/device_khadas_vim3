@@ -185,6 +185,12 @@ BOARD_KERNEL_CMDLINE += cma=576M
 # NOTE: media output is also name-resolved (persist.vendor.audio.primary.card_name) so it
 # tracks ICUSBAUDIO7D regardless; these pins just make the whole layout predictable.
 BOARD_KERNEL_CMDLINE += snd_aloop.index=7
+# Slave the loopback's PCM timer to the USB sound card (card 5, pcm0, sub0) instead of letting
+# it free-run on the jiffies system timer. The radio HAL writes decoded audio into the loopback
+# and the audio HAL captures it for the speakers; with an independent timer the loopback's 48kHz
+# drifts against the USB card's real 48kHz, periodically over/underrunning the ~85ms capture
+# buffer -> DAB audio stutters then "catches up" fast. Slaving locks both to one clock.
+BOARD_KERNEL_CMDLINE += snd_aloop.timer_source=5.0.0
 BOARD_KERNEL_CMDLINE += snd_usb_audio.vid=0x0d8c,0x534d snd_usb_audio.pid=0x0102,0x0021 snd_usb_audio.index=5,6
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
