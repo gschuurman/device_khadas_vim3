@@ -4,9 +4,20 @@
 
   The default @drawable/nav_bar_button_background only ripples on rotary
   state_focused / state_selected, so on a touchscreen the volume buttons gave
-  no press feedback. A bare ripple responds to plain state_pressed (touch) too.
+  no press feedback. A ripple responds to plain state_pressed (touch) too.
+
+  The previous version used @drawable/nav_bar_button_background_unselected as the
+  ripple's content layer, but that resource is a solid-filled squircle *vector*
+  (the rotary focus shape), so it painted a permanent blob behind every icon
+  instead of a clean press highlight. Here the ripple has no content layer and a
+  circular mask, so it shows a bounded ripple only while pressed and is otherwise
+  fully transparent.
 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="@color/car_ui_ripple_color">
-    <item android:drawable="@drawable/nav_bar_button_background_unselected" />
+    <item android:id="@android:id/mask">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
 </ripple>
