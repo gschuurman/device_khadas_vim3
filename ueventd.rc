@@ -34,4 +34,10 @@ subsystem usbmisc
 
 /sys/class/udc*                          current_speed 0644    system       system
 
+# VIM3: let system_server (PhoneWindowManager) toggle the head-unit touchscreen's
+# wake-inhibit, so the physical power button can disable tap-to-wake while injected
+# keyevent 26 (burn-in screen-off) keeps it. The USB-HID path is the onboard
+# WaveShare touch (vid 0EEF); trailing * matches the volatile inputN.
+/sys/devices/platform/soc/ffe09000.usb/ff500000.usb/xhci-hcd.1.auto/usb1/1-1/1-1.4/1-1.4.1/1-1.4.1:1.0/0003:0EEF:0005.0001/input/input* inhibited 0664 system system
+
 /dev/ttyAML*  0660  system  system
