@@ -31,6 +31,12 @@
     -->
     <integer name="config_longPressOnPowerBehavior">3</integer>
 
+    <!-- Allow a power-button long press to run the long-press action (power off)
+         even when the device is non-interactive (asleep). The head unit sleeps on
+         ACC-low, then the Pi Pico long-presses the physical power button to power
+         off; with the default (false) that long press would only wake the screen. -->
+    <bool name="config_supportLongPressPowerWhenNonInteractive">true</bool>
+
     <!-- Disable lockscreen sound effect -->
     <integer name="def_lockscreen_sounds_enabled">0</integer>
 
