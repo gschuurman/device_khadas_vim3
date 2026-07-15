@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vim3 audio effects config.
+
+     The stock config this replaces (hardware/amlogic/yukawa/audio/audio_effects_config.xml)
+     declares "uuid" values from the wrong UUID family: legacy EffectBundle/AIDL-non-Sw UUIDs
+     (e.g. equalizer's ce772f20-... = kEffectImplUuidEqualizerBundle) instead of the actual
+     kEffectImplUuid*Sw constants (system/media/audio/include/system/audio_effects/effect_uuid.h)
+     that the "*Sw" libraries loaded here (EqualizerSw.cpp etc, in
+     hardware/amlogic/yukawa/audio/<effect>/) validate against in their queryEffect(). A mismatched
+     uuid makes queryEffect() return EX_ILLEGAL_ARGUMENT ("uuid not supported"), and
+     EffectsFactoryHalAidl aborts registration of the ENTIRE batch on that single failure
+     (observed: "EffectsFactoryHalAidl with 0 nonProxyEffects and 0 proxyEffects" -- every effect
+     silently unavailable, not just the mismatched one). Fixed here by using the correct *Sw impl
+     UUIDs throughout. env_reverb dropped (also wrong-UUID'd upstream, and not needed -- preset_reverb
+     covers the reverb use case).
+-->
+<audio_effects_conf version="2.0" xmlns="http://schemas.android.com/audio/audio_effects_conf/v2_0">
+    <libraries>
+        <library name="aecsw" path="libaecsw_generic.so"/>
+        <library name="agc1sw" path="libagc1sw_generic.so"/>
+        <library name="agc2sw" path="libagc2sw_generic.so"/>
+        <library name="bassboostsw" path="libbassboostsw_generic.so"/>
+        <library name="downmix" path="libdownmixsw_generic.so"/>
+        <library name="dynamics_processing" path="libdynamicsprocessingsw_generic.so"/>
+        <library name="equalizersw" path="libequalizersw_generic.so"/>
+        <library name="haptic_generator" path="libhapticgeneratorsw_generic.so"/>
+        <library name="loudness_enhancer" path="libloudnessenhancersw_generic.so"/>
+        <library name="nssw" path="libnssw_generic.so"/>
+        <library name="preset_reverbsw" path="libpresetreverbsw_generic.so"/>
+        <library name="virtualizersw" path="libvirtualizersw_generic.so"/>
+        <library name="visualizer" path="libvisualizersw_generic.so"/>
+        <library name="volumesw" path="libvolumesw_generic.so"/>
+        <library name="spatializersw" path="libspatializersw_generic.so"/>
+    </libraries>
+
+    <effects>
+        <effect name="automatic_gain_control_v1" library="agc1sw" uuid="aa8130e0-66fc-11e0-bad0-0002a5d5c51b"/>
+        <effect name="automatic_gain_control_v2" library="agc2sw" uuid="89f38e65-d4d2-4d64-ad0e-2b3e799ea886"/>
+        <effect name="acoustic_echo_canceler" library="aecsw" uuid="bb392ec0-8d4d-11e0-a896-0002a5d5c51b"/>
+        <effect name="noise_suppression" library="nssw" uuid="c06c8400-8e06-11e0-9cb6-0002a5d5c51b"/>
+        <effect name="bassboost" library="bassboostsw" uuid="fa8181f2-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="downmix" library="downmix" uuid="fa8187ba-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="dynamics_processing" library="dynamics_processing" uuid="fa818d78-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="equalizer" library="equalizersw" uuid="0bed4300-847d-11df-bb17-0002a5d5c51b"/>
+        <effect name="haptic_generator" library="haptic_generator" uuid="fa819110-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="loudness_enhancer" library="loudness_enhancer" uuid="fa819610-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="preset_reverb" library="preset_reverbsw" uuid="fa8199c6-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="spatializer" library="spatializersw" uuid="fa81a880-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="virtualizer" library="virtualizersw" uuid="fa819d86-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="visualizer" library="visualizer" uuid="fa81a0f6-588b-11ed-9b6a-0242ac120002"/>
+        <effect name="volume" library="volumesw" uuid="fa81a718-588b-11ed-9b6a-0242ac120002"/>
+    </effects>
+
+    <preprocess>
+        <stream type="voice_communication">
+            <apply effect="acoustic_echo_canceler"/>
+            <apply effect="noise_suppression"/>
+        </stream>
+    </preprocess>
+
+    <!-- No deviceEffects block: equalizer/bassboost/virtualizer/loudness_enhancer are standard
+         INSERT-type effects, not pre/post-processing device effects, so DeviceEffectManager
+         rejects them for device-level auto-attach ("non pre/post processing device effect").
+         MusicFX attaches these itself via the AudioEffect API on the global mix session (0)
+         when launched standalone, which is the normal way this has always worked. -->
+</audio_effects_conf>
