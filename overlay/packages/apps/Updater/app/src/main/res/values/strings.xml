@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Self-hosted OTA server (schuurman-it.com), v2 API format. -->
+    <string name="updater_server_url" translatable="false">https://updates.schuurman-it.com/api/v2/devices/{device}/builds</string>
+</resources>
