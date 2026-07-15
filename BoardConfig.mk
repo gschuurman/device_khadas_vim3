@@ -322,6 +322,17 @@ PRODUCT_VIRTUAL_AB_OTAPREOPT_PAYLOAD := true
 
 DEVICE_PATH := device/khadas/vim3
 
+# # Drop upstream debug/test apps we don't ship. This must live in BoardConfig,
+# # NOT a product .mk: inherit-product only appends @inherit: tags to
+# # PRODUCT_PACKAGES at parse time (build/make/core/product.mk), and the real
+# # module names are substituted later by strip-product-vars in product_config.mk.
+# # BoardConfig.mk is included (via envsetup.mk) AFTER product_config.mk resolves
+# # those tags, so here PRODUCT_PACKAGES holds real names and filter-out works.
+# #   NetworkPreferenceApp       <- packages/services/Car/car_product/build/car.mk
+# #   DisplayCompat{Test,Intent}App <- .../displaycompat/display_compat_system.mk (DEBUG)
+# PRODUCT_PACKAGES := $(filter-out NetworkPreferenceApp DisplayCompatTestApp DisplayCompatIntentApp, $(PRODUCT_PACKAGES))
+# PRODUCT_PACKAGES_DEBUG := $(filter-out NetworkPreferenceApp DisplayCompatTestApp DisplayCompatIntentApp, $(PRODUCT_PACKAGES_DEBUG))
+
 BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 
 # TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
