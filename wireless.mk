@@ -22,3 +22,8 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.aware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.aware.xml
 
+# CONFIG_MODPROBE_PATH target (see modprobe_vim3/) — required for brcmfmac's
+# fwvid vendor-plugin (brcmfmac_wcc) autoload on this board's BCM4359 to work.
+PRODUCT_PACKAGES += \
+    modprobe_vim3
+
