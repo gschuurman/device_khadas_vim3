@@ -9,9 +9,9 @@
      hardware/amlogic/yukawa/audio/<effect>/) validate against in their queryEffect(). A mismatched
      uuid makes queryEffect() return EX_ILLEGAL_ARGUMENT ("uuid not supported"), and
      EffectsFactoryHalAidl aborts registration of the ENTIRE batch on that single failure
-     (observed: "EffectsFactoryHalAidl with 0 nonProxyEffects and 0 proxyEffects" -- every effect
+     (observed: "EffectsFactoryHalAidl with 0 nonProxyEffects and 0 proxyEffects" - every effect
      silently unavailable, not just the mismatched one). Fixed here by using the correct *Sw impl
-     UUIDs throughout. env_reverb dropped (also wrong-UUID'd upstream, and not needed -- preset_reverb
+     UUIDs throughout. env_reverb dropped (also wrong-UUID'd upstream, and not needed - preset_reverb
      covers the reverb use case).
 -->
 <audio_effects_conf version="2.0" xmlns="http://schemas.android.com/audio/audio_effects_conf/v2_0">
