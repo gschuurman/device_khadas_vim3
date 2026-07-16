@@ -267,7 +267,7 @@ TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vim3_mmc_avb
 TARGET_KERNEL_SOURCE := kernel/khadas/vim3
 TARGET_KERNEL_CONFIG := \
     gki_defconfig \
-    amlogic_gki.config
+    amlogic_gki.fragment
 TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.config
 
 # Paths relative to $(DTB_OUT)/arch/arm64/boot/dts/ — order matters: U-Boot adtb_idx=1 selects index 1.
