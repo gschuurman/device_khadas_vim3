@@ -4,6 +4,7 @@ ao-cec.ko
 b43.ko
 bcma.ko
 brcmfmac.ko
+brcmfmac-wcc.ko
 brcmutil.ko
 cfg80211.ko
 clk-pwm.ko
