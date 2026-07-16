@@ -3,10 +3,6 @@ ao-cec-g12a.ko
 ao-cec.ko
 b43.ko
 bcma.ko
-brcmfmac.ko
-brcmfmac-wcc.ko
-brcmutil.ko
-cfg80211.ko
 clk-pwm.ko
 cordic.ko
 cpufreq-dt.ko
