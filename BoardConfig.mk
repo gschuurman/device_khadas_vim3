@@ -266,9 +266,23 @@ TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vim3_mmc_avb
 
 TARGET_KERNEL_SOURCE := kernel/khadas/vim3
 TARGET_KERNEL_CONFIG := \
-    gki_defconfig \
-    amlogic_gki.fragment
-TARGET_KERNEL_CONFIG_EXT := kernel/khadas/vim3_overlay/vim3_extra.config
+    gki_defconfig
+# amlogic_gki.config is a symlink (in vim3_overlay, our own tree) to the upstream
+# arch/arm64/configs/amlogic_gki.fragment — kernel.mk's merge only picks up
+# *.config names, so the fragment can't be listed directly here.
+TARGET_KERNEL_CONFIG_EXT := \
+    kernel/khadas/vim3_overlay/amlogic_gki.config \
+    kernel/khadas/vim3_overlay/vim3_extra.config
+
+# Out-of-tree AIC8800D80 driver (Ugreen USB WiFi dongle) — no mainline
+# driver exists, so it's built via vendor/lineage's external-module Kbuild
+# path rather than the main in-tree kernel_khadas_vim3 source. The module's
+# own Makefile (drivers/aic8800/Makefile) does the actual
+# `make -C $(KDIR) M=$(PWD) modules` invocation; KDIR/ARCH/CROSS_COMPILE/O
+# are supplied by kernel.mk's make-external-module-target as command-line
+# overrides.
+TARGET_KERNEL_EXT_MODULE_ROOT := kernel/khadas/vim3_overlay/drivers
+TARGET_KERNEL_EXT_MODULES := aic8800
 
 # Paths relative to $(DTB_OUT)/arch/arm64/boot/dts/ — order matters: U-Boot adtb_idx=1 selects index 1.
 # Mirrors original vendor_boot layout: VIM3L at index 0, VIM3 (HDMI) at index 1.
@@ -335,5 +349,12 @@ DEVICE_PATH := device/khadas/vim3
 
 BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 
-# TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
-# TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
+# gms_spoof_*.prop intentionally re-set several ro.build.* keys (release,
+# sdk, type, flavor, ...) that gen_build_prop.py already hard-assigns from
+# the real product config. Soong's post_process_props rejects duplicate
+# hard assignments with differing values by default; since our override
+# file is appended after the real values, the last (spoofed) one wins at
+# boot once the strict check is relaxed.
+BUILD_BROKEN_DUP_SYSPROP := true
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop

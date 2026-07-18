@@ -1,3 +1,5 @@
+aic8800_fdrv.ko
+aic_load_fw.ko
 amlogic-gxl-crypto.ko
 ao-cec-g12a.ko
 ao-cec.ko

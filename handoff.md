@@ -108,7 +108,7 @@ with flag `0` — **no volume panel appears**, single-step adjust only (safe for
 | EVS / rear camera | EVS disabled; RVC via custom `com.schuurman.rvc` app on `/dev/video10` |
 | SELinux | **permissive** (`TARGET_SELINUX_ENFORCE := false`) |
 | Kernel | GKI android16-6.12, inline build from `kernel/khadas/vim3` |
-| Kernel config | `gki_defconfig` + `amlogic_gki.fragment` + `vim3_extra.config` |
+| Kernel config | `gki_defconfig` + `amlogic_gki.config` (symlink → upstream `.fragment`) + `vim3_extra.config` |
 | Fstab suffix | `vim3.mmc.avb` |
 | `ro.hardware` | `vim3` |
 
