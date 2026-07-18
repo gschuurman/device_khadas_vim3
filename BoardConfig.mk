@@ -60,6 +60,9 @@ BOARD_HAVE_BLUETOOTH := true
 # defined"). Reference the lib by fully-qualified //namespace:module path instead, as
 # device/generic/goldfish does for its private lib.
 BOARD_WLAN_DEVICE := bcmdhd
+# Second WiFi chip (AIC8800D80 USB dongle) loaded via a /vendor/etc/wifi/
+# vendor_hals/*.xml descriptor alongside the primary libwifi-hal-bcm.
+WIFI_MULTIPLE_VENDOR_HALS := true
 BOARD_WPA_SUPPLICANT_PRIVATE_LIB := //external/wpa_supplicant_8/wpa_supplicant/wpa_supplicant:lib_driver_cmd_fallback
 BOARD_HOSTAPD_PRIVATE_LIB := //external/wpa_supplicant_8/wpa_supplicant/wpa_supplicant:lib_driver_cmd_fallback
 WPA_SUPPLICANT_VERSION := VER_0_8_X

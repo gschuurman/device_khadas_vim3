@@ -1,0 +1,11 @@
+cc_library_shared {
+    name: "libwifi-hal-aic8800",
+    vendor: true,
+    srcs: ["aic8800_vendor_hal.cpp"],
+    header_libs: ["wifi_legacy_headers"],
+    shared_libs: ["libbase"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+}
