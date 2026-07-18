@@ -1,0 +1,14 @@
+cc_binary {
+    name: "aic8800_modeswitch",
+    vendor: true,
+    srcs: ["aic8800_modeswitch.c"],
+    init_rc: ["aic8800_modeswitch.rc"],
+    shared_libs: [
+        "liblog",
+        "libselinux",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+}

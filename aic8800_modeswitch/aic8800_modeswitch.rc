@@ -1,0 +1,6 @@
+service aic8800_modeswitch /vendor/bin/aic8800_modeswitch
+    class late_start
+    user root
+    group root
+    seclabel u:r:aic8800_modeswitch:s0
+    restart_period 2

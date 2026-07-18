@@ -1,0 +1,26 @@
+type aic8800_modeswitch, domain;
+type aic8800_modeswitch_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(aic8800_modeswitch)
+
+# Netlink uevent socket to watch for the dongle's decoy mass-storage
+# enumeration (see aic8800_modeswitch.c for why this can't be a plain
+# ueventd.rc rule).
+allow aic8800_modeswitch self:netlink_kobject_uevent_socket { create bind read };
+
+# The dongle's decoy block device (/dev/block/sdX) is hotplugged with a
+# dynamic name, so it can't be pinned to a fixed file_contexts path the way
+# named partitions are -- it lands on the generic "block_device" catch-all
+# type like any other unlabeled node. domain.te neverallows raw blk_file
+# access on that generic type for everyone but a handful of core domains
+# (deliberately -- see the neverallow's own comment: "force a relabel to a
+# more specific type"), so relabel it to a type of our own at runtime
+# instead of trying to touch it as block_device directly.
+type aic8800_block_device, dev_type;
+
+allow aic8800_modeswitch block_device:blk_file relabelfrom;
+allow aic8800_modeswitch aic8800_block_device:blk_file { relabelto getattr open ioctl };
+
+# START_STOP (the SG_IO eject command) is on the kernel's own
+# capability-free allowlist in scsi_cmd_allowed() -- no sys_rawio needed
+# (and it's neverallow'd for this domain anyway).

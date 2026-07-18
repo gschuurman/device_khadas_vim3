@@ -27,3 +27,12 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     modprobe_vim3
 
+# AIC8800D80 USB WiFi dongle (Ugreen adapter, secondary radio alongside the
+# onboard BCM4359). Enumerates as a fake mass-storage device (a69c:5723)
+# until mode-switched; see aic8800_modeswitch/.
+PRODUCT_PACKAGES += \
+    aic8800_modeswitch
+
+PRODUCT_COPY_FILES += \
+    $(call find-copy-subdir-files,*,device/khadas/vim3/aic8800_modeswitch/fw/aic8800D80,$(TARGET_COPY_OUT_VENDOR)/firmware/aic8800D80)
+
