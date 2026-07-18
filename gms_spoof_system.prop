@@ -1,6 +1,35 @@
-# Google backend identity (safe on Android 16)
-ro.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:14/UAA1.250512.001/13479943:user/release-keys
-ro.build.description=sdk_gcar_arm64-user 14 UAA1.250512.001 13479943 release-keys
+# Google backend identity (car emulator w/ GAS, Android 15)
+ro.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.build.id=AAI5.260516.001.A1
+ro.build.display.id=AAI5.260516.001.A1 release-keys
+ro.build.version.incremental=15446886
+ro.build.version.sdk=35
+ro.build.version.release=15
+ro.build.version.release_or_codename=15
+ro.build.version.security_patch=2025-12-05
+ro.build.type=user
+ro.build.tags=release-keys
+ro.build.flavor=sdk_gcar_arm64-user
+ro.build.product=emulator_car64_arm64
+ro.build.description=sdk_gcar_arm64-user 15 AAI5.260516.001.A1 15446886 release-keys
 
 # Mirror for modern GSF lookups
-ro.system.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:14/UAA1.250512.001/13479943:user/release-keys
+ro.system.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.system.build.id=AAI5.260516.001.A1
+ro.system.build.tags=release-keys
+ro.system.build.type=user
+ro.system.build.version.incremental=15446886
+ro.system.build.version.release=15
+ro.system.build.version.sdk=35
+
+# ro.product.system.* is a distinct namespace from ro.product.* (bare) and
+# ro.build.* above -- without this, Google's device-consistency check (the
+# same one gms_spoof_vendor/odm/product/system_ext.prop fix for build.*)
+# still saw the real Khadas/vim3/VIM3 Automotive identity here, which is
+# what showed up as "manufacturer: Khadas" during Google sign-in instead
+# of the spoofed "Google".
+ro.product.system.brand=google
+ro.product.system.device=emulator_car64_arm64
+ro.product.system.manufacturer=Google
+ro.product.system.model=car_generic
+ro.product.system.name=car_generic

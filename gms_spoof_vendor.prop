@@ -1,0 +1,25 @@
+# Vendor-partition mirror of gms_spoof_system.prop. GMS/Play Integrity's
+# device-consistency check reads ro.vendor.build.* independently of
+# ro.build.* / ro.system.build.* -- without this, /vendor/build.prop kept
+# reporting the real eng.glenn:userdebug/test-keys identity even though
+# the system partition was spoofed, which is an obvious cross-partition
+# fingerprint mismatch to any backend attestation check.
+ro.vendor.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.vendor.build.id=AAI5.260516.001.A1
+ro.vendor.build.tags=release-keys
+ro.vendor.build.type=user
+ro.vendor.build.version.incremental=15446886
+ro.vendor.build.version.release=15
+ro.vendor.build.version.release_or_codename=15
+ro.vendor.build.version.sdk=35
+ro.vendor.build.security_patch=2025-12-05
+
+# ro.product.vendor.* is the vendor partition's product-identity block,
+# distinct from ro.vendor.build.* (fingerprint) above. Left unset, this
+# reported the real Khadas/vim3/VIM3 Automotive identity -- the source of
+# "manufacturer: Khadas" showing up during Google sign-in.
+ro.product.vendor.brand=google
+ro.product.vendor.device=emulator_car64_arm64
+ro.product.vendor.manufacturer=Google
+ro.product.vendor.model=car_generic
+ro.product.vendor.name=car_generic

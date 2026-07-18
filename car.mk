@@ -106,6 +106,16 @@ PRODUCT_PRODUCT_PROPERTIES += \
     persist.rcs.supported=0 \
     persist.eab.supported=0
 
+# Enable Remote Key Provisioning (RKPD). Without this, remote_provisioning.hostname
+# is empty and rkpdapp's RemoteProvisioningService immediately errors out with
+# "RKP is disabled. System configured with no default URL." -- KeyMint never even
+# attempts to fetch attestation keys, software or otherwise. Real Pixel devices and
+# Google's own goldfish/cuttlefish emulators (device/generic/goldfish/product/generic.mk)
+# set this same production hostname so their software/hardware KeyMint can register
+# with Google's backend and obtain real (if only software-attested) keys.
+PRODUCT_PRODUCT_PROPERTIES += \
+    remote_provisioning.hostname=remoteprovisioning.googleapis.com
+
 PRODUCT_PACKAGES_DEBUG += \
     android.hardware.automotive.occupant_awareness@1.0-service \
     android.hardware.automotive.occupant_awareness@1.0-service_mock

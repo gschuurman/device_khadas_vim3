@@ -219,6 +219,15 @@ ifneq ($(TARGET_KERNEL_CFG),)
 BOARD_KERNEL_CMDLINE += $(TARGET_KERNEL_CFG)
 endif
 
+# Selects the "maps + play store" GAS feature bundle. The gas_*_overlay
+# modules in vendor/google/gapps_auto (RRO block in gapps-core.mk) are
+# static RROs gated by android:requiredSystemPropertyValue against
+# ro.boot.hardware.sku; only the overlay(s) whose required value matches
+# this SKU actually activate. gas_maps_playstore activates
+# GasMapsPlaystoreOverlay; note CarLauncherGasPlaystoreOverlay requires
+# the different value "gas_playstore" and will NOT activate under this SKU.
+BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=gas_maps_playstore
+
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := build/make/target/board/mainline_arm64/bluetooth
 
 BOARD_VENDOR_SEPOLICY_DIRS += \
@@ -354,8 +363,8 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 # file is appended after the real values, the last (spoofed) one wins at
 # boot once the strict check is relaxed.
 BUILD_BROKEN_DUP_SYSPROP := true
-TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
-TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
-TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
-TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
-TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop
+# TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
+# TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
+# TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
+# TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
+# TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop

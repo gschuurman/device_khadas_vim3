@@ -98,4 +98,6 @@
     
     <bool name="config_carNightGlobalSetting">true</bool>
     <bool name="config_uiThemeToggle">true</bool>
+    
+    <string name="config_deviceConfiguratorPackageName" translatable="false">com.google.android.gms</string>
 </resources>

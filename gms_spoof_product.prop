@@ -3,3 +3,42 @@ ro.product.device=emulator_car64_arm64
 ro.product.manufacturer=Google
 ro.product.model=car_generic
 ro.product.name=car_generic
+
+# ro.product.build.* is a distinct namespace from ro.product.* above and
+# from ro.build.* in gms_spoof_system.prop -- without this the product
+# partition (/system/product/etc/build.prop on this device) kept reporting
+# the real eng.glenn:userdebug/test-keys identity, a cross-partition
+# fingerprint mismatch visible to device-consistency checks.
+ro.product.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.product.build.id=AAI5.260516.001.A1
+ro.product.build.tags=release-keys
+ro.product.build.type=user
+ro.product.build.version.incremental=15446886
+ro.product.build.version.release=15
+ro.product.build.version.release_or_codename=15
+ro.product.build.version.sdk=35
+ro.product.build.security_patch=2025-12-05
+
+# ro.product.product.* (yes, doubled -- that's the actual Android property
+# name for the product partition's own product-identity block) is distinct
+# from ro.product.* (bare, above) and from ro.product.build.* (fingerprint).
+# Left unset, it still reported the real Khadas/vim3/VIM3 Automotive identity.
+ro.product.product.brand=google
+ro.product.product.device=emulator_car64_arm64
+ro.product.product.manufacturer=Google
+ro.product.product.model=car_generic
+ro.product.product.name=car_generic
+
+# /system/product/etc/build.prop also independently regenerates its own
+# BARE ro.build.* keys (no partition prefix at all -- distinct from both
+# ro.product.build.* above and ro.build.* in gms_spoof_system.prop) from
+# the real device identity. For ro.build.tags specifically this bare
+# product-partition copy wins over system's spoofed value at runtime
+# (getprop ro.build.tags kept returning test-keys even though
+# /system/build.prop itself was correctly deduped to release-keys) --
+# so it must be overridden here too, in the same file/partition that
+# regenerates it.
+ro.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.build.id=AAI5.260516.001.A1
+ro.build.tags=release-keys
+ro.build.type=user

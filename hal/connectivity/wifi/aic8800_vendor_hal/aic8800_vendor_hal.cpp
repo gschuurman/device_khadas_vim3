@@ -1,6 +1,6 @@
 /*
  * Minimal legacy vendor HAL for the AIC8800D80 dongle (wlan1), loaded as a
- * second /vendor/etc/wifi/vendor_hals/*.xml entry alongside the primary
+ * second /vendor/etc/wifi/vendor_hals/ *.xml entry alongside the primary
  * BCM4359 HAL (libwifi-hal-bcm). aic8800 has no vendor-proprietary
  * extensions -- it's a plain cfg80211 driver -- so almost everything here
  * stays the default WIFI_ERROR_NOT_SUPPORTED stub that

@@ -1,0 +1,21 @@
+# ODM-partition mirror of gms_spoof_system.prop -- see gms_spoof_vendor.prop
+# for why this is needed. /odm on this device is a symlink into
+# /vendor/odm, but ro.odm.build.* is still tracked as its own prop
+# namespace and must match or it's a red flag for device-consistency checks.
+ro.odm.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
+ro.odm.build.id=AAI5.260516.001.A1
+ro.odm.build.tags=release-keys
+ro.odm.build.type=user
+ro.odm.build.version.incremental=15446886
+ro.odm.build.version.release=15
+ro.odm.build.version.release_or_codename=15
+ro.odm.build.version.sdk=35
+ro.odm.build.security_patch=2025-12-05
+
+# ro.product.odm.* is the odm partition's product-identity block, distinct
+# from ro.odm.build.* (fingerprint) above. Same fix as gms_spoof_vendor.prop.
+ro.product.odm.brand=google
+ro.product.odm.device=emulator_car64_arm64
+ro.product.odm.manufacturer=Google
+ro.product.odm.model=car_generic
+ro.product.odm.name=car_generic
