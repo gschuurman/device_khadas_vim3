@@ -49,7 +49,10 @@ static int scsi_eject(const char *devpath) {
         return -1;
     }
 
-    int fd = open(devpath, O_RDWR | O_NONBLOCK);
+    /* O_RDONLY: the decoy device reports itself as write-protected at the
+     * SCSI level, so O_RDWR fails with EROFS. SG_IO with SG_DXFER_NONE
+     * doesn't need a writable fd. */
+    int fd = open(devpath, O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
         ALOGE("open(%s) failed: %s", devpath, strerror(errno));
         return -1;

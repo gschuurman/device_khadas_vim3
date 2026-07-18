@@ -12,6 +12,7 @@ allow aic8800_modeswitch self:netlink_kobject_uevent_socket { create bind read }
 # aic8800_modeswitch.c).
 type aic8800_block_device, dev_type;
 
+allow aic8800_modeswitch block_device:dir search;
 allow aic8800_modeswitch block_device:blk_file relabelfrom;
 allow aic8800_modeswitch aic8800_block_device:blk_file { relabelto getattr open ioctl };
 
