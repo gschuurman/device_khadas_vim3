@@ -22,8 +22,14 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.aware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.aware.xml
 
-# CONFIG_MODPROBE_PATH target (see modprobe_vim3/) — required for brcmfmac's
-# fwvid vendor-plugin (brcmfmac_wcc) autoload on this board's BCM4359 to work.
+# CONFIG_MODPROBE_PATH target (see modprobe_vim3/). NOT actually needed for
+# brcmfmac's fwvid vendor-plugin (brcmfmac_wcc) anymore -- that's now
+# statically linked into brcmfmac.ko (see kernel_khadas_vim3's brcmfmac
+# Makefile/fwvid.c fork patch), so it never calls request_module() at all.
+# Kept as a general-purpose safety net for any future driver on this board
+# that does rely on runtime module autoload -- see the matching
+# CONFIG_MODPROBE_PATH/CONFIG_STATIC_USERMODEHELPER_PATH comment in
+# kernel_khadas_vim3_overlay's vim3_extra.fragment.
 PRODUCT_PACKAGES += \
     modprobe_vim3
 
