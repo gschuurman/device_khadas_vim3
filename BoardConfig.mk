@@ -274,13 +274,8 @@ TARGET_KERNEL_CONFIG_EXT := \
     kernel/khadas/vim3_overlay/amlogic_gki.config \
     kernel/khadas/vim3_overlay/vim3_extra.config
 
-# Out-of-tree AIC8800D80 driver (Ugreen USB WiFi dongle) — no mainline
-# driver exists, so it's built via vendor/lineage's external-module Kbuild
-# path rather than the main in-tree kernel_khadas_vim3 source. The module's
-# own Makefile (drivers/aic8800/Makefile) does the actual
-# `make -C $(KDIR) M=$(PWD) modules` invocation; KDIR/ARCH/CROSS_COMPILE/O
-# are supplied by kernel.mk's make-external-module-target as command-line
-# overrides.
+# AIC8800D80 driver (Ugreen USB WiFi dongle) — no mainline driver exists,
+# built out-of-tree via vendor/lineage's external-module Kbuild path.
 TARGET_KERNEL_EXT_MODULE_ROOT := kernel/khadas/vim3_overlay/drivers
 TARGET_KERNEL_EXT_MODULES := aic8800
 
@@ -358,3 +353,6 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 BUILD_BROKEN_DUP_SYSPROP := true
 TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
 TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
+TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
+TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
+TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop

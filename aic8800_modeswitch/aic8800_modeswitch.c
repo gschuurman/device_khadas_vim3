@@ -1,24 +1,15 @@
 /*
- * aic8800_modeswitch: tiny persistent daemon that watches the kernel uevent
- * netlink socket for the Ugreen/AIC8800D80 USB WiFi dongle's decoy
- * mass-storage enumeration (idVendor=a69c, idProduct=5723 -- "Aic MSC") and
- * issues a SCSI START STOP UNIT (eject) on it, which flips the device into
- * its real WiFi-mode enumeration (a69c:8d80 -- "AIC Wlan").
+ * Watches the kernel uevent netlink socket for the Ugreen/AIC8800D80 USB
+ * dongle's decoy mass-storage enumeration (idVendor=a69c, idProduct=5723)
+ * and issues a SCSI eject, which flips it into its real WiFi-mode
+ * enumeration (a69c:8d80). Android's ueventd has no udev-style RUN+=
+ * action support, so this reimplements the equivalent udev rule as a
+ * persistent daemon instead.
  *
- * Android's ueventd only supports device-node permission/ownership rules,
- * not udev-style RUN+= actions, so there's no config-only way to do this --
- * on real Linux distros this exact chip is handled by a one-line udev rule
- * (`RUN+="/usr/bin/eject /dev/%k"`); this daemon is that rule reimplemented
- * as a long-running init service, since it's the smallest thing that works
- * within what ueventd actually offers.
- *
- * The raw kernel uevent stream (unlike udev's enriched one) reports the USB
- * device's idVendor/idProduct and the resulting /dev/sdX block device as two
- * *separate* events for two different kernel objects in the device tree --
- * there is no single event carrying both. So this tracks the DEVPATH of the
- * most recently seen matching USB device (subsystem=usb, PRODUCT=a69c/5723)
- * and, when a later block-disk add event's DEVPATH nests under it, ejects
- * that block device.
+ * The raw kernel uevent stream reports the USB device and its resulting
+ * block device as two separate events with no field linking them, so this
+ * tracks the DEVPATH of the most recently seen matching USB device and
+ * ejects the next block-disk event whose DEVPATH nests under it.
  */
 
 #include <errno.h>
@@ -45,16 +36,14 @@
 
 #define AIC8800_BLOCK_DEVICE_CONTEXT "u:object_r:aic8800_block_device:s0"
 
-/* SCSI START STOP UNIT (0x1B) with the eject bit set -- what `eject`
- * issues under the hood for USB mass-storage devices that aren't real
- * optical drives (CDROMEJECT only works on actual ATAPI/SCSI CD-ROMs). */
+/* SCSI START STOP UNIT (0x1B) with the eject bit set -- what `eject` uses
+ * for USB mass-storage devices that aren't real optical drives. */
 static int scsi_eject(const char *devpath) {
-    /* ueventd labels hotplugged block nodes with the generic "block_device"
-     * catch-all type (there's no fixed path to pin a file_contexts entry
-     * to -- the sdX letter is assigned dynamically). domain.te neverallows
-     * raw blk_file access on that generic type for everyone but a handful
-     * of core domains, by design ("force a relabel to a more specific
-     * type"), so relabel to our own narrow type before opening it. */
+    /* Hotplugged block nodes get the generic "block_device" catch-all
+     * type (the sdX letter is dynamic, so it can't be pinned in
+     * file_contexts). domain.te neverallows raw blk_file access on that
+     * type outside a few core domains, so relabel to our own narrow type
+     * before opening it. */
     if (setfilecon(devpath, AIC8800_BLOCK_DEVICE_CONTEXT) < 0) {
         ALOGE("setfilecon(%s) failed: %s", devpath, strerror(errno));
         return -1;
