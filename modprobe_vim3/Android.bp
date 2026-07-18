@@ -1,7 +1,0 @@
-// modprobe_vim3: CONFIG_MODPROBE_PATH target so kernel-side request_module()
-// calls (e.g. brcmfmac's fwvid vendor-plugin autoload) can actually find
-// modules under /vendor_dlkm and /system_dlkm. See modprobe_vim3.sh.
-sh_binary {
-    name: "modprobe_vim3",
-    src: "modprobe_vim3.sh",
-}
