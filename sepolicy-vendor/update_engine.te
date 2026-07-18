@@ -1,3 +1,10 @@
 userdebug_or_eng(`
     allow update_engine untrusted_app_27:binder call;
 ')
+
+# init_boot and dtbo are non-dynamic partitions written directly during OTA,
+# not via the boot control HAL / super partition. update_engine never picked
+# up the update_engine_common attribute in this tree (only recovery has it),
+# so these grants have to be explicit here.
+allow update_engine boot_block_device:blk_file rw_file_perms;
+allow update_engine dtbo_block_device:blk_file rw_file_perms;

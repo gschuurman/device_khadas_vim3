@@ -54,7 +54,7 @@
 /dev/block/platform/soc/ffe07000.mmc/by-name/misc                     u:object_r:misc_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/super                    u:object_r:super_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/boot(_[ab])?             u:object_r:boot_block_device:s0
-/dev/block/platform/soc/ffe07000.mmc/by-name/init_boot_(_[ab])?       u:object_r:boot_block_device:s0
+/dev/block/platform/soc/ffe07000.mmc/by-name/init_boot(_[ab])?        u:object_r:boot_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/vendor_boot(_[ab])?      u:object_r:boot_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/dtbo(_[ab])?             u:object_r:dtbo_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/vbmeta(_[ab])?           u:object_r:vbmeta_block_device:s0
@@ -102,3 +102,6 @@
 
 # Camera HAL
 /vendor/bin/hw/android\.hardware\.camera\.provider-V1-external-service          u:object_r:hal_camera_default_exec:s0
+
+# AIC8800D80 USB WiFi dongle mode-switch daemon
+/vendor/bin/aic8800_modeswitch          u:object_r:aic8800_modeswitch_exec:s0
