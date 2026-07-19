@@ -21,12 +21,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.audiocontrol-service \
 
-# EQ / bassboost / virtualizer / loudness control panel (attached to bus0_media_out
-# via deviceEffects in audio_effects.xml; given a launcher entry since there's no
-# stock music player here to fire DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
-PRODUCT_PACKAGES += \
-    MusicFX \
-
 # PRODUCT_PACKAGES += \
 #     CarAudioTuner \
 
@@ -35,7 +29,7 @@ PRODUCT_COPY_FILES += \
     device/khadas/vim3/hal/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
     device/khadas/vim3/hal/audio/primary_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml \
     device/khadas/vim3/hal/audio/mixer_controls.xml:$(TARGET_COPY_OUT_VENDOR)/etc/mixer_controls.xml \
-    device/khadas/vim3/hal/audio/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects_config.xml \
+    hardware/amlogic/yukawa/audio/audio_effects_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects_config.xml \
     frameworks/av/services/audiopolicy/config/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \
     frameworks/av/services/audiopolicy/config/default_volume_tables.xml:$(TARGET_COPY_OUT_VENDOR)/etc/default_volume_tables.xml \
     device/khadas/vim3/hal/audio/r_submix_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/r_submix_audio_policy_configuration.xml \
