@@ -38,7 +38,8 @@ $(call inherit-product-if-exists, packages/services/Car/car_product/rro/ThemeSam
 $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sample_rros.mk)
 
 PRODUCT_PACKAGES += \
-    CarSettingsIntelligence
+    CarSettingsIntelligence \
+    OpenHeadunit
 
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
