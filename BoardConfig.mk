@@ -2,6 +2,19 @@ TARGET_VIM3 := true
 TARGET_DEV_BOARD := vim3
 TARGET_BOOTLOADER_BOARD_NAME := vim3
 
+# U-Boot is built from source (u-boot/khadas/vim3, see
+# vendor/khadas/vim3/bootloader/Android.mk) per lunch target. Both
+# variants share this same device tree/BoardConfig (TARGET_DEVICE=vim3),
+# so the split has to happen here rather than via a separate product's
+# own BoardConfig. Only the fastboot-flash storage backend differs
+# between the two defconfigs (mmc vs nvme) -- the GPT partition layout
+# and everything else is shared.
+ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
+TARGET_UBOOT_DEFCONFIG := khadas-vim3_android_ab_nvme_defconfig
+else
+TARGET_UBOOT_DEFCONFIG := khadas-vim3_android_ab_defconfig
+endif
+
 BOARD_KERNEL_IMAGE_NAME := Image
 
 TARGET_SELINUX_ENFORCE := false
@@ -134,10 +147,13 @@ TARGET_COPY_OUT_SYSTEM_DLKM := system_dlkm
 BOARD_DB_DYNAMIC_PARTITIONS_PARTITION_LIST += system_dlkm
 
 # Userdata partition
+# No BOARD_USERDATAIMAGE_PARTITION_SIZE: userdata is sized dynamically from
+# the GPT (size=- in the U-Boot partition table), so the same build image
+# self-sizes to whatever's left on the target disk (small eMMC or a much
+# larger NVMe SSD) rather than baking in a fixed capacity.
 TARGET_COPY_OUT_DATA := data
 TARGET_USERIMAGES_USE_F2FS := true
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
-BOARD_USERDATAIMAGE_PARTITION_SIZE := $(shell echo $$(( 10240 * 1024 * 1024 )))
 TARGET_USERIMAGES_SPARSE_F2FS_DISABLED ?= false
 
 # Recovery
@@ -328,13 +344,10 @@ BOARD_SEPOLICY_DIRS += \
 BOARD_VENDOR_SEPOLICY_DIRS += \
     vendor/gschuurman/vehicle_interfaces/usb_gnss_hal/android.hardware.gnss-service.usb/sepolicy/vendor
 
-BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := erofs
-BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
-BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
-BOARD_SYSTEM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
-TARGET_USERIMAGES_USE_EROFS := true
-BOARD_EROFS_COMPRESSOR := lz4hc
-BOARD_EROFS_PCLUSTER_SIZE := 65536
+BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_SYSTEM_DLKMIMAGE_FILE_SYSTEM_TYPE := ext4
 
 BOARD_VIRTUAL_AB_ENABLE := true
 BOARD_VIRTUAL_AB_COMPRESSION := true
