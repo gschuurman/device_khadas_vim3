@@ -39,7 +39,8 @@ $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sa
 
 PRODUCT_PACKAGES += \
     CarSettingsIntelligence \
-    OpenHeadunit
+    OpenHeadunit \
+    OrganicMaps
 
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
