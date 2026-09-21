@@ -69,6 +69,12 @@ Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci
 4. Verify the fix directly: `pci enum`, `pci` (expect 15b7:5003), then run `fastboot usb 0`, do one `fastboot getvar partition-size:boot_a` from the host, Ctrl+C, and `pci` again -- it must still show 15b7:5003. If it still shows 0xffff, the USB glue is being probed before `board_early_init_r` (or the MCU read failed) and we need to look at what else touches the PHY.
 5. Once Android boots from the SSD: confirm `bootflow scan` picks it over eMMC, and revisit the ACC/suspend-to-RAM VHAL work (`vendor/gschuurman/vehicle_interfaces`, commit `1ba64cf`) on real hardware — that was implemented and pushed today but never tested live (needs the Pico reconnected, or the onboard power button as a stand-in per earlier testing notes).
 
+## Bootloader flashing safety (learned the hard way, 2026-09-21)
+
+- The FIP size changes every build. A raw `mmc write ... 0x1 <count>` needs `count = ceil(size/512)` computed from the *actual* file -- reusing the previous build's count truncated BL33 and bricked boot0 (BL2 loops `BL33 CHK: 0x000000ff`; recover via maskrom, see the `project_bootloader_brick_recovery` memory).
+- Always verify: after `mmc write`, `mmc read` it back to another RAM address and compare `crc32` against the file's CRC32 (U-Boot has `crc32` but no md5sum/sha256sum command).
+- Prefer `fastboot flash bootloader` once the fixed U-Boot is running (it sizes the write itself); use `stage` + `mmc write` only as a last resort.
+
 ## Loose ends / things not yet done
 
 - `env default -a && saveenv` needed once more after whatever bootloader ends up flashed tomorrow, to sync `check_func_key` (now includes `mmc dev 2; pci enum; nvme scan;` before `fastboot usb 0`).
