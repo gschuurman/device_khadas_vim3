@@ -30,9 +30,9 @@ The real cause (found 2026-09-21, from reading the driver code):
   just gave us time to notice. The small (bootloader -> eMMC) flash "worked" only because it never needed the SSD.
 - Khadas' own patches (khadas-uboot `7003`/`7004`/`CC01`) do NOT fix this -- 7003/CC01 are already upstream (don't tear
   down clocks on link failure), and they mask the shared-PHY reset by running USB *before* `pci enum` in distro boot.
-- Fix: commits `bd205d88d25` + `872ea6d4a05` (u-boot, pushed; the second one enables `CONFIG_BOARD_EARLY_INIT_R` -- without it the hook is compiled but never called, which is what the first hardware test on 2026-09-21 hit): when the MCU says PCIe mode, drop `usb3-phy0` from U-Boot's own control DT in
-  `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log, and a clean `U-Boot 2026.07-g872ea6d4a055` banner (no `-dirty`). **Built only -- not yet
-  verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix2.bin`.
+- Fix: commits `bd205d88d25` + `872ea6d4a05` + `68e5d22a4e8` (u-boot, pushed; `68e5d22a4e8` makes the edit same-length/in-place -- the first version resized the live control DT, which shifted 105 nodes (xtal-clk, regulators, ...) that DM had already bound by offset, so PCIe PHY and USB both failed with -ENODEV (`failed to get pcie phy (ret=-19)`, `USB init failed: -19`). **Never fdt_setprop-resize U-Boot's own control DT; same-length in-place edits only.**; the second one enables `CONFIG_BOARD_EARLY_INIT_R` -- without it the hook is compiled but never called, which is what the first hardware test on 2026-09-21 hit): when the MCU says PCIe mode, drop `usb3-phy0` from U-Boot's own control DT in
+  `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log, and a clean `U-Boot 2026.07-g68e5d22a4e80` banner (no `-dirty`). **Built only -- not yet
+  verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix3.bin`.
 
 Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci` and look for `0xffff`.
 
