@@ -45,6 +45,10 @@ PRODUCT_PACKAGES += \
     ScreenOffService \
     Vim3PowerFrameworkOverlay
 
+# First-boot setup (Wi-Fi, Google account). Direct-boot-aware HOME while the device is unprovisioned.
+PRODUCT_PACKAGES += \
+    Vim3Setup
+
 # Volume control receiver (up / down / mute buttons in the system bar)
 PRODUCT_PACKAGES += \
     VolumeControl

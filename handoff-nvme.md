@@ -129,11 +129,14 @@ also removes the same-named-partition race that first-stage init has between the
    only has the wizard's permission stubs; the app is only in gapps-auto.mk, which cannot be inherited as a whole).
    Verified: with device_provisioned/user_setup_complete=1 persisted, a plain reboot unlocks user 10 by itself.
    Lineage's own car targets avoid this by inheriting common_car.mk (CarSettingsProviderOverlay = provisioned).
-   DECISION: we want a real first-boot Google sign-in, so lineage_vim3.mk stays on common.mk (unprovisioned) and now
-   installs com_google_android_car_setupwizard + com_android_managedprovisioning_googlecarui_rro.
-   UNTESTED: whether the wizard as HOME makes the unprovisioned first boot unlock the user. If user 10 stalls again
-   (FallbackHome, `dumpsys activity users` shows BOOTING), the known-good fallback is provisioned defaults
-   (inherit vendor/lineage/config/common_car.mk); do not patch frameworks/base.
+   DECISION: we want a first-boot setup with Google sign-in, but the Google car setup wizard is not used (not usable on
+   this hardware). lineage_vim3.mk stays on common.mk (unprovisioned) and Vim3Setup (vendor/gschuurman/vehicle_interfaces/
+   automotive/setup, in vehicle.mk) is the HOME activity until the user finishes: Wi-Fi, "Add Google account", Finish
+   (sets device_provisioned + user_setup_complete, disables itself, opens CarLauncher). It is a direct-boot-aware HOME
+   (priority 10 > CarProvision 1 > CarLauncher 0): while the driver user is still locked only direct-boot-aware activities
+   can be its home screen, which is what the earlier stall was missing (only FallbackHome resolved).
+   UNTESTED: compile-checked with javac only. If user 10 stalls again (`dumpsys activity users` shows BOOTING) the known-good
+   fallback is provisioned defaults (inherit vendor/lineage/config/common_car.mk); do not patch frameworks/base.
 6. ACC key: G12 gpio intc has no both-edge irq; polled key + falling-edge wake-only node (kernel f711d184dad68).
 
 **Embedded in the image now:** NVMe stability cmdline (no HMB, MPS 128, no ASPM/APST), 8 GiB swap entry (fstab, priority 10,
