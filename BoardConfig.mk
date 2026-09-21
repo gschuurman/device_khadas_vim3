@@ -181,10 +181,12 @@ BOARD_MKBOOTIMG_ARGS += --ramdisk_offset $(BOARD_RAMDISK_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --pagesize 4096
 
-# Kernel serial console disabled for boot speed (no printk/earlycon spew at 115200).
-# console=ttynull already comes from the GKI boot image, so it stays the sole console;
-# the in-memory kernel log is unaffected (adb shell dmesg still works). To re-enable
-# serial kernel debugging, restore: no_console_suspend console=ttyAML0,115200 earlycon
+# Kernel messages on the debug UART (uart_AO, 115200). console=ttynull still comes from the
+# GKI boot image; ttyAML0 is added next to it. SERIAL_MESON is a module (loaded in first
+# stage), so there is no earlycon: the console registers when meson_uart.ko loads (~0.9s) and
+# replays the whole log buffer, so nothing is lost. Costs some boot time at 115200. To turn it
+# off again, drop the next line -- the in-memory log (adb shell dmesg) is unaffected.
+BOARD_KERNEL_CMDLINE += no_console_suspend console=ttyAML0,115200n8
 BOARD_KERNEL_CMDLINE += printk.devkmsg=on
 BOARD_KERNEL_CMDLINE += init=/init
 BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
