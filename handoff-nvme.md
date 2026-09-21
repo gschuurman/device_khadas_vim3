@@ -64,7 +64,15 @@ Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci
    fastboot flash vbmeta_system_dlkm_b vbmeta_system_dlkm.img
    fastboot flash super super.img
    # do NOT `fastboot erase userdata`: the NVMe backend soft-erases by writing zeros to ~100GB (hours).
-   # A freshly-created GPT partition is already zero; /metadata and /data are `formattable` and get formatted on first boot.
+   # BUT metadata and the start of userdata MUST be wiped: a new GPT does NOT clear the partitions, and fs_mgr only
+   # formats a `formattable` partition if its first 4KB is all 0x00 or all 0xFF (libcutils partition_wiped()). Stale
+   # bytes => "Invalid f2fs superblock ... skipping mount" => /metadata never mounted => /data read-only =>
+   # vold "read_key failed" => init_user0_failed => reboot into recovery. From the U-Boot console (LBAs from `part list nvme 0`):
+   #   mw.b 0x8000000 0 0x100000
+   #   nvme write 0x8000000 <metadata start> 0x800     # 1 MiB
+   #   nvme write 0x8000000 <userdata start> 0x800     # 1 MiB
+   # (or `fastboot erase metadata`, 64MB, plus the userdata head via U-Boot). Also zero misc's A/B block (byte 2048 = LBA start+4)
+   # after failed boots, or U-Boot falls over to the never-populated slot b.
    fastboot reboot
    ```
 4. Verify the fix directly: `pci enum`, `pci` (expect 15b7:5003), then run `fastboot usb 0`, do one `fastboot getvar partition-size:boot_a` from the host, Ctrl+C, and `pci` again -- it must still show 15b7:5003. If it still shows 0xffff, the USB glue is being probed before `board_early_init_r` (or the MCU read failed) and we need to look at what else touches the PHY.
