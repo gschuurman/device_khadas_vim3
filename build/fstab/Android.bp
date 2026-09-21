@@ -21,7 +21,7 @@ genrule {
     name: "gen_fstab_vim3_mmc_avb",
     srcs: ["fstab.in.avb"],
     out: ["fstab.vim3"],
-    cmd: "sed -e s/@sdio_node@/ffe07000.mmc/ -e s/@id_mmc@/1/ -e '/^@swap_entry@$/d' $(in) > $(out)",
+    cmd: "sed -e s/@sdio_node@/ffe07000.mmc/ -e s/@id_mmc@/1/ -e '/^@swap_entry@$$/d' $(in) > $(out)",
 }
 
 
