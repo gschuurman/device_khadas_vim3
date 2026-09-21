@@ -111,3 +111,42 @@ ramdisk and DTB from the SSD and starts the kernel. It then reset because the im
 `boot_devices=soc/fc000000.pcie`, no NVMe fstab, no pci-meson in first-stage modules). NEXT: rebuild `lineage_vim3_nvme-bp4a-userdebug`,
 reflash vendor_boot/boot/init_boot/dtbo/vbmeta*/super to the SSD, boot, and check `ro.boot.boot_devices` and `/dev/block/platform/soc/fc000000.pcie/by-name`.
 Serial kernel console for debugging: `setenv bootargs "no_console_suspend console=ttyAML0,115200 earlycon loglevel=8"` before `bootflow scan -b`.
+
+## Update 2026-09-21 night: Android boots from NVMe; what is embedded in the build vs one-time provisioning
+
+**Verified on hardware:** U-Boot -> kernel -> first-stage (boot_devices=soc/fc000000.pcie) -> verity -> /metadata + /data
+(metadata-encrypted f2fs on the SSD, fresh format) -> system_server -> CarLauncher. No I/O errors, no memory corruption
+with the NVMe/PCIe workaround cmdline. The eMMC is hidden from the kernel when booting NVMe (U-Boot ft fixup), which
+also removes the same-named-partition race that first-stage init has between the two disks.
+
+**Root causes found this session (all fixed in source, none needs hot-patching):**
+1. libfdt 8-byte alignment of vendor_boot DTBs (U-Boot boot_get_fdt).
+2. Android bootmeth / bcb / AVB were eMMC-only (U-Boot).
+3. Slot b was selected while `super` only has slot a (reset A/B block: misc LBA start+4).
+4. `metadata`/`userdata` must be wiped before first boot (`partition_wiped()` needs 4 KiB of 0x00/0xFF), see above.
+5. First-boot user-switch race in frameworks/base: the Driver user (10) stayed in STATE_BOOTING because its home
+   activity went idle before the switch was registered -> never unlocked -> FallbackHome/black screen, emulated storage
+   UNMOUNTABLE. Fix: 10 s fallback in RootWindowContainer.switchUser() (frameworks/base 09b56db7303b).
+6. ACC key: G12 gpio intc has no both-edge irq; polled key + falling-edge wake-only node (kernel f711d184dad68).
+
+**Embedded in the image now:** NVMe stability cmdline (no HMB, MPS 128, no ASPM/APST), 8 GiB swap entry (fstab, priority 10,
+zram 1 GiB stays first), swap_block_device label, 4 KiB swap header image in `swap/`.
+
+**One-time provisioning after this build (partition table changes: swap is inserted before userdata):**
+```
+env default -a; saveenv              # new $partitions incl. the swap partition
+gpt write nvme 0 $partitions
+part start nvme 0 userdata us        # userdata moved 8 GiB up: wipe its head again
+mw.b 0x8000000 0 0x100000
+nvme write 0x8000000 ${us} 0x800
+# host:
+fastboot flash swap device/khadas/vim3/swap/swap-8g.img
+# (plus the usual image flash list; do NOT fastboot erase userdata)
+```
+Verify: `adb shell "cat /proc/swaps"` shows /dev/block/zram0 (prio 100) and the nvme swap partition (prio 10).
+
+**Not yet compiled:** the framework change and the Android.bp/fstab edits were only desk-checked (the fstab sed rules were
+run against the real template); build with `lunch lineage_vim3_nvme-bp4a-userdebug` in your normal shell.
+
+**Open:** "video buffer" glitching seen under first-boot load (CmaFree ~6 MB of 576 MB, Play Store/dexopt/rkpd retry loop,
+sugov at 55-70% CPU); no GPU/DRM kernel errors or SELinux denials. Needs a description of the symptom.
