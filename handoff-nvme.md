@@ -124,12 +124,12 @@ also removes the same-named-partition race that first-stage init has between the
 2. Android bootmeth / bcb / AVB were eMMC-only (U-Boot).
 3. Slot b was selected while `super` only has slot a (reset A/B block: misc LBA start+4).
 4. `metadata`/`userdata` must be wiped before first boot (`partition_wiped()` needs 4 KiB of 0x00/0xFF), see above.
-5. First-boot user-switch race in AOSP (NOT patched): the Driver user (10) stayed in STATE_BOOTING because its
-   home activity went idle before the switch was registered (slow first boot) -> never unlocked -> FallbackHome/black
-   screen, emulated storage UNMOUNTABLE. Starting any new activity for the user completes the switch. Worked around in
-   our own code: `UserSwitchNudge` (vendor/gschuurman/vehicle_interfaces/automotive/usernudge, in vehicle.mk): on
-   LOCKED_BOOT_COMPLETED, if the non-system user is still locked it starts an invisible activity (retries ~30 s).
-   Do not patch frameworks/base for this; there is no CarService config for it.
+5. Driver user (10) never unlocked on first boot (FallbackHome, black screen, emulated storage UNMOUNTABLE): our product
+   inherited vendor/lineage/config/common.mk instead of common_car.mk, so it lacked device/lineage/car
+   (CarSettingsProviderOverlay: def_device_provisioned / def_user_setup_complete / def_wifi_on = true). The device booted
+   UNPROVISIONED and the first-boot flow stalled the user switch. Verified: with the flags persisted, a plain reboot unlocks
+   user 10 by itself (finishing switch within ~1 s, CarLauncher in focus) with no workaround. Fix: lineage_vim3.mk now
+   inherits common_car.mk. No AOSP patch, no workaround app.
 6. ACC key: G12 gpio intc has no both-edge irq; polled key + falling-edge wake-only node (kernel f711d184dad68).
 
 **Embedded in the image now:** NVMe stability cmdline (no HMB, MPS 128, no ASPM/APST), 8 GiB swap entry (fstab, priority 10,
