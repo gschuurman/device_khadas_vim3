@@ -1,8 +1,8 @@
 # src                                                    mnt_point      type    mnt_flags   fs_mgr_flags
-system                                                   /system        erofs   ro          wait,avb=vbmeta,slotselect,logical,first_stage_mount
-vendor                                                   /vendor        erofs   ro          wait,avb,slotselect,logical,first_stage_mount
-vendor_dlkm                                              /vendor_dlkm   erofs   ro          wait,avb=vbmeta_vendor_dlkm,slotselect,logical,first_stage_mount
-system_dlkm                                              /system_dlkm   erofs   ro          wait,avb=vbmeta_system_dlkm,slotselect,logical,first_stage_mount
+system                                                   /system        ext4    ro          wait,avb=vbmeta,slotselect,logical,first_stage_mount
+vendor                                                   /vendor        ext4    ro          wait,avb,slotselect,logical,first_stage_mount
+vendor_dlkm                                              /vendor_dlkm   ext4    ro          wait,avb=vbmeta_vendor_dlkm,slotselect,logical,first_stage_mount
+system_dlkm                                              /system_dlkm   ext4    ro          wait,avb=vbmeta_system_dlkm,slotselect,logical,first_stage_mount
 /dev/block/platform/soc/@sdio_node@/by-name/vendor_boot  /vendor_boot   emmc    defaults    recoveryonly,slotselect
 /dev/block/platform/soc/@sdio_node@/by-name/boot         /boot          emmc    defaults    recoveryonly,slotselect,first_stage_mount,avb=boot
 /dev/block/platform/soc/@sdio_node@/by-name/init_boot    /init_boot     emmc    defaults    recoveryonly,slotselect,first_stage_mount,avb=init_boot
