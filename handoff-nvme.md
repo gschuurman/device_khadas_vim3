@@ -1,6 +1,6 @@
 # VIM3 M2X/NVMe Boot — Handoff
 
-**Last updated:** 2026-09-20
+**Last updated:** 2026-09-21 (evening)
 **Status:** Root cause of the PCIe-link-dropping problem found (shared USB3/PCIe PHY reset by U-Boot's USB probe) and fixed in u-boot `bd205d88d25` + `872ea6d4a05`; awaiting hardware verification. Everything else needed to boot Android from the NVMe SSD is in place and pushed.
 
 ---
@@ -80,3 +80,25 @@ Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci
 - `env default -a && saveenv` needed once more after whatever bootloader ends up flashed tomorrow, to sync `check_func_key` (now includes `mmc dev 2; pci enum; nvme scan;` before `fastboot usb 0`).
 - The ACC-line VHAL suspend-to-RAM implementation is untested on hardware (see `vendor/gschuurman/vehicle_interfaces` commit `1ba64cf` and the kernel wakeup-source DTS fix `994a4876d94b9`).
 - `packages/apps/OpenHeadunit` (system app for the USB Android Auto picker) is wired in but also untested since the device has been fully occupied with bootloader/NVMe work.
+
+## Update 2026-09-21 evening: U-Boot now boots Android from NVMe (userspace still to verify)
+
+Three more U-Boot bugs found on hardware, all fixed and pushed (u-boot master `45584307a3e`):
+1. **DTB alignment (`3d1498a2b3e`)** -- mainline libfdt rejects DTBs at non-8-byte-aligned addresses. vendor_boot packs the DTBs
+   back to back, so idx 1 (VIM3) is unaligned -> `fdt_check_header` failed silently -> "FDT and ATAGS support not compiled in".
+   `boot_get_fdt` now copies an unaligned Android DTB to an aligned buffer.
+2. **Android bootmeth was eMMC-only (`cb34cdad806`)** -- `android_check()` rejected non-MMC bootdevs (silently), `bcb` load hard-coded
+   `"mmc"`, and AVB (`get_partition`) used `find_mmc_device`. Now NVMe is accepted; AVB has `avb_ops_alloc_blk()` for non-MMC media.
+3. **Boot order (`58852b00707`)** -- NVMe build defaults to `boot_targets=nvme0 mmc2` (eMMC build: `mmc2`). The SAVED env keeps the
+   old value, so run `env default -a; saveenv` after flashing a new bootloader.
+
+Debug notes: the NVMe defconfig now has `CONFIG_BOOTSTD_FULL` (`bootflow scan -lae`, `bootdev list`, `bootdev hunt -l`); `check_func_key`
+uses `bootflow scan -b` accordingly. With BOOTSTD_FULL + `bootmeths=android`, `bootflow scan <label>` silently fails
+(global bootmeths can't be skipped) -- select the device with `setenv boot_targets nvme0` instead. Debug binary block count changed
+(FIP now 0xa06 blocks) -- always recompute `ceil(size/512)`.
+
+Verified on hardware: `bootflow scan -lae` shows `nvme#0.blk#1.bootdev.whole` as a valid android bootflow; `bootflow scan -b` loads kernel,
+ramdisk and DTB from the SSD and starts the kernel. It then reset because the images on the SSD were an OLD Android build (no
+`boot_devices=soc/fc000000.pcie`, no NVMe fstab, no pci-meson in first-stage modules). NEXT: rebuild `lineage_vim3_nvme-bp4a-userdebug`,
+reflash vendor_boot/boot/init_boot/dtbo/vbmeta*/super to the SSD, boot, and check `ro.boot.boot_devices` and `/dev/block/platform/soc/fc000000.pcie/by-name`.
+Serial kernel console for debugging: `setenv bootargs "no_console_suspend console=ttyAML0,115200 earlycon loglevel=8"` before `bootflow scan -b`.
