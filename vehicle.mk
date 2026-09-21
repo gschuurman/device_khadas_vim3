@@ -45,6 +45,10 @@ PRODUCT_PACKAGES += \
     ScreenOffService \
     Vim3PowerFrameworkOverlay
 
+# First-boot workaround for AOSP's user-switch race (driver user never unlocking); no AOSP patch
+PRODUCT_PACKAGES += \
+    UserSwitchNudge
+
 # Volume control receiver (up / down / mute buttons in the system bar)
 PRODUCT_PACKAGES += \
     VolumeControl

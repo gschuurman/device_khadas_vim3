@@ -124,9 +124,12 @@ also removes the same-named-partition race that first-stage init has between the
 2. Android bootmeth / bcb / AVB were eMMC-only (U-Boot).
 3. Slot b was selected while `super` only has slot a (reset A/B block: misc LBA start+4).
 4. `metadata`/`userdata` must be wiped before first boot (`partition_wiped()` needs 4 KiB of 0x00/0xFF), see above.
-5. First-boot user-switch race in frameworks/base: the Driver user (10) stayed in STATE_BOOTING because its home
-   activity went idle before the switch was registered -> never unlocked -> FallbackHome/black screen, emulated storage
-   UNMOUNTABLE. Fix: 10 s fallback in RootWindowContainer.switchUser() (frameworks/base 09b56db7303b).
+5. First-boot user-switch race in AOSP (NOT patched): the Driver user (10) stayed in STATE_BOOTING because its
+   home activity went idle before the switch was registered (slow first boot) -> never unlocked -> FallbackHome/black
+   screen, emulated storage UNMOUNTABLE. Starting any new activity for the user completes the switch. Worked around in
+   our own code: `UserSwitchNudge` (vendor/gschuurman/vehicle_interfaces/automotive/usernudge, in vehicle.mk): on
+   LOCKED_BOOT_COMPLETED, if the non-system user is still locked it starts an invisible activity (retries ~30 s).
+   Do not patch frameworks/base for this; there is no CarService config for it.
 6. ACC key: G12 gpio intc has no both-edge irq; polled key + falling-edge wake-only node (kernel f711d184dad68).
 
 **Embedded in the image now:** NVMe stability cmdline (no HMB, MPS 128, no ASPM/APST), 8 GiB swap entry (fstab, priority 10,
@@ -145,7 +148,7 @@ fastboot flash swap device/khadas/vim3/swap/swap-8g.img
 ```
 Verify: `adb shell "cat /proc/swaps"` shows /dev/block/zram0 (prio 100) and the nvme swap partition (prio 10).
 
-**Not yet compiled:** the framework change and the Android.bp/fstab edits were only desk-checked (the fstab sed rules were
+**Not yet built in-tree:** the UserSwitchNudge Java was compile-checked with javac against the SDK jar; the Android.bp/fstab edits were only desk-checked (the fstab sed rules were
 run against the real template); build with `lunch lineage_vim3_nvme-bp4a-userdebug` in your normal shell.
 
 **Open:** "video buffer" glitching seen under first-boot load (CmaFree ~6 MB of 576 MB, Play Store/dexopt/rkpd retry loop,
