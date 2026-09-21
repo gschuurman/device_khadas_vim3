@@ -34,12 +34,12 @@ The real cause (found 2026-09-21, from reading the driver code):
   `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log. **Built only -- not yet
   verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix.bin`.
 
-Do NOT call `pci enum` more than needed and do NOT trust `nvme info` as a liveness check -- use `pci` and look for `0xffff`.
+Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci` and look for `0xffff`.
 
 ## Picking this up tomorrow
 
 1. Flash the new bootloader (`fastboot flash bootloader ...usb3phy-fix.bin`, via the Function-key fastboot path so `mmc dev 2` is done first), then `env default -a; saveenv`. Check the boot log for `vim3: PCIe mode, USB3 PHY left to PCIe`. If it's missing, the MCU read failed or the mux is back in USB3 mode -- redo `i2c dev i2c@5000; i2c mw 0x18 0x33 1` and full power cycle. Bench PSU on V-IN is no longer required.
-2. With the board powered from the bench PSU and USB-C connected only to your PC for data, redo the GPT write (if `part list nvme 0` comes back empty — the last one may or may not have stuck given how much power instability happened around it):
+2. Redo the GPT write if `part list nvme 0` comes back empty (the last one may not have stuck, since the link kept dropping around it):
    ```
    pci enum
    nvme scan
