@@ -215,8 +215,16 @@ BOARD_KERNEL_CMDLINE += snd_aloop.index=7
 BOARD_KERNEL_CMDLINE += snd_aloop.timer_source=5.0.0
 BOARD_KERNEL_CMDLINE += snd_usb_audio.vid=0x0d8c,0x534d snd_usb_audio.pid=0x0102,0x0021 snd_usb_audio.index=5,6
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
+# Boot device = the controller whose block device holds the GPT (ueventd matches this against
+# the platform ancestor of the block device: eMMC -> soc/ffe07000.mmc, NVMe SSD on the PCIe
+# host -> soc/fc000000.pcie). The fstab suffix picks fstab.vim3.<mmc|nvme>.avb.
+ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
+BOARD_BOOTCONFIG += androidboot.boot_devices=soc/fc000000.pcie
+BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.nvme.avb
+else
 BOARD_BOOTCONFIG += androidboot.boot_devices=soc/ffe07000.mmc
 BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.mmc.avb
+endif
 BOARD_BOOTCONFIG += androidboot.load_modules_parallel=true
 
 ifneq ($(TARGET_SELINUX_ENFORCE), true)
@@ -286,7 +294,11 @@ BOARD_AVB_VENDOR_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 BOARD_AVB_VENDOR_DLKM_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 BOARD_AVB_SYSTEM_DLKM_ADD_HASHTREE_FOOTER_ARGS += --hash_algorithm sha256
 
+ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
+TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vim3_nvme_avb
+else
 TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vim3_mmc_avb
+endif
 
 # =============================================================================
 # VIM3 kernel — inline build from kernel/khadas/vim3 (GKI android16-6.12 ACK)

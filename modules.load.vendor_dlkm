@@ -33,7 +33,6 @@ meson-drm.ko
 meson_dw_hdmi.ko
 meson-gxl.ko
 panfrost.ko
-pci-meson.ko
 phy-meson-axg-mipi-dphy.ko
 phy-meson-axg-mipi-pcie-analog.ko
 phy-meson-axg-pcie.ko

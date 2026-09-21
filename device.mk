@@ -119,9 +119,18 @@ PRODUCT_COPY_FILES += \
 # fstab
 # =============================================================================
 
+# The eMMC and NVMe products share this device tree but not the block device path in the
+# fstab (soc/ffe07000.mmc vs soc/fc000000.pcie) -- see build/fstab/Android.bp and the matching
+# androidboot.boot_devices / fstab_suffix in BoardConfig.mk.
+ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
+PRODUCT_PACKAGES += \
+    fstab.vim3.nvme.avb \
+    fstab.vim3.nvme.avb.vendor_ramdisk
+else
 PRODUCT_PACKAGES += \
     fstab.vim3.mmc.avb \
     fstab.vim3.mmc.avb.vendor_ramdisk
+endif
 
 # =============================================================================
 # Init scripts and ueventd

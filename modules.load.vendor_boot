@@ -34,6 +34,7 @@ meson_uart.ko
 pcs_xpcs.ko
 phy-meson-g12a-usb2.ko
 phy-meson-g12a-usb3-pcie.ko
+pci-meson.ko
 phy-meson-gxl-usb2.ko
 phy-meson8b-usb2.ko
 pinctrl-meson-axg-pmx.ko

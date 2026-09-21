@@ -32,3 +32,19 @@ prebuilt_etc {
     vendor_ramdisk_available: true,
 }
 
+// NVMe (Khadas M2X) variant: the SSD hangs off the PCIe host at /soc/pcie@fc000000, so
+// ueventd creates /dev/block/platform/soc/fc000000.pcie/by-name/* instead of the eMMC's
+// soc/ffe07000.mmc. Selected per product in device.mk / BoardConfig.mk (lineage_vim3_nvme).
+genrule {
+    name: "gen_fstab_vim3_nvme_avb",
+    srcs: ["fstab.in.avb"],
+    out: ["fstab.vim3"],
+    cmd: "sed -e s/@sdio_node@/fc000000.pcie/ $(in) > $(out)",
+}
+
+prebuilt_etc {
+    name: "fstab.vim3.nvme.avb",
+    src: ":gen_fstab_vim3_nvme_avb",
+    vendor: true,
+    vendor_ramdisk_available: true,
+}

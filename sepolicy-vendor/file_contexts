@@ -25,6 +25,7 @@
 
 # eMMC sysfs — init writes to queue/discard_max_bytes at boot for tuning
 /sys/devices/platform/soc/ffe07000\.mmc(/.*)?                                           u:object_r:sysfs_mmc:s0
+/sys/devices/platform/soc/fc000000\.pcie(/.*)?                                          u:object_r:sysfs_mmc:s0
 
 # ext4 per-filesystem stats — CarService reads lifetime_write_kbytes for storage diagnostics
 /sys/fs/ext4(/.*)?                                                                       u:object_r:sysfs_fs_ext4_features:s0
@@ -60,6 +61,18 @@
 /dev/block/platform/soc/ffe07000.mmc/by-name/vbmeta(_[ab])?           u:object_r:vbmeta_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/metadata                 u:object_r:metadata_block_device:s0
 /dev/block/platform/soc/ffe07000.mmc/by-name/frp                      u:object_r:frp_block_device:s0
+
+# NVMe (M2X SSD) equivalents -- same partitions, PCIe host as the platform ancestor
+/dev/block/platform/soc/fc000000.pcie/by-name/userdata                 u:object_r:userdata_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/misc                     u:object_r:misc_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/super                    u:object_r:super_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/boot(_[ab])?             u:object_r:boot_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/init_boot(_[ab])?        u:object_r:boot_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/vendor_boot(_[ab])?      u:object_r:boot_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/dtbo(_[ab])?             u:object_r:dtbo_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/vbmeta(_[ab])?           u:object_r:vbmeta_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/metadata                 u:object_r:metadata_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/frp                      u:object_r:frp_block_device:s0
 
 
 #############################
