@@ -403,8 +403,15 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 # file is appended after the real values, the last (spoofed) one wins at
 # boot once the strict check is relaxed.
 BUILD_BROKEN_DUP_SYSPROP := true
-# TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_spoof_system.prop
-# TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_spoof_product.prop
-# TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
-# TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
-# TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop
+# Present Google's own GAS car emulator identity to Play Services/Maps (the gapps_auto blobs come from
+# that image and only work for devices Google recognises). Scope is deliberately narrow: fingerprint
+# + brand/manufacturer/model only (gms_identity_*.prop), NOT the older gms_spoof_*.prop which also
+# forced sdk=35/release=15/type=user/tags on an Android 16 userdebug build. ro.product.name/device stay
+# real so OTA pre-device checks keep working. This does not make the device certified: it will not
+# pass a hardware-backed Play Integrity check, and it is unsupported by Google. After the first boot
+# with this identity, clear Play Services once (adb shell pm clear com.google.android.gms) and sign in.
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gms_identity_system.prop
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gms_identity_product.prop
+TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_identity_vendor.prop
+TARGET_ODM_PROP += $(DEVICE_PATH)/gms_identity_odm.prop
+TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_identity_system_ext.prop

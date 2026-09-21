@@ -124,12 +124,16 @@ also removes the same-named-partition race that first-stage init has between the
 2. Android bootmeth / bcb / AVB were eMMC-only (U-Boot).
 3. Slot b was selected while `super` only has slot a (reset A/B block: misc LBA start+4).
 4. `metadata`/`userdata` must be wiped before first boot (`partition_wiped()` needs 4 KiB of 0x00/0xFF), see above.
-5. Driver user (10) never unlocked on first boot (FallbackHome, black screen, emulated storage UNMOUNTABLE): our product
-   inherited vendor/lineage/config/common.mk instead of common_car.mk, so it lacked device/lineage/car
-   (CarSettingsProviderOverlay: def_device_provisioned / def_user_setup_complete / def_wifi_on = true). The device booted
-   UNPROVISIONED and the first-boot flow stalled the user switch. Verified: with the flags persisted, a plain reboot unlocks
-   user 10 by itself (finishing switch within ~1 s, CarLauncher in focus) with no workaround. Fix: lineage_vim3.mk now
-   inherits common_car.mk. No AOSP patch, no workaround app.
+5. Driver user (10) never unlocked on first boot (FallbackHome, black screen, emulated storage UNMOUNTABLE) on an
+   UNPROVISIONED device (GAS default def_device_provisioned=false) that had no setup wizard app installed (gapps-core.mk
+   only has the wizard's permission stubs; the app is only in gapps-auto.mk, which cannot be inherited as a whole).
+   Verified: with device_provisioned/user_setup_complete=1 persisted, a plain reboot unlocks user 10 by itself.
+   Lineage's own car targets avoid this by inheriting common_car.mk (CarSettingsProviderOverlay = provisioned).
+   DECISION: we want a real first-boot Google sign-in, so lineage_vim3.mk stays on common.mk (unprovisioned) and now
+   installs com_google_android_car_setupwizard + com_android_managedprovisioning_googlecarui_rro.
+   UNTESTED: whether the wizard as HOME makes the unprovisioned first boot unlock the user. If user 10 stalls again
+   (FallbackHome, `dumpsys activity users` shows BOOTING), the known-good fallback is provisioned defaults
+   (inherit vendor/lineage/config/common_car.mk); do not patch frameworks/base.
 6. ACC key: G12 gpio intc has no both-edge irq; polled key + falling-edge wake-only node (kernel f711d184dad68).
 
 **Embedded in the image now:** NVMe stability cmdline (no HMB, MPS 128, no ASPM/APST), 8 GiB swap entry (fstab, priority 10,
@@ -153,3 +157,13 @@ run against the real template); build with `lunch lineage_vim3_nvme-bp4a-userdeb
 
 **Open:** "video buffer" glitching seen under first-boot load (CmaFree ~6 MB of 576 MB, Play Store/dexopt/rkpd retry loop,
 sugov at 55-70% CPU); no GPU/DRM kernel errors or SELinux denials. Needs a description of the symptom.
+
+## Google Maps / GMS (2026-09-21)
+State: Maps, Play Services, Play Store installed; network fine; no Google account; device presents the real identity
+(userdebug, test-keys, verified boot orange), so Maps draws its UI but no map (uncertified).
+Change (untested in-tree): gms_identity_*.prop (fingerprint + brand/manufacturer/model of Google's GAS car emulator only)
+wired via TARGET_*_PROP in BoardConfig.mk. Not the old gms_spoof_*.prop (they forced sdk=35/release=15/type/tags).
+Limits: not certification, will not pass hardware-backed Play Integrity, unsupported by Google, may break with GMS updates.
+After the first boot with this identity: `adb shell pm clear com.google.android.gms`, then sign in.
+Alternative that needs no spoofing: Google Maps through the phone via Android Auto (HeadUnit Revived / OpenHeadunit).
+

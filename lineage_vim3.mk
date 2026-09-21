@@ -1,15 +1,20 @@
 # Inherit device configuration (brings in car.mk, vehicle.mk, wireless.mk, etc.)
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
-# LineageOS common configuration for Android Automotive: common.mk plus device/lineage/car
-# (CarSettingsProviderOverlay: device_provisioned / user_setup_complete / wifi_on default to true,
-# CarServiceOverlay: no user-notice UI). Every Lineage car target (emulator, GSI, cuttlefish)
-# inherits this. Without it the device boots unprovisioned and the first-boot flow (CarProvision /
-# FallbackHome) leaves the driver user locked forever: no launcher, black screen.
-$(call inherit-product, vendor/lineage/config/common_car.mk)
+# LineageOS common configuration. NOT common_car.mk: that ships device_provisioned/user_setup_complete
+# = true (CarSettingsProviderOverlay), which skips the first-boot setup wizard. We want the Google
+# car setup wizard (sign in to a Google account), so the device boots unprovisioned (GAS defaults
+# from car_settings_provider_config_rro) and the wizard is the HOME activity until setup is done.
+$(call inherit-product, vendor/lineage/config/common.mk)
 
 # Google Automotive Apps
 $(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
+
+# gapps-core.mk only carries the wizard's permission files; the app itself is listed in the full
+# gapps-auto.mk, which cannot be inherited as a whole (it names modules that do not exist).
+PRODUCT_PACKAGES += \
+    com_google_android_car_setupwizard \
+    com_android_managedprovisioning_googlecarui_rro
 
 # Product identity
 PRODUCT_BRAND := Khadas
