@@ -41,3 +41,7 @@ subsystem usbmisc
 /sys/devices/platform/soc/ffe09000.usb/ff500000.usb/xhci-hcd.1.auto/usb1/1-1/1-1.4/1-1.4.1/1-1.4.1:1.0/0003:0EEF:0005.0001/input/input* inhibited 0664 system system
 
 /dev/ttyAML*  0660  system  system
+
+# OP-TEE (BL32 in the FIP): /dev/tee0 = client interface, /dev/teepriv0 = tee-supplicant
+/dev/tee0       0660  system  system
+/dev/teepriv0   0660  system  system

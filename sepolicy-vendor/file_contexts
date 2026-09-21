@@ -119,3 +119,7 @@
 
 # AIC8800D80 USB WiFi dongle mode-switch daemon
 /vendor/bin/aic8800_modeswitch          u:object_r:aic8800_modeswitch_exec:s0
+
+# OP-TEE kernel driver nodes
+/dev/tee[0-9]*        u:object_r:tee_device:s0
+/dev/teepriv[0-9]*    u:object_r:tee_device:s0
