@@ -167,3 +167,10 @@ State: Maps, Play Services, Play Store installed; network fine; no Google accoun
 disguised (an experimental gms_identity_* change was added and then removed again); the old gms_spoof_*.prop files stay unused and
 their TARGET_*_PROP hookups stay commented out in BoardConfig.mk. Options that do not involve that: Google Maps through the phone
 via Android Auto (HeadUnit Revived / OpenHeadunit), or an open map app on the board (OsmAnd / Organic Maps).
+
+## Session-end state (2026-09-21)
+
+- `fastboot oem format` now works on the NVMe (block) backend (u-boot 0e603b09782 + 7428383a2ba, local, NOT pushed, not run on hardware): writes GPT from $partitions, wipes heads of metadata/userdata/misc, writes swap v1 header. Running U-Boot must be the new one: rebuild (`rm -f out/target/product/vim3/u-boot_kvim3_ab.bin; m u-boot_kvim3_ab`, check `strings -a out/target/product/vim3/obj/UBOOT_OBJ/u-boot.bin | grep -c "wrote swap header"` == 1) and flash via manual stage/mmc write/crc32 (old U-Boot can't `fastboot flash bootloader`).
+- Navigation: Google Maps needs a Play-certified device -> Organic Maps (F-Droid, arm64) baked in via car.mk `OrganicMaps` (vendor/gschuurman/vehicle_interfaces/automotive/organicmaps). Unbuilt/untested. microG rejected (same package name as GMS, needs signature-spoofing framework patch). Device identity is NOT disguised.
+- Unverified on hardware: Vim3Setup as first-boot HOME (fallback: inherit common_car.mk), swap in /proc/swaps, Organic Maps launch.
+- Unpushed local commits: u-boot, device/khadas/vim3, vendor/gschuurman/vehicle_interfaces, vendor/khadas/vim3.
