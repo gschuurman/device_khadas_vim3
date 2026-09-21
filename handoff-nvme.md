@@ -1,7 +1,7 @@
 # VIM3 M2X/NVMe Boot — Handoff
 
 **Last updated:** 2026-09-20
-**Status:** Blocked on power delivery to the VIM3 while flashing over USB-C. Everything else needed to boot Android from the NVMe SSD is in place and pushed.
+**Status:** Root cause of the PCIe-link-dropping problem found (shared USB3/PCIe PHY reset by U-Boot's USB probe) and fixed in u-boot `bd205d88d25`; awaiting hardware verification. Everything else needed to boot Android from the NVMe SSD is in place and pushed.
 
 ---
 
@@ -14,17 +14,31 @@
   2. **Fastboot mode never probed PCI/NVMe** (`include/configs/khadas-vim3_android.h`, commit `b28bb7e8eef`) — `bootflow scan`'s NVMe hunter auto-calls `pci_init()`, but `fastboot usb 0` is a separate code path that never did. Added `pci enum; nvme scan;` before it.
   3. **`fastboot flash bootloader` impossible once the block backend targets NVMe** (`drivers/fastboot/fb_block.c`, commit `3e6b696054e`) — `fastboot_raw_partition_bootloader` (the mechanism that lets `fastboot flash bootloader` write to eMMC's boot0 hardware partition) only ever existed in `fb_mmc.c`. Ported an equivalent raw-partition fallback into `fb_block.c`, hardcoded to eMMC device 2 regardless of what the block backend targets for Android's own partitions. Also needed `mmc dev 2;` added before `fastboot usb 0` (commit `fd482e76a0a`) — without it, `blk_get_dev("mmc", 2)` inside that new fallback destabilized the USB gadget stack badly enough to kill fastboot's USB transport entirely (confirmed live: adding `mmc dev 2` at the console before manually invoking `fastboot usb 0` fixed it immediately).
 
-## The actual current blocker: power, not software
+## Root cause of the "PCIe link dies" problem: shared USB3/PCIe PHY (NOT power)
 
-Today's flashing attempts kept failing in a way that looked like software bugs (NVMe write hangs, PCIe link dying, "timing" issues) but root-caused to **power delivery**, confirmed by this pattern:
-- Small transfers (the ~1.3MB bootloader) reliably succeed.
-- Large transfers (`boot_a`, 64MB) reliably kill the PCIe link — `pci` afterward shows `01.00.00 0xffff 0xffff` (classic "device not responding" signature), even when `nvme scan` was never run in that session at all. The drop correlates with USB transfer size, not with any NVMe command sequence.
-- The VIM3 has **no separate DC barrel jack** — power is exclusively via the same USB-C port used for fastboot data (5-20V PD; Khadas sells dedicated 24W/30W USB-C PD adapters for it). It was being powered off a laptop's USB-C port during today's testing, which very likely can't sustain the combined VIM3 + M2X + SSD load during a large USB transfer without sagging.
-- A bare wall charger doesn't work as a fix by itself (no data lines) — plan was either a laptop-on-AC-power retest, a USB-C "2-in-1 charge+sync" splitter cable, or (what you landed on) injecting power directly via the board's **V-IN** pads/header from a bench PSU, bypassing USB-C power negotiation entirely while keeping USB-C free for fastboot data only.
+Earlier revisions of this doc blamed power delivery. That was wrong: a bench 5V/5A supply on V-IN changed nothing.
+The real cause (found 2026-09-21, from reading the driver code):
+
+- The USB3.0 Type-A port and the M.2 slot share ONE combo PHY (`usb3_pcie_phy`) behind the MCU-controlled FUSB340 mux.
+- U-Boot's USB glue (`meson-g12a-usb-ctrl`) lists it as `usb3-phy0`. When the glue probes (`fastboot usb 0`, `usb start`,
+  bootflow's usb hunter, usbkbd), `phy_meson_g12a_usb3_init()` does `reset_assert_bulk()` + `reset_deassert_bulk()` on the
+  shared PHY and reprograms it for USB3; the glue's remove path asserts the resets again. That is the PHY the PCIe
+  controller is running on -> link dies, `pci` shows `01.00.0 0xffff:0xffff`, every flash fails with
+  "failed to get partition info". `nvme info` keeps printing stale cached identify data, so it looks alive.
+- Only the *kernel* DT was ever fixed up for this (`meson_ft_board_setup`); U-Boot never edited its own control DT.
+- Everything that looked like "power" / "size" / "timing" was this: the drop happens when USB comes up, and big transfers
+  just gave us time to notice. The small (bootloader -> eMMC) flash "worked" only because it never needed the SSD.
+- Khadas' own patches (khadas-uboot `7003`/`7004`/`CC01`) do NOT fix this -- 7003/CC01 are already upstream (don't tear
+  down clocks on link failure), and they mask the shared-PHY reset by running USB *before* `pci enum` in distro boot.
+- Fix: commit `bd205d88d25` (u-boot, pushed): when the MCU says PCIe mode, drop `usb3-phy0` from U-Boot's own control DT in
+  `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log. **Built only -- not yet
+  verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix.bin`.
+
+Do NOT call `pci enum` more than needed and do NOT trust `nvme info` as a liveness check -- use `pci` and look for `0xffff`.
 
 ## Picking this up tomorrow
 
-1. Wire up bench PSU to V-IN (check the correct voltage/polarity for this input before connecting — get this right the first time, this is a direct power injection point with presumably no reverse-polarity protection to rely on).
+1. Flash the new bootloader (`fastboot flash bootloader ...usb3phy-fix.bin`, via the Function-key fastboot path so `mmc dev 2` is done first), then `env default -a; saveenv`. Check the boot log for `vim3: PCIe mode, USB3 PHY left to PCIe`. If it's missing, the MCU read failed or the mux is back in USB3 mode -- redo `i2c dev i2c@5000; i2c mw 0x18 0x33 1` and full power cycle. Bench PSU on V-IN is no longer required.
 2. With the board powered from the bench PSU and USB-C connected only to your PC for data, redo the GPT write (if `part list nvme 0` comes back empty — the last one may or may not have stuck given how much power instability happened around it):
    ```
    pci enum
@@ -52,7 +66,7 @@ Today's flashing attempts kept failing in a way that looked like software bugs (
    fastboot erase userdata
    fastboot reboot
    ```
-4. If `boot_a` (64MB) now goes through cleanly where it didn't before, the power theory is confirmed and the rest should follow. If it *still* dies at the same point with stable bench-PSU power, that reopens the "real NVMe driver/hardware bug" investigation — at that point the next move is trying a different NVMe SSD to isolate drive-specific firmware fragility from a genuine driver defect, since we ruled out connection/seating and (about to rule out) power.
+4. Verify the fix directly: `pci enum`, `pci` (expect 15b7:5003), then run `fastboot usb 0`, do one `fastboot getvar partition-size:boot_a` from the host, Ctrl+C, and `pci` again -- it must still show 15b7:5003. If it still shows 0xffff, the USB glue is being probed before `board_early_init_r` (or the MCU read failed) and we need to look at what else touches the PHY.
 5. Once Android boots from the SSD: confirm `bootflow scan` picks it over eMMC, and revisit the ACC/suspend-to-RAM VHAL work (`vendor/gschuurman/vehicle_interfaces`, commit `1ba64cf`) on real hardware — that was implemented and pushed today but never tested live (needs the Pico reconnected, or the onboard power button as a stand-in per earlier testing notes).
 
 ## Loose ends / things not yet done
