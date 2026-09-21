@@ -21,7 +21,7 @@ genrule {
     name: "gen_fstab_vim3_mmc_avb",
     srcs: ["fstab.in.avb"],
     out: ["fstab.vim3"],
-    cmd: "sed -e s/@sdio_node@/ffe07000.mmc/ -e s/@id_mmc@/1/ $(in) > $(out)",
+    cmd: "sed -e s/@sdio_node@/ffe07000.mmc/ -e s/@id_mmc@/1/ -e '/^@swap_entry@$/d' $(in) > $(out)",
 }
 
 
@@ -39,7 +39,9 @@ genrule {
     name: "gen_fstab_vim3_nvme_avb",
     srcs: ["fstab.in.avb"],
     out: ["fstab.vim3"],
-    cmd: "sed -e s/@sdio_node@/fc000000.pcie/ $(in) > $(out)",
+    // Disk swap on the SSD (partition "swap", see u-boot khadas-vim3_android.h). Lower priority than
+    // the 1 GiB zram (100), so compressed RAM is used first and the SSD only takes the overflow.
+    cmd: "sed -e s/@sdio_node@/fc000000.pcie/ -e 's|^@swap_entry@$$|/dev/block/platform/soc/fc000000.pcie/by-name/swap none swap defaults wait,swapprio=10|' $(in) > $(out)",
 }
 
 prebuilt_etc {

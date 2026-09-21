@@ -66,6 +66,7 @@
 /dev/block/platform/soc/fc000000.pcie/by-name/userdata                 u:object_r:userdata_block_device:s0
 /dev/block/platform/soc/fc000000.pcie/by-name/misc                     u:object_r:misc_block_device:s0
 /dev/block/platform/soc/fc000000.pcie/by-name/super                    u:object_r:super_block_device:s0
+/dev/block/platform/soc/fc000000.pcie/by-name/swap                     u:object_r:swap_block_device:s0
 /dev/block/platform/soc/fc000000.pcie/by-name/boot(_[ab])?             u:object_r:boot_block_device:s0
 /dev/block/platform/soc/fc000000.pcie/by-name/init_boot(_[ab])?        u:object_r:boot_block_device:s0
 /dev/block/platform/soc/fc000000.pcie/by-name/vendor_boot(_[ab])?      u:object_r:boot_block_device:s0

@@ -229,6 +229,19 @@ BOARD_BOOTCONFIG += androidboot.fstab_suffix=vim3.mmc.avb
 endif
 BOARD_BOOTCONFIG += androidboot.load_modules_parallel=true
 
+# NVMe (WD SN520, DRAM-less) on the Amlogic DW PCIe host: with these the kernel survived heavy
+# first-boot I/O; without them it hit random memory corruption (oopses in unrelated subsystems
+# around the time apexd/vendor_dlkm start). Which one is the real fix is not narrowed down yet:
+#   - nvme.max_host_mem_size_mb=0  no Host Memory Buffer (the device DMAs into host RAM itself)
+#   - pci=pcie_bus_peer2peer       max payload 128 B instead of the 256 B the kernel picks
+#   - nvme_core.default_ps_max_latency_us=0 / pcie_aspm=off  no NVMe/PCIe power-state games
+ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
+BOARD_KERNEL_CMDLINE += nvme.max_host_mem_size_mb=0
+BOARD_KERNEL_CMDLINE += nvme_core.default_ps_max_latency_us=0
+BOARD_KERNEL_CMDLINE += pci=pcie_bus_peer2peer
+BOARD_KERNEL_CMDLINE += pcie_aspm=off
+endif
+
 ifneq ($(TARGET_SELINUX_ENFORCE), true)
 BOARD_BOOTCONFIG += androidboot.selinux=permissive
 endif
