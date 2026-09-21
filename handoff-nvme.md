@@ -159,11 +159,8 @@ run against the real template); build with `lunch lineage_vim3_nvme-bp4a-userdeb
 sugov at 55-70% CPU); no GPU/DRM kernel errors or SELinux denials. Needs a description of the symptom.
 
 ## Google Maps / GMS (2026-09-21)
-State: Maps, Play Services, Play Store installed; network fine; no Google account; device presents the real identity
-(userdebug, test-keys, verified boot orange), so Maps draws its UI but no map (uncertified).
-Change (untested in-tree): gms_identity_*.prop (fingerprint + brand/manufacturer/model of Google's GAS car emulator only)
-wired via TARGET_*_PROP in BoardConfig.mk. Not the old gms_spoof_*.prop (they forced sdk=35/release=15/type/tags).
-Limits: not certification, will not pass hardware-backed Play Integrity, unsupported by Google, may break with GMS updates.
-After the first boot with this identity: `adb shell pm clear com.google.android.gms`, then sign in.
-Alternative that needs no spoofing: Google Maps through the phone via Android Auto (HeadUnit Revived / OpenHeadunit).
-
+State: Maps, Play Services, Play Store installed; network fine; no Google account; the device presents its real identity
+(userdebug, test-keys, verified boot orange, uncertified), and Maps draws its UI but no map. Decision: the device identity is NOT
+disguised (an experimental gms_identity_* change was added and then removed again); the old gms_spoof_*.prop files stay unused and
+their TARGET_*_PROP hookups stay commented out in BoardConfig.mk. Options that do not involve that: Google Maps through the phone
+via Android Auto (HeadUnit Revived / OpenHeadunit), or an open map app on the board (OsmAnd / Organic Maps).

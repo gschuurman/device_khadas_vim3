@@ -1,7 +1,0 @@
-# Google backend identity for GMS (Google GAS car emulator). ONLY the fingerprint and
-# brand/manufacturer/model: never sdk/release/type/tags or ro.product.name/device (OTA checks
-# pre-device against ro.product.device). See BoardConfig.mk for scope and limits.
-ro.system_ext.build.fingerprint=google/sdk_gcar_arm64/emulator_car64_arm64:15/AAI5.260516.001.A1/15446886:user/release-keys
-ro.product.system_ext.brand=google
-ro.product.system_ext.manufacturer=Google
-ro.product.system_ext.model=car_generic
