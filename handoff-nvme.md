@@ -63,7 +63,8 @@ Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci
    fastboot flash vbmeta_system_dlkm_a vbmeta_system_dlkm.img
    fastboot flash vbmeta_system_dlkm_b vbmeta_system_dlkm.img
    fastboot flash super super.img
-   fastboot erase userdata
+   # do NOT `fastboot erase userdata`: the NVMe backend soft-erases by writing zeros to ~100GB (hours).
+   # A freshly-created GPT partition is already zero; /metadata and /data are `formattable` and get formatted on first boot.
    fastboot reboot
    ```
 4. Verify the fix directly: `pci enum`, `pci` (expect 15b7:5003), then run `fastboot usb 0`, do one `fastboot getvar partition-size:boot_a` from the host, Ctrl+C, and `pci` again -- it must still show 15b7:5003. If it still shows 0xffff, the USB glue is being probed before `board_early_init_r` (or the MCU read failed) and we need to look at what else touches the PHY.
