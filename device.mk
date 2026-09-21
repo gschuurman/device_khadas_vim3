@@ -210,7 +210,9 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.keystore.app_attest_key.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.keystore.app_attest_key.xml
 
 # USB HAL
-BOARD_VENDOR_SEPOLICY_DIRS += hardware/amlogic/yukawa/usb/aidl/sepolicy
+# Local copy of the BayLibre USB HAL sepolicy: upstream now uses platform sysfs_typec, which is
+# private below board API 202604 (this device is 202504), so keep the sysfs_typec_info variant.
+BOARD_VENDOR_SEPOLICY_DIRS += device/khadas/vim3/sepolicy-usb
 
 PRODUCT_PACKAGES += \
     com.android.hardware.usb.generic
