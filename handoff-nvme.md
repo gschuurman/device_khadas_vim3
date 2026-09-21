@@ -1,7 +1,7 @@
 # VIM3 M2X/NVMe Boot — Handoff
 
 **Last updated:** 2026-09-20
-**Status:** Root cause of the PCIe-link-dropping problem found (shared USB3/PCIe PHY reset by U-Boot's USB probe) and fixed in u-boot `bd205d88d25`; awaiting hardware verification. Everything else needed to boot Android from the NVMe SSD is in place and pushed.
+**Status:** Root cause of the PCIe-link-dropping problem found (shared USB3/PCIe PHY reset by U-Boot's USB probe) and fixed in u-boot `bd205d88d25` + `872ea6d4a05`; awaiting hardware verification. Everything else needed to boot Android from the NVMe SSD is in place and pushed.
 
 ---
 
@@ -30,9 +30,9 @@ The real cause (found 2026-09-21, from reading the driver code):
   just gave us time to notice. The small (bootloader -> eMMC) flash "worked" only because it never needed the SSD.
 - Khadas' own patches (khadas-uboot `7003`/`7004`/`CC01`) do NOT fix this -- 7003/CC01 are already upstream (don't tear
   down clocks on link failure), and they mask the shared-PHY reset by running USB *before* `pci enum` in distro boot.
-- Fix: commit `bd205d88d25` (u-boot, pushed): when the MCU says PCIe mode, drop `usb3-phy0` from U-Boot's own control DT in
-  `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log. **Built only -- not yet
-  verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix.bin`.
+- Fix: commits `bd205d88d25` + `872ea6d4a05` (u-boot, pushed; the second one enables `CONFIG_BOARD_EARLY_INIT_R` -- without it the hook is compiled but never called, which is what the first hardware test on 2026-09-21 hit): when the MCU says PCIe mode, drop `usb3-phy0` from U-Boot's own control DT in
+  `board_early_init_r()`. Expect `vim3: PCIe mode, USB3 PHY left to PCIe` early in the boot log, and a clean `U-Boot 2026.07-g872ea6d4a055` banner (no `-dirty`). **Built only -- not yet
+  verified on hardware.** Bootloader: `out/target/product/vim3/bootloader/u-boot_kvim3_ab-nvme-usb3phy-fix2.bin`.
 
 Do NOT trust `nvme info` as a liveness check (it prints cached data) -- use `pci` and look for `0xffff`.
 
