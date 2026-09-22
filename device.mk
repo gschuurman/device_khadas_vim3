@@ -201,14 +201,15 @@ PRODUCT_PACKAGES += \
     com.google.cf.health.storage
 
 # Security HALs
-# KeyMint: back to the in-process (insecure) reference HAL so vold/keystore2 never block on OP-TEE/
-# tee-supplicant at boot. The OP-TEE-backed one (vendor/khadas/vim3/optee/keymint) is still built and
-# installed, but only as a manual-start test instance -- see its .rc for how to invoke it once the device
-# is up and reachable over adb. Flip this back once that's been verified working.
+# KeyMint: the OP-TEE-backed HAL (vendor/khadas/vim3/optee/keymint) is now the boot-time service --
+# vold/keystore2 depend on OP-TEE/tee-supplicant at boot. Switched from the in-process nonsecure
+# reference HAL (com.android.hardware.keymint.rust_nonsecure) once the TA was proven loading
+# reliably across reboots with real dynamic SHM, a real HW RNG and an efuse-backed HUK. It's
+# installed unconditionally by vendor/khadas/vim3/optee/optee.mk, so it isn't listed here.
+# Gatekeeper has no OP-TEE implementation in this project; stays on the nonsecure reference HAL.
 PRODUCT_PACKAGES += \
     com.android.hardware.authsecret \
-    com.android.hardware.gatekeeper.nonsecure \
-    com.android.hardware.keymint.rust_nonsecure
+    com.android.hardware.gatekeeper.nonsecure
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.keystore.app_attest_key.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.keystore.app_attest_key.xml
