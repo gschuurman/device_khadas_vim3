@@ -82,6 +82,9 @@
 # Security
 /vendor/bin/hw/android\.hardware\.gatekeeper@1\.0-service\.software    u:object_r:hal_gatekeeper_default_exec:s0
 /vendor/bin/hw/android\.hardware\.security\.keymint-service\.nonsecure  u:object_r:hal_keymint_default_exec:s0
+# Manual-start OP-TEE KeyMint test instance (vendor.keymint-optee-test, disabled by default) --
+# not the active/boot-time HAL, see device.mk.
+/vendor/bin/hw/android\.hardware\.security\.keymint-service\.optee  u:object_r:hal_keymint_default_exec:s0
 /vendor/bin/hw/android\.hardware\.authsecret-service.example u:object_r:hal_authsecret_default_exec:s0
 
 /vendor/bin/hw/android\.hardware\.drm(@[0-9]+\.[0-9]+)?-service\.widevine    u:object_r:hal_drm_widevine_exec:s0
@@ -123,3 +126,8 @@
 # OP-TEE kernel driver nodes
 /dev/tee[0-9]*        u:object_r:tee_device:s0
 /dev/teepriv[0-9]*    u:object_r:tee_device:s0
+
+# OP-TEE userspace
+/vendor/bin/tee-supplicant     u:object_r:tee_exec:s0
+/data/vendor/tee(/.*)?         u:object_r:tee_data_file:s0
+/metadata/vendor/tee(/.*)?     u:object_r:tee_metadata_file:s0

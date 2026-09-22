@@ -13,3 +13,6 @@ type sysfs_vpu, sysfs_type, fs_type;
 type vendor_firmware_file, vendor_file_type, file_type;
 
 type sysfs_mmc, fs_type, sysfs_type;
+
+# OP-TEE secure storage (REE FS) in /metadata: needed before /data is mounted
+type tee_metadata_file, file_type;

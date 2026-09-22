@@ -1,3 +1,6 @@
 # Allow hal_keymint to read serialno property for device identification
 # This is needed for key derivation and attestation
 get_prop(hal_keymint_default, serialno_prop)
+
+# KeyMint TA runs in OP-TEE: the HAL talks to it through /dev/tee0 (libteec).
+allow hal_keymint_default tee_device:chr_file rw_file_perms;

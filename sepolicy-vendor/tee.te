@@ -1,0 +1,8 @@
+# tee-supplicant (OP-TEE normal-world helper). The tee domain, tee_exec and the base rules come from
+# system/sepolicy/vendor/tee.te; this adds what OP-TEE needs: TAs are loaded from /vendor/lib/optee_armtz,
+# and secure storage lives in /metadata (mounted before /data) so KeyMint works before FBE unlock.
+allow tee vendor_file:dir r_dir_perms;
+allow tee vendor_file:file r_file_perms;
+allow tee metadata_file:dir search;
+allow tee tee_metadata_file:dir create_dir_perms;
+allow tee tee_metadata_file:file create_file_perms;

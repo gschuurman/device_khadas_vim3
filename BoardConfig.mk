@@ -188,6 +188,12 @@ BOARD_MKBOOTIMG_ARGS += --pagesize 4096
 # off again, drop the next line -- the in-memory log (adb shell dmesg) is unaffected.
 BOARD_KERNEL_CMDLINE += no_console_suspend console=ttyAML0,115200n8
 BOARD_KERNEL_CMDLINE += printk.devkmsg=on
+# Debugging the OP-TEE/KeyMint TA-load failure with only the serial console available (boot never gets far
+# enough for adb): the default console loglevel filters out KERN_DEBUG lines, which is exactly the level
+# tee-supplicant's DMSG() writes at (via stdio_to_kmsg -> /dev/kmsg_debug, see
+# vendor/khadas/vim3/optee/tee-supplicant.rc + cfg_tee_supp_log_level=3 in optee.mk). ignore_loglevel prints
+# everything live instead of only what would reach `dmesg`. Revert once root-caused.
+BOARD_KERNEL_CMDLINE += ignore_loglevel
 BOARD_KERNEL_CMDLINE += init=/init
 BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M
@@ -199,7 +205,12 @@ BOARD_KERNEL_CMDLINE += brcmfmac.feature_disable=0x82008
 # P2P up. The real WiFi-Direct fix is wifi.direct.interface=p2p-dev-wlan0, set in
 # hal/connectivity/device_vendor.mk (the brcmfmac P2P-device is a non-netdev wdev, not
 # a p2p0 netdev). Leave p2pon unset so brcmfmac uses its dynamic P2P-device model.
-BOARD_KERNEL_CMDLINE += cma=576M
+# Bumped from 576M (2026-09-22): /proc/pagetypeinfo showed the CMA zone at 0 free pages of any order --
+# fully consumed, most likely by display/GPU (meson-drm + panfrost, /dev/dma_heap/reserved). OP-TEE's
+# dynamic-SHM pool for loading TAs draws from this same pool, so TA loads failed with a plain OOM
+# (get_rpc_alloc_res / TEEC_ERROR_OUT_OF_MEMORY) whenever nothing was left. Test value; device has 4GB RAM.
+# See device/khadas/vim3/handoff-keymint-optee.md.
+BOARD_KERNEL_CMDLINE += cma=768M
 # Pin ALSA card indices so they're deterministic across boots/replug. snd-aloop and
 # snd-usb-audio are both built-in (=y), so their module params go on the kernel cmdline.
 # snd-aloop (native radio loopback) -> card 7. USB audio pinned by VID:PID:
@@ -408,3 +419,24 @@ BUILD_BROKEN_DUP_SYSPROP := true
 # TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
 # TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
 # TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop
+
+# ---------------------------------------------------------------------------
+# OP-TEE userspace (vendor/khadas/vim3/optee): tee-supplicant, xtest and the test TAs.
+# These must exist before external/optee_test/**/Android.mk are parsed.
+# ---------------------------------------------------------------------------
+VIM3_OPTEE_MAKE := $(abspath prebuilts/build-tools/linux-x86/bin/make)
+VIM3_OPTEE_PATH := /usr/bin:/bin:$(abspath prebuilts/build-tools/linux-x86/bin)
+# the from-source OP-TEE build (module u-boot_kvim3_ab_optee) exports the TA dev kit here
+VIM3_OPTEE_OBJ = $(PRODUCT_OUT)/obj/UBOOT_OPTEE_OBJ
+VIM3_OPTEE_TA_DEV_KIT = $(VIM3_OPTEE_OBJ)/optee/export-ta_arm64
+VIM3_OPTEE_FIP_BUILT = $(PRODUCT_OUT)/obj/ETC/u-boot_kvim3_ab_optee_intermediates/u-boot_kvim3_ab_optee.bin
+VIM3_OPTEE_TA_SCRIPT := vendor/khadas/vim3/optee/scripts/build-optee-ta.sh
+# hook that optee_test's TA Android.mk files include to build a TA
+BUILD_OPTEE_MK := vendor/khadas/vim3/optee/build_optee_ta.mk
+# xtest's Android.mk takes its headers from $(TA_DEV_KIT_DIR)/host_include and makes every object depend on
+# $(OPTEE_BIN): point both at the from-source OP-TEE build so the freshly exported dev kit exists first.
+TA_DEV_KIT_DIR = $(abspath $(VIM3_OPTEE_TA_DEV_KIT))
+OPTEE_BIN = $(VIM3_OPTEE_FIP_BUILT)
+# xtest picks sources with the OP-TEE CFG_* flags at parse time, before the dev kit exists (its conf.mk is only
+# read on incremental builds). Preset the one that matters; build-g12b-optee-fip.sh fails if OP-TEE disagrees.
+CFG_GP_SOCKETS := y
