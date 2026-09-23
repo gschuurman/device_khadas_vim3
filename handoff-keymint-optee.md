@@ -223,10 +223,136 @@ comes up and `/data` mounts normally, then try `tee_client_test`.
 - Upstream `system/keymint/wire/Cargo.toml` has a duplicate `hal_v4` key; the build script copies KMR and renames it to `hal_v5` rather than editing the tree.
 
 ## Known gaps (security, not build)
-- HUK: our OP-TEE `plat-amlogic` has no real HUK (stubbed/zero). The TA derives its root KEK, KAK and auth-token key from it, so keys are not device-secret yet.
-- RNG: not hardware-seeded (OP-TEE prints "configuration might be insecure").
-- Root of trust / boot info comes from Android properties via the reference helper, not from the bootloader.
+- ~~HUK: stubbed/zero~~ **RESOLVED 2026-09-22**, see the dated section below: real HUK derived from the
+  Amlogic efuse AES-key field (SHA-256 whitened), real hardware RNG. Documented, deliberately-accepted
+  caveat: this efuse field is not hardware-locked on this device (matches any unlocked-bootloader retail
+  device's threat model) -- see `bootloader/optee_os/core/arch/arm/plat-amlogic/huk.c`'s header comment.
+- RNG: **RESOLVED 2026-09-22**, same section -- real MMIO TRNG (`0xff630218`), `CFG_WITH_SOFTWARE_PRNG=n`.
+- Root of trust / boot info still comes from Android properties via the reference helper, not from the
+  bootloader. Unchanged, still a real gap.
 - Attestation keys are software and not Google-provisioned, so Play Integrity will not trust the chain.
+  Unchanged, still the main remaining gap for real attestation.
+
+## 2026-09-22: real TeeChannel bug found and fixed -- KeyMint AIDL surface now fully validated
+
+**Context**: after the HUK/RNG work above landed, the OP-TEE KeyMint HAL was promoted to be the real
+boot-time HAL (`device.mk`: removed `com.android.hardware.keymint.rust_nonsecure`, OP-TEE HAL's `.rc`
+made boot-time). A full clean build+flash then hung forever at `keystore2`/`vold` startup. Root cause
+turned out to be a real, previously-undetected bug -- not a HUK/RNG/attestation-provisioning limitation --
+because `tee_client_test` (the existing manual test tool) only ever did `TEEC_InitializeContext` +
+`TEEC_OpenSession`, never a real KeyMint AIDL command round-trip, so this bug had never been exercised.
+
+**Symptom, reproduced via the disabled/manual-start `vendor.keymint-optee-test` instance (not the boot
+path) so the device stayed usable while debugging**: every `getHardwareInfo()` call (and, transitively,
+every real KeyMint operation) failed with `TEE_ERROR_OUT_OF_MEMORY` (`0xffff000c`), deterministically,
+right after the HAL's own 3 startup messages (boot info, attestation IDs, HAL info) succeeded.
+
+**Two false leads, ruled out empirically before finding the real cause** (kept as the tale for future
+"OOM" reports on this HAL -- don't re-chase these):
+1. `CFG_TZDRAM_SIZE` was only 12 MiB although BL2 hardware-protects a full 32 MiB window at
+   `CFG_TZDRAM_START` (confirmed by decompiling `bl2.bin`, see the comment in
+   `bootloader/optee_os/core/arch/arm/plat-amlogic/conf.mk`) -- 20 MiB sat unused. Raised to 32 MiB
+   (`0x02000000`) in `conf.mk` and the matching `sec_mem_size`/`res_mem_size` in `link.mk`. **Made zero
+   difference** -- identical failure, byte-for-byte, before and after. Kept anyway (real, harmless
+   headroom win now that the TA has more room), but it was not the fix.
+2. The KeyMint TA's own heap (`tee/optee/ta/keymint/src/config.rs`, `HEAP_SIZE`) was 512 KiB, a value
+   fixed at TA-build time regardless of platform TZDRAM size. Bumped 8x to 4 MiB. **Also made zero
+   difference.** Kept anyway (real headroom for the actual crypto workload once attestation is added),
+   but likewise not the fix. Together, (1) and (2) proved the failure was NOT a real memory-exhaustion
+   problem, just mislabeled as one.
+3. Bumped `CFG_TEE_CORE_LOG_LEVEL` to 4 (`TRACE_DEBUG`) and `CFG_TEE_CORE_MALLOC_DEBUG=y` in `conf.mk` to
+   get OP-TEE's own trace on the physical UART. **The trace stayed completely silent** across the failing
+   call -- proof the failure never reached secure world at all. **This debug bump is still in the
+   currently-flashed `u-boot_kvim3_ab_optee.bin` and should be reverted to defaults before the final
+   commit** (revert both lines, or just delete them -- `?=` means the platform default of 2 comes back).
+
+**Real root cause, confirmed with kprobes + strace** (methodology: `mount -t debugfs debugfs
+/sys/kernel/debug`; kretprobe on `tee_ioctl` -- the single `/dev/tee0` ioctl entry point -- showed **zero
+hits** during the failing call, proving the error never reached the kernel driver either; `strace -f -p
+<hal_pid>` then caught the real syscall: `ioctl(528018950, TEE_IOC_SHM_ALLOC, ...) = -1 EBADF`. `528018950`
+is not a real file descriptor -- it's garbage read from a corrupted `TEEC_Context.imp.fd` field, and
+libteec's `teec_shm_alloc()` maps any `ioctl()` failure, including `EBADF`, to `TEEC_ERROR_OUT_OF_MEMORY`,
+which is why it looked like a memory bug for so long).
+
+The actual bug: `TEEC_Session.imp.ctx` (see `external/optee_client/libteec/include/tee_client_api.h`) is a
+**raw C pointer** (`TEEC_Context *ctx`) that `TEEC_OpenSession()` sets to point at wherever the
+`TEEC_Context` argument lives *at the moment of the call*. `vendor/khadas/vim3/optee/keymint/hal/main.rs`'s
+old `TeeChannel::try_connect()` held `ctx` **by value on the stack**, called `TEEC_OpenSession(&mut ctx,
+...)`, then did `Ok(Self { ctx, session })` -- a Rust move that relocates `ctx`'s bytes to their final
+home inside the `Arc<Mutex<TeeChannel>>`. `session.imp.ctx` is an opaque-to-Rust raw pointer, so the move
+does **not** update it: it's left pointing at the now-dead stack frame inside `try_connect()`. Every
+subsequent function call reuses that stack region, progressively clobbering it, until enough of it had
+been overwritten that `ctx.imp.fd` read back as garbage on the 4th real call. This also explains why the
+3 startup messages "worked": not enough intervening stack use had happened yet to corrupt that memory.
+
+**Fix** (`vendor/khadas/vim3/optee/keymint/hal/main.rs`): box `ctx` (`Box<teec::TEEC_Context>`), allocated
+on the heap *before* `TEEC_InitializeContext`/`TEEC_OpenSession` ever run, so its address is final and
+stable for the `TeeChannel`'s entire lifetime regardless of later Rust-level moves. `TeeChannel.ctx` is now
+`Box<teec::TEEC_Context>`; `try_connect()`, `Drop::drop()` updated to call `.as_mut()` where a `&mut
+TEEC_Context` is needed. Full doc comment on the struct explains why, for future readers.
+
+**Validated end-to-end** with a new standalone AIDL client (not just `tee_client_test`'s bare
+`OpenSession`), added at `vendor/khadas/vim3/optee/keymint/aidltest/` (`keymint_aidl_test`,
+`PRODUCT_PACKAGES_DEBUG`, links `android.hardware.security.keymint-V4-rust` + `libbinder_rs` directly,
+calls the real `IKeyMintDevice` binder interface). Deployed via `adb push` to `/data/local/tmp` (not
+installed into any image yet) against the manual-start `vendor.keymint-optee-test` instance. Full run,
+all steps OK:
+```
+getHardwareInfo   -> versionNumber=3, TRUSTED_ENVIRONMENT, "TEE KeyMint in Rust" / "Google"
+earlyBootEnded    -> OK
+generateKey       -> AES-128-ECB-NoPadding, 191B key blob, 1 characteristics entry
+begin/update/finish -> real AES-ECB encrypt round trip, 16B in -> 16B ciphertext out
+deleteKey         -> OK
+importKey         -> raw AES-128 import, 184B key blob, then deleted
+```
+This is the first time in the project any real KeyMint AIDL operation (not just TA session-open) has been
+exercised successfully.
+
+**Deployment method used while iterating** (fast, no reboot needed, safe): `adb root`; `adb push` the
+rebuilt `.ta` or HAL binary to `/data/local/tmp/`; `adb shell mount --bind <pushed file>
+/vendor/lib/optee_armtz/dc274baf-....ta` (or `/vendor/bin/hw/android.hardware.security.keymint-service.optee`
+for the HAL); `stop`/`start vendor.keymint-optee-test` (HAL) or just reboot (TA, since tee-supplicant
+wouldn't accept a plain `stop`/`start` cycle here -- "Unable to stop/start service", needs a real reboot to
+reload). **Bind-mounts do not survive reboot** -- redo them after every reboot while testing uncommitted
+changes; this matches the project's standing rule of bind-mount-only, never remount/disable-verity.
+
+**Current state of the fix, as of stopping this session -- NOTHING beyond the bootloader flash below is
+committed or baked into any image**:
+- `bootloader/optee_os/core/arch/arm/plat-amlogic/conf.mk` (TZDRAM 32 MiB + debug log level/malloc debug),
+  `link.mk` (matching sec_mem_size/res_mem_size) -- **baked into the currently-flashed
+  `u-boot_kvim3_ab_optee.bin`** (flashed to `bootloader` this session). Debug log level should be reverted
+  before committing (see above).
+- `kernel/khadas/vim3_overlay/.../meson-g12b-a311d-khadas-vim3-android.dts` -- comment-only fix (12->32
+  MiB), **not yet baked into a flashed dtbo/boot image, harmless either way** (was never functional).
+- `tee/optee/ta/keymint/src/config.rs` (`HEAP_SIZE` 512 KiB -> 4 MiB) -- rebuilt, currently **only
+  bind-mounted**, not in the flashed vendor image; needs `m optee_ta_keymint` + reflash (or another
+  bind-mount) to persist across the next real reboot cycle if kept.
+- `vendor/khadas/vim3/optee/keymint/hal/main.rs` (**the actual fix**, boxed `ctx`) -- rebuilt, currently
+  **only bind-mounted**, not in the flashed vendor image.
+- `vendor/khadas/vim3/optee/keymint/aidltest/` (new `keymint_aidl_test` tool + `optee.mk`
+  `PRODUCT_PACKAGES_DEBUG` entry) -- built, only pushed to `/data/local/tmp`, not installed into any image.
+- The device's *actual currently-running config* (device.mk / sepolicy-vendor / vendor Android.bp+rc) is
+  still the safe **rollback** state from earlier this session: `com.android.hardware.keymint.rust_nonsecure`
+  is the real boot-time HAL; the OP-TEE HAL is `vendor.keymint-optee-test`, disabled/manual-start, no
+  `vintf_fragment_modules`. **keystore2/vold do not use OP-TEE at all right now** -- the AIDL validation
+  above was against the manual-start instance only, reached by a brand-new process's fresh binder lookup
+  (existing keystore2 binder connections aren't redirected just because servicemanager's `.../default`
+  registration briefly pointed at both HALs at once during testing).
+
+## Next steps (in order)
+1. Revert `CFG_TEE_CORE_LOG_LEVEL`/`CFG_TEE_CORE_MALLOC_DEBUG` in `plat-amlogic/conf.mk` to defaults.
+2. Decide whether to keep the TZDRAM 32 MiB bump and TA heap 4 MiB bump (recommended: yes, both are real,
+   harmless headroom) or revert them now that the real bug is fixed and they're not strictly needed.
+3. Commit: `optee_os` (TZDRAM/log-level), `tee/optee/ta/keymint` (heap size), `vendor_khadas_vim3` (the
+   real `main.rs` fix + the new `keymint_aidl_test` tool), `kernel_overlay` (DTS comment). Rebuild+reflash
+   `bootloader` (for the reverted log level) and either `vendorimage`+bind-mount test again or a full
+   flash to get everything installed for real (not just bind-mounted) before the next step.
+4. Once (3) is flashed and confirmed clean via `keymint_aidl_test` again post-reboot (bind-mounts don't
+   survive, so this also re-validates the fix survived a real, non-bind-mounted rebuild): re-promote the
+   OP-TEE KeyMint HAL to boot-time (reverse the `device.mk`/sepolicy-vendor/vendor Android.bp+rc rollback
+   from earlier this session) and do a full clean boot test, watching serial for the keystore2/vold hang
+   that started all of this -- expected to be gone now.
+5. Attestation key provisioning remains the next real phase after that (see "Known gaps" above).
 
 ## Correction to an earlier claim
 I said the Khadas/Amlogic `.ta` files use a different container magic than OP-TEE. Wrong: both start with `48 53 54 4f` ("HSTO" = SHDR_MAGIC). The header fields after the magic differ, and the Amlogic signing key/TDK ABI still make them unusable here. Conclusion (don't ship them) stands.
@@ -237,3 +363,19 @@ I said the Khadas/Amlogic `.ta` files use a different container magic than OP-TE
 3. Verify keystore2 picks up the HAL: `dumpsys android.security.maintenance`, `cmd -l | grep keymint`, `getprop`/logcat for keystore2 and vold (FBE unlock works).
 4. Then: real HUK (Amlogic efuse via SMC, or a provisioned secret), hardware RNG seeding, bootloader-provided RoT.
 5. Commit locally per repo (device/khadas/vim3, vendor/khadas/vim3, .repo/local_manifests); ask before pushing (standing preference).
+
+## 2026-09-23: fix validated on a real flash; OP-TEE KeyMint re-promoted to boot-time
+- Flashed build (no bind-mounts; on-device HAL + TA sha256 == `out/`): `tee_client_test <uuid>` and the full
+  `keymint_aidl_test` round trip passed once, then 3/3 again after a reboot, against the manual-start instance.
+- Re-promoted: the committed promotion (device.mk without `rust_nonsecure`, `vendor.keymint-default` early_hal
+  with the VINTF fragments) is back in effect, with one real fix -- the HAL now runs as `user system`/`group
+  system`, since `nobody` can't open `/dev/tee0` (system:system 0660).
+- `CFG_TEE_CORE_LOG_LEVEL=4`/`CFG_TEE_CORE_MALLOC_DEBUG=y` removed from `plat-amlogic/conf.mk`.
+- TA heap 4 MiB now comes from `vendor/khadas/vim3/optee/keymint/overlay/ta-heap-size.patch` (applied by
+  `build-keymint-ta.sh`), so `tee/optee/ta/keymint` stays pristine at its pinned revision.
+- Found while testing: `tee-supplicant` ran as `u:r:init:s0` (only worked because SELinux is permissive) --
+  the rollback had dropped its `tee_exec` label. HEAD's `file_contexts` has the labels again.
+- **Flash with `./flash.sh --clean`**: existing /data + /metadata keys were made by the nonsecure KeyMint and
+  can't be decrypted by the TA. Also RAM-boot the rebuilt FIP before flashing it.
+- Next: clean boot test (watch serial for the keystore2/vold hang and tee/hal_keymint_default denials), then
+  attestation key provisioning.
