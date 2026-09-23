@@ -3,6 +3,8 @@
 # and secure storage lives in /metadata (mounted before /data) so KeyMint works before FBE unlock.
 allow tee vendor_file:dir r_dir_perms;
 allow tee vendor_file:file r_file_perms;
-allow tee metadata_file:dir search;
+allow tee metadata_file:dir { search getattr };
+# stdio_to_kmsg in tee-supplicant.rc (same as prng_seeder in system/sepolicy)
+allow tee kmsg_debug_device:chr_file { w_file_perms getattr ioctl };
 allow tee tee_metadata_file:dir create_dir_perms;
 allow tee tee_metadata_file:file create_file_perms;
