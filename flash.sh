@@ -20,9 +20,6 @@ done
 if [ "$CLEAN" = 1 ]; then
     echo "Formatting device..."
     fastboot oem format
-
-    echo "Rebooting to fastbootd..."
-    fastboot reboot bootloader
 fi
 
 echo "Flashing partitions..."
