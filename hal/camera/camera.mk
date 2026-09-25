@@ -15,3 +15,14 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     device/khadas/vim3/hal/camera/camera_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/camera_config.xml \
     device/khadas/vim3/hal/camera/external_camera_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/external_camera_config.xml
+
+# Rear view camera during boot: rvc_early (packages/apps/RearViewCamera/early) shows the camera in
+# reverse before Android has booted, through the car display proxy. cameraserver only serves it
+# (AID_AUTOMOTIVE_EVS, before system_server) for an exterior system camera, which the external camera
+# HAL reports when this property is set. Side effect: third-party apps can't use the USB camera.
+PRODUCT_PACKAGES += \
+    cardisplayproxyd \
+    rvc_early
+
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.camera.external.automotive_location=exterior_rear
