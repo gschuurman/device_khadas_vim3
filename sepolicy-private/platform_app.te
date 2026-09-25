@@ -1,0 +1,2 @@
+# The rear view camera app (platform signed) stores its settings in persist.rvc.*.
+set_prop(platform_app, rvc_config_prop)

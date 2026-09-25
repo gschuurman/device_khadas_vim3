@@ -1,0 +1,3 @@
+# Rear view camera settings (persist.rvc.*): written by the RVC app's settings screen, read by the
+# camera activity. A system-side property: platform apps may not set vendor properties.
+system_internal_prop(rvc_config_prop)
