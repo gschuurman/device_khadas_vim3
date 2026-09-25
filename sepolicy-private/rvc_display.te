@@ -1,0 +1,21 @@
+# The rear view camera's full screen layer while Android boots (packages/apps/RearViewCamera/early):
+# runs as graphics, the uid SurfaceFlinger lets create a top-level layer before system_server.
+type rvc_display, domain, coredomain;
+type rvc_display_exec, exec_type, file_type, system_file_type;
+type rvc_display_service, service_manager_type;
+init_daemon_domain(rvc_display)
+
+binder_use(rvc_display)
+add_service(rvc_display, rvc_display_service)
+binder_call(rvc_display, rvc_early)
+
+allow rvc_display surfaceflinger_service:service_manager find;
+binder_call(rvc_display, surfaceflinger)
+# SurfaceFlinger's transaction callbacks.
+binder_call(surfaceflinger, rvc_display)
+# The camera queues its frames into the layer's buffer queue, which lives in this process.
+binder_call(cameraserver, rvc_display)
+
+hal_client_domain(rvc_display, hal_graphics_allocator)
+allow rvc_display gpu_device:chr_file rw_file_perms;
+allow rvc_display gpu_device:dir search;

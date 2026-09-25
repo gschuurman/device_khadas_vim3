@@ -1,1 +1,2 @@
-/system/bin/rvc_early    u:object_r:rvc_early_exec:s0
+/system/bin/rvc_early      u:object_r:rvc_early_exec:s0
+/system/bin/rvc_display    u:object_r:rvc_display_exec:s0
