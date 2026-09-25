@@ -43,6 +43,10 @@ PRODUCT_PACKAGES += \
     OpenHeadunit \
     OrganicMaps
 
+# Dicio's speech recognition (English, Dutch) and wake word models, so voice works offline from the
+# first boot (our Dicio build loads them from here instead of downloading them).
+PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*,vendor/gschuurman/vehicle_interfaces/automotive/dicio/models,$(TARGET_COPY_OUT_PRODUCT)/usr/share/dicio)
+
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
 

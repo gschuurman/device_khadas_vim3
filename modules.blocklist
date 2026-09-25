@@ -1,1 +1,6 @@
 blacklist btsdio
+# etnaviv (the A311D's Vivante VIPNano NPU) is built but kept from loading: enabling the npu DT node
+# hung the board at ~7 s of boot (2026-09-25; cause not known yet: power domain, clocks or the driver,
+# and this blocklist alone did not prevent the hang). The npu node is disabled again; bring it up by
+# hand before changing this.
+blacklist etnaviv
