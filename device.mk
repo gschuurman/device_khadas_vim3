@@ -268,3 +268,8 @@ PRODUCT_COPY_FILES += \
     device/khadas/vim3/flash.sh:$(TARGET_OUT)/flash.sh
 
 PRODUCT_PACKAGE_OVERLAYS += device/khadas/vim3/overlay
+
+# Kernel module blocklist for ueventd/modprobe (see the file). The inline kernel build doesn't install
+# one (BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST is only used for prebuilt modules).
+PRODUCT_COPY_FILES += \
+    device/khadas/vim3/modules.blocklist:$(TARGET_COPY_OUT_VENDOR_DLKM)/lib/modules/modules.blocklist

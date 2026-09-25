@@ -1,6 +1,8 @@
-blacklist btsdio
-# etnaviv (the A311D's Vivante VIPNano NPU) is built but kept from loading: enabling the npu DT node
-# hung the board at ~7 s of boot (2026-09-25; cause not known yet: power domain, clocks or the driver,
-# and this blocklist alone did not prevent the hang). The npu node is disabled again; bring it up by
-# hand before changing this.
-blacklist etnaviv
+blocklist btsdio
+# Installed as /vendor_dlkm/lib/modules/modules.blocklist by device.mk (the inline kernel build ignores
+# BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST). libmodprobe only accepts the "blocklist" keyword.
+#
+# etnaviv (the A311D's Vivante VIPNano NPU): loaded by init.vim3.rc on boot instead, after panfrost (GPU)
+# and meson-drm (display) have their nodes. Coldboot loads modules in parallel, and minigbm's gbm_mesa takes
+# the first render node as the GPU: an NPU on renderD128 would break graphics.
+blocklist etnaviv

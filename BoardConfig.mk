@@ -403,7 +403,6 @@ DEVICE_PATH := device/khadas/vim3
 # PRODUCT_PACKAGES := $(filter-out NetworkPreferenceApp DisplayCompatTestApp DisplayCompatIntentApp, $(PRODUCT_PACKAGES))
 # PRODUCT_PACKAGES_DEBUG := $(filter-out NetworkPreferenceApp DisplayCompatTestApp DisplayCompatIntentApp, $(PRODUCT_PACKAGES_DEBUG))
 
-BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST := device/khadas/vim3/modules.blocklist
 
 # gms_spoof_*.prop intentionally re-set several ro.build.* keys (release,
 # sdk, type, flavor, ...) that gen_build_prop.py already hard-assigns from

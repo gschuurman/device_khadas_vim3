@@ -49,6 +49,9 @@ on init
     start watchdogd
 
 on boot
+    # The NPU (etnaviv on the Vivante VIPNano): only now, so the GPU (panfrost) keeps renderD128 -- see
+    # modules.blocklist. insmod ignores the blocklist.
+    insmod /vendor_dlkm/lib/modules/etnaviv.ko
     chmod 0755 /sys/kernel/debug
     chown system system /sys/kernel/debug
     chmod 0222 /sys/kernel/debug/tracing/trace_marker
