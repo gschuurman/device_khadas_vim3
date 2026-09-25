@@ -45,9 +45,10 @@ PRODUCT_PACKAGES += \
     ScreenOffService \
     Vim3PowerFrameworkOverlay
 
-# First-boot setup (Wi-Fi, Google account). Direct-boot-aware HOME while the device is unprovisioned.
+# First-boot setup: LineageOS SetupWizard with its Automotive flow (res/raw-car). vendor/lineage's
+# common.mk only ships it on non-automotive products, so add it here; HOME while unprovisioned.
 PRODUCT_PACKAGES += \
-    Vim3Setup
+    LineageSetupWizard
 
 # Volume control receiver (up / down / mute buttons in the system bar)
 PRODUCT_PACKAGES += \
