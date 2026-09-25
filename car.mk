@@ -39,6 +39,7 @@ $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sa
 
 PRODUCT_PACKAGES += \
     CarSettingsIntelligence \
+    Dicio \
     OpenHeadunit \
     OrganicMaps
 
