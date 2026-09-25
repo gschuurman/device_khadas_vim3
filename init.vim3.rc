@@ -54,9 +54,13 @@ on boot
     chmod 0222 /sys/kernel/debug/tracing/trace_marker
     write /sys/kernel/debug/tracing/tracing_on 0
 
-    # Switch CPU clusters to schedutil post-boot (EAS works best with schedutil on both)
-    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
-    write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor schedutil
+    # Post-boot CPU governor: conservative, sampled every 100 ms. Not schedutil: on this SoC a frequency
+    # change goes through the SCPI firmware (cpuinfo_transition_latency = 50 ms) and schedutil requested
+    # ~300 of them per second per cluster, keeping its sugov:0/sugov:2 threads at ~50% CPU each and halving
+    # app performance (e.g. Organic Maps search 8.8 s -> 4.4 s after switching).
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor conservative
+    write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor conservative
+    write /sys/devices/system/cpu/cpufreq/conservative/sampling_rate 100000
 
 
     # Background app limit: 16 for 4GB device (was 4, tuned for 2GB)
