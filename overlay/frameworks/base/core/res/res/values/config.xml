@@ -100,4 +100,9 @@
     <bool name="config_uiThemeToggle">true</bool>
     
     <string name="config_deviceConfiguratorPackageName" translatable="false">com.google.android.gms</string>
+
+    <!-- CarSystemUI (not the app) decides whether the system bars may be hidden. With its
+         config_systemBarPersistency = 0 (non_immersive) the status bar (notifications, brightness)
+         and the bottom bar (volume) stay on screen whatever an app requests. -->
+    <bool name="config_remoteInsetsControllerControlsSystemBars">true</bool>
 </resources>

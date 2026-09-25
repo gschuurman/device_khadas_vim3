@@ -3,4 +3,9 @@
     <string name="config_rearViewCameraActivity" translatable="false">
         com.schuurman.rvc/.RearViewCameraActivity
     </string>
+
+    <!-- Never let an app go immersive: always keep the status bar (notifications, brightness) and
+         the bottom bar (volume). 0 = non_immersive; needs the framework's
+         config_remoteInsetsControllerControlsSystemBars = true (device framework overlay). -->
+    <integer name="config_systemBarPersistency">0</integer>
 </resources>
