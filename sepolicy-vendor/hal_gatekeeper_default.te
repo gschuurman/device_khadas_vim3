@@ -1,3 +1,6 @@
 # Allow gatekeeper to add its shared secret service implementation
 # This is a separate service type to avoid neverallow restrictions
 allow hal_gatekeeper_default gatekeeper_sharedsecret_service:service_manager add;
+
+# Gatekeeper TA runs in OP-TEE: the HAL talks to it through /dev/tee0 (libteec).
+allow hal_gatekeeper_default tee_device:chr_file rw_file_perms;

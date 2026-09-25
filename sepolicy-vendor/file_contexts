@@ -81,6 +81,7 @@
 #
 # Security
 /vendor/bin/hw/android\.hardware\.gatekeeper@1\.0-service\.software    u:object_r:hal_gatekeeper_default_exec:s0
+/vendor/bin/hw/android\.hardware\.gatekeeper-service\.optee    u:object_r:hal_gatekeeper_default_exec:s0
 # Boot-time KeyMint HAL (vendor.keymint-default), see device.mk.
 /vendor/bin/hw/android\.hardware\.security\.keymint-service\.optee  u:object_r:hal_keymint_default_exec:s0
 /vendor/bin/hw/android\.hardware\.authsecret-service.example u:object_r:hal_authsecret_default_exec:s0

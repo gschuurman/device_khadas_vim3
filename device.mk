@@ -206,10 +206,10 @@ PRODUCT_PACKAGES += \
 # reference HAL (com.android.hardware.keymint.rust_nonsecure) once the TA was proven loading
 # reliably across reboots with real dynamic SHM, a real HW RNG and an efuse-backed HUK. It's
 # installed unconditionally by vendor/khadas/vim3/optee/optee.mk, so it isn't listed here.
-# Gatekeeper has no OP-TEE implementation in this project; stays on the nonsecure reference HAL.
+# Gatekeeper is OP-TEE-backed too (vendor/khadas/vim3/optee/gatekeeper, also installed by optee.mk), so
+# lock-screen verification and auth token minting happen in the TEE.
 PRODUCT_PACKAGES += \
-    com.android.hardware.authsecret \
-    com.android.hardware.gatekeeper.nonsecure
+    com.android.hardware.authsecret
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.keystore.app_attest_key.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.keystore.app_attest_key.xml
