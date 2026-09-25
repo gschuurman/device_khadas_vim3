@@ -269,14 +269,12 @@ ifneq ($(TARGET_KERNEL_CFG),)
 BOARD_KERNEL_CMDLINE += $(TARGET_KERNEL_CFG)
 endif
 
-# Selects the "maps + play store" GAS feature bundle. The gas_*_overlay
-# modules in vendor/google/gapps_auto (RRO block in gapps-core.mk) are
-# static RROs gated by android:requiredSystemPropertyValue against
-# ro.boot.hardware.sku; only the overlay(s) whose required value matches
-# this SKU actually activate. gas_maps_playstore activates
-# GasMapsPlaystoreOverlay; note CarLauncherGasPlaystoreOverlay requires
-# the different value "gas_playstore" and will NOT activate under this SKU.
-BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=gas_maps_playstore
+# Selects the "play store only" GAS feature bundle (no Google Maps, no Google Assistant; neither works on
+# this uncertified head unit). The gas_*_overlay modules in vendor/google/gapps_auto (RRO block in
+# gapps-core.mk) are static RROs gated by android:requiredSystemPropertyValue against ro.boot.hardware.sku;
+# gas_playstore activates GasPlaystoreOverlay (blanks the default assistant, navigation app and speech
+# recognizer) and CarLauncherGasPlaystoreOverlay.
+BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=gas_playstore
 
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := build/make/target/board/mainline_arm64/bluetooth
 
