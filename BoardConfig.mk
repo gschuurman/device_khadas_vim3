@@ -437,3 +437,23 @@ OPTEE_BIN = $(VIM3_OPTEE_FIP_BUILT)
 # xtest picks sources with the OP-TEE CFG_* flags at parse time, before the dev kit exists (its conf.mk is only
 # read on incremental builds). Preset the one that matters; build-g12b-optee-fip.sh fails if OP-TEE disagrees.
 CFG_GP_SOCKETS := y
+
+# Mesa from source (vendor/mesa3d-upstream), only to regenerate the prebuilts in
+# vendor/khadas/vim3/gpu/mesa/a73 — see hal/graphics/device_vendor.mk.
+ifeq ($(VIM3_MESA_FROM_SOURCE),true)
+BOARD_MESA3D_USES_MESON_BUILD := true
+# panfrost only: with etnaviv in libgallium_dri, EGL picked the NPU (GC8000,
+# no 3D pipe) as the GL device and rendered everything black. Teflon (NPU) is
+# built standalone with the NDK instead — see the README.
+BOARD_MESA3D_GALLIUM_DRIVERS := panfrost
+BOARD_MESA3D_VULKAN_DRIVERS := panfrost
+BOARD_MESA3D_BUILD_LIBGBM := true
+# panfrost/panvk precompile CL shaders: host tools built natively from the same
+# source (see vendor/khadas/vim3/gpu/mesa/README.md), found via a native file.
+MESA3D_HOST_TOOLS ?= $(HOME)/android/mesa-host-tools
+BOARD_MESA3D_MESON_ARGS := -Dmesa-clc=system -Dprecomp-compiler=system \
+    --native-file $(MESA3D_HOST_TOOLS)/native.ini \
+    --cross-file $(MESA3D_HOST_TOOLS)/cross-python.ini
+# meson >= 1.4 + mako/yaml/ply/pycparser live in a venv (see the README).
+MESA3D_HOST_PATH ?= $(HOME)/android/teflon/venv/bin
+endif

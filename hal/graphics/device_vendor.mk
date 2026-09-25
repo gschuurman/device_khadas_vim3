@@ -1,7 +1,12 @@
 # Select the correct Mesa variant for VIM3 (A311D = Cortex-A73)
+# VIM3_MESA_FROM_SOURCE=true builds Mesa from vendor/mesa3d-upstream instead of
+# the prebuilts; it is only used to regenerate vendor/khadas/vim3/gpu/mesa/a73
+# (see the README there), not for flashable builds.
+ifneq ($(VIM3_MESA_FROM_SOURCE),true)
 PRODUCT_SOONG_NAMESPACES += vendor/khadas/vim3/gpu/mesa/a73
 PRODUCT_SOONG_NAMESPACES += external/minigbm/gbm_mesa_driver/a73
 PRODUCT_PACKAGES += libgbm_mesa_wrapper_a73
+endif
 
 PRODUCT_VENDOR_PROPERTIES += ro.sf.lcd_density=100
 
