@@ -10,17 +10,20 @@ endif
 
 PRODUCT_VENDOR_PROPERTIES += ro.sf.lcd_density=100
 
-# opengles features
+# opengles features (panfrost on Mali-G52 is GLES 3.1 without AEP: no
+# geometry/tessellation shaders)
 PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.opengles.aep.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.opengles.aep.xml \
     frameworks/native/data/etc/android.software.opengles.deqp.level-2021-03-01.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.opengles.deqp.level.xml
 
-# Vulkan
+# Vulkan: panvk only exposes Bifrost v7 behind PAN_I_WANT_A_BROKEN_VULKAN_DRIVER
+# and then reports Vulkan 1.0, so declare 1.0 / level 0 only. HWUI (skiagl) and
+# RenderEngine (skiaglthreaded) stay on GL.
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.vulkan.version-1_0_3.xml:vendor/etc/permissions/android.hardware.vulkan.version.xml \
-    frameworks/native/data/etc/android.hardware.vulkan.compute-0.xml:vendor/etc/permissions/android.hardware.vulkan.compute.xml \
-    frameworks/native/data/etc/android.hardware.vulkan.level-1.xml:vendor/etc/permissions/android.hardware.vulkan.level.xml \
-    frameworks/native/data/etc/android.software.vulkan.deqp.level-2020-03-01.xml:vendor/etc/permissions/android.software.vulkan.deqp.level.xml
+    frameworks/native/data/etc/android.hardware.vulkan.level-0.xml:vendor/etc/permissions/android.hardware.vulkan.level.xml
+
+PRODUCT_VENDOR_PROPERTIES += \
+    vendor.mesa.pan.i.want.a.broken.vulkan.driver=1
 
 # Minigbm mapper/allocator
 PRODUCT_PACKAGES += \
@@ -62,5 +65,5 @@ PRODUCT_VENDOR_PROPERTIES += \
     debug.stagefright.c2inputsurface=-1
 
 PRODUCT_VENDOR_PROPERTIES += \
-    ro.opengles.version=196864
+    ro.opengles.version=196609
 

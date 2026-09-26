@@ -76,18 +76,31 @@ Goal: panfrost uapi ≥1.4 (currently 1.2 on 6.12.93), from BayLibre's mainline 
   - The ueventd rule for tap-to-wake.
 - Bring-up order and checks: see plan B4.
 
-## Latest state (end of session 2026-09-25) — START HERE
-- The committed prebuilts (panfrost-only GL + standalone Teflon) **build cleanly** (`m` succeeded). The OTA packaging was
-  stopped on request, so this final version is **NOT on the board yet**.
-- The board runs slot `_b` with the *earlier* Mesa 26 build (etnaviv inside libgallium_dri). It only renders because
-  of the runtime property `drm.gpu.vendor_name=panfrost`, which is lost on reboot: after a reboot the UI is black until you set it
-  again or install the new OTA. Slot `_a` = the old 25.3 build (fallback).
-- Next: `m otapackage` → stream it to the inactive slot (`_a`) → reboot → verify WITHOUT the property:
-  - the SF GLES string reads Panfrost Mesa 26.2.3
-  - `ahbtest` passes
-  - a screenshot shows the UI
-  - the Teflon smoke test passes from /vendor
-  Then fix the feature declarations (follow-up 1).
+## Latest state (2026-09-26) — START HERE
+- The final Mesa 26 build (panfrost-only GL + standalone Teflon + panvk enabled) is **on slot `_a` and verified**
+  WITHOUT `drm.gpu.vendor_name`: SF `GLES: Mali-G52 MC2 (Panfrost), OpenGL ES 3.1 Mesa 26.2.3`, UI screenshot OK.
+  Slot `_b` = the earlier Mesa 26 build (etnaviv in libgallium_dri → black UI without the property).
+- **Vulkan (follow-up 1 done):** `vendor.mesa.pan.i.want.a.broken.vulkan.driver=1` is baked into the vendor props;
+  feature XMLs are now vulkan version 1.0.3 + level 0 (compute-0, level-1 and vulkan deqp level dropped);
+  `ro.opengles.version=196609`, `opengles.aep` dropped. `cmd gpu vkjson` → 1 device, Mali-G52 MC2, 1.0, 130 exts.
+- `tools/gpu-tests/vktest.c` (compute dispatch, offscreen triangle + readback, render into imported AHB + CPU lock)
+  **passes on 1.0**, and also with `MESA_VK_VERSION_OVERRIDE=1.1` and `=1.3`. panvk v7 has every 1.1-core
+  extension/feature (multiview, 16bit storage, ycbcr, variable pointers, subgroups in FS/CS); the 1.0 cap is
+  Mesa policy (not CTS-tested), not missing features or the kernel. Build:
+  `glslc --target-env=vulkan1.0 -mfmt=num <shader> -o <name>_<stage>.inc` then
+  `aarch64-linux-android34-clang -O2 vktest.c -lvulkan -landroid -lnativewindow` (NDK r29 in ~/android/sdk/ndk).
+- Next for Vulkan: run a dEQP-VK subset (api.*, memory.*, pipeline.*, draw.*) under the 1.1 override. If it's clean,
+  consider patching `get_api_version()` to 1.1 for v7 and declaring vulkan version 1.1 (HWUI/RE stay GL regardless:
+  `ro.hwui.use_vulkan` unset, `debug.renderengine.backend=skiaglthreaded`).
+- Organic Maps not yet checked with Vulkan exposed: on the bench it stops at DownloadResourcesLegacyActivity
+  (World.mwm/WorldCoasts missing, no network). Check the renderer when it's back in the car (`logcat | grep -i vulkan`).
+- Not re-run this session (the 2026-09-25 test binaries were in an old scratchpad): GL `ahbtest` and the Teflon smoke
+  test from /vendor.
+- **Boot hang seen once on `_b`:** after a long uptime, vold was stuck waiting for keystore2 (`Waited one second for
+  android.system.keystore2...` loop at ~600 s, init `Too many pending control messages`, no adb); SysRq over serial
+  did not respond, it needed a power cycle. The clean boot after it was fine (keystore2 up at 13.9 s, boot_completed
+  56 s). Root cause unknown; the first failure had scrolled out of the console. Screen logging is now on:
+  `screen -S <session> -X logfile <path>; -X log on`.
 
 ## Deploy notes
 - The board is on the bench with no network, so OTAs are streamed over USB: `adb reverse tcp:8765 tcp:8765` + a Range HTTP server
