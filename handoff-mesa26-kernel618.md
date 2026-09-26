@@ -89,9 +89,74 @@ Goal: panfrost uapi ≥1.4 (currently 1.2 on 6.12.93), from BayLibre's mainline 
   Mesa policy (not CTS-tested), not missing features or the kernel. Build:
   `glslc --target-env=vulkan1.0 -mfmt=num <shader> -o <name>_<stage>.inc` then
   `aarch64-linux-android34-clang -O2 vktest.c -lvulkan -landroid -lnativewindow` (NDK r29 in ~/android/sdk/ndk).
-- Next for Vulkan: run a dEQP-VK subset (api.*, memory.*, pipeline.*, draw.*) under the 1.1 override. If it's clean,
-  consider patching `get_api_version()` to 1.1 for v7 and declaring vulkan version 1.1 (HWUI/RE stay GL regardless:
-  `ro.hwui.use_vulkan` unset, `debug.renderengine.backend=skiaglthreaded`).
+- HWUI/RE stay GL whatever version panvk reports: `ro.hwui.use_vulkan` unset, `debug.renderengine.backend=skiaglthreaded`.
+
+### Vulkan 1.1 → 1.2 on Bifrost v7 (IN PROGRESS, paused 2026-09-26)
+Goal agreed with the user: raise panvk on the G52 step by step (1.2 → 1.3 → maybe 1.4), with dEQP-VK subsets at each step.
+WIP artifacts (the scratchpad is gone): `~/android/vk12-wip/`: run.py, caselists (subset.txt = 1.1, subset12.txt
+= 1.2, sgtest.txt), results-1.1.txt / results-1.2.txt, mesa-vk12.diff, minigbm-blob.diff, vulkan.mesa.vk12.so.
+
+**dEQP tooling:** `m deqp-binary` (external/deqp, ~6 min) → push `out/.../data/nativetest64/deqp-binary/{deqp-binary64,vulkan}`
+to `/data/local/tmp/deqp/`. Case list = union of `external/deqp/android/cts/main/vk-main-20*/*.txt` (1.58M cases).
+`python3 run.py <caselist> <outdir> [ENV=..]` runs it over adb and resumes after crash/timeout/ResourceError
+(each ResourceError ends the deqp process, so expect one restart per such case). Output goes to logcat + the .qpa.
+Mesa CI (`src/panfrost/ci/panfrost-g52-fails.txt`) runs the full CTS on the G52, but at **1.0**, so subgroup and
+memory-model tests have never been run upstream on v7.
+
+**1.1 result (override, stock 26.2.3 driver), 11,638 cases:** 8495 pass, 3126 NotSupported, 3 Fail, 14 ResourceError,
+0 crashes. The failures:
+- `info.device_extensions`: `VK_KHR_pipeline_binary` is exposed without its dependency `KHR_maintenance5` (on the CI fails list too).
+- `api.device_init.create_device_global_priority{,_khr}.basic`: v7 advertises only MEDIUM priority (also on the CI fails list).
+- `api.external.memory.android_hardware_buffer.*` (buffer / device_only / host_visible, 14×) ResourceError: **minigbm** rejects
+  BLOB/R8 + `GPU_DATA_BUFFER` ("Unsupported combination"), so Vulkan can't allocate buffer AHBs (image AHBs work).
+
+**Uncommitted patches (in the working tree, also in the .diff files):**
+- `vendor/mesa3d-upstream` (branch vim3-26.2.3):
+  1. `panvk_vX_device.c` check_global_priority: an unsupported priority ≤ MEDIUM → `VK_ERROR_INITIALIZATION_FAILED`
+     (fixes the _khr test). **Still failing:** the EXT variant requires LOW to *succeed* → next fix: on arch < 10 also
+     advertise/accept LOW (run it at medium; global priority is only a hint). Do this in both panvk_physical_device.c
+     (~l.525 prio_mask filter) and check_global_priority.
+  2. `panvk_vX_physical_device.c`: `KHR_pipeline_binary = has_vk1_1` (same gate as maintenance5).
+  3. `jm/panvk_vX_cmd_draw.c`: `CmdDraw{,Indexed}IndirectCount` stubs (UNREACHABLE). 1.2 makes them core entry points;
+     the drawIndirectCount feature stays off on JM, so apps may not call them.
+  4. `panvk_vX_physical_device.c`: `has_v7_vk1_2` → `KHR_spirv_1_4` + `KHR_shader_subgroup_extended_types` on v7;
+     `get_api_version()` returns **1.2** for PAN_ARCH == 7.
+- `external/minigbm` gbm_mesa_internals.cpp: add `BO_USE_GPU_DATA_BUFFER | BO_USE_SENSOR_DIRECT_DATA` to the R8 combination
+  (built OK with `m libminigbm_gralloc android.hardware.graphics.allocator-service.minigbm`, **not deployed/tested yet**; it needs
+  the allocator service restarted or an OTA, then rerun the `api.external.memory.android_hardware_buffer` group).
+
+**1.2 result (patched driver, native 1.2), 20,841 cases:** 11396 pass, 8775 NotSupported, **655 Fail**, 14 ResourceError (AHB,
+minigbm), 1 Timeout (memory_model). No regressions versus 1.1. vktest passes at native 1.2. The failures are all subgroup-related:
+- `subgroups.arithmetic.compute` 617: every reduce/inclusive/exclusive op, **including plain 32-bit int/uint/float**, so it's not
+  the new extended types. Also `subgroups.shuffle.compute.subgroupclusteredrotate_*` 18, `subgroups.shape.{compute.quad,
+  compute.clustered,graphics.clustered}`. All say "1 / 7 values passed". Plain shuffle/xor/up/down/rotate, vote, ballot,
+  ballot_broadcast and basic PASS.
+- `memory_model.message_passing.*` 17: **all subgroup-scope** cases (`.subgroup.` in the name); the other scopes pass.
+- In the compiler (`compiler/bifrost/bifrost_nir.c` ~l.1037), nir_lower_subgroups lowers reduce/scan/quad/clustered to shuffles, with
+  `subgroup_size = pan_subgroup_size(7) = 8` (`compiler/pan_compiler.h`).
+- **Experiment prepared, NOT run:** build with `pan_subgroup_size()` = 4 for arch 7, then run `sgtest.txt` (655 fails + 135 sampled
+  passes). Hypothesis: a warp/lockstep-width mismatch explains both the reductions and the subgroup-scope memory-model failures. (The
+  change was only made in the out/ MESON_MESA3D copy and has been reverted there.)
+- If it's not quickly fixable: advertise less on v7. Drop ARITHMETIC, CLUSTERED, QUAD and ROTATE_CLUSTERED from
+  `subgroupSupportedOperations` (1.1/1.2 only require BASIC in compute). vulkanMemoryModel is optional in 1.2 (required in 1.3),
+  so it either needs the fix or has to be turned off for v7 at 1.2 (then 1.3 is blocked on it).
+- After that: declare `android.hardware.vulkan.version-1_2` (+ maybe level-0/compute-0) in hal/graphics/device_vendor.mk,
+  regenerate the a73 prebuilt vulkan.mesa.so (README recipe), commit the Mesa patches on vim3-26.2.3, run an OTA and rerun
+  vktest + subset12.
+
+**Fast iteration loop (used this session):** edit vendor/mesa3d-upstream → `cp` the changed files into
+`out/target/product/vim3/obj/MESON_MESA3D/<same path>` → `cd` there and `PATH=~/android/teflon/venv/bin:/usr/bin:/bin:$PATH
+ninja -C build src/panfrost/vulkan/libvulkan_panfrost.so` (1–3 min) → NDK `llvm-strip --strip-unneeded` → push to
+`/data/local/tmp/`, `chcon u:object_r:same_process_hal_file:s0`, `mount --bind` over `/vendor/lib64/hw/vulkan.mesa.so`
+(new processes only; lost on reboot). **Right now the board has the 1.2 WIP driver bind-mounted** (a reboot restores stock).
+The next full `m` with VIM3_MESA_FROM_SOURCE=true re-copies the source (rm -rf + cp) anyway.
+
+### Vulkan 1.3 / 1.4 gap on v7 (analysis, 26.2.3 source)
+- 1.3 needs `KHR_maintenance4` + `EXT_subgroup_size_control` (gated to v10+; the feature bits are already on) + vulkanMemoryModel
+  (see above). Nearly everything else in 1.3 (inline uniform blocks, image robustness, dynamic state, sync2, dynamic rendering...) is on for v7.
+- 1.4 also needs maintenance5/6 and `shader_float_controls2`. **Check the spec** for whether 1.4 requires descriptor-indexing /
+  update-after-bind: on v7 it's off (v9+), with all update-after-bind limits 0. Implementing it on Bifrost means rebuilding descriptor
+  tables at draw time, which is real driver work. The Android Baseline Profile needs it regardless.
 - Organic Maps not yet checked with Vulkan exposed: on the bench it stops at DownloadResourcesLegacyActivity
   (World.mwm/WorldCoasts missing, no network). Check the renderer when it's back in the car (`logcat | grep -i vulkan`).
 - Not re-run this session (the 2026-09-25 test binaries were in an old scratchpad): GL `ahbtest` and the Teflon smoke
