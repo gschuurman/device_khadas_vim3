@@ -110,7 +110,7 @@ memory-model tests have never been run upstream on v7.
 - `api.external.memory.android_hardware_buffer.*` (buffer / device_only / host_visible, 14×) ResourceError: **minigbm** rejects
   BLOB/R8 + `GPU_DATA_BUFFER` ("Unsupported combination"), so Vulkan can't allocate buffer AHBs (image AHBs work).
 
-**Uncommitted patches (in the working tree, also in the .diff files):**
+**Patches (committed locally 2026-09-26, NOT pushed; mesa 9484156 / a8ebc90 / d7a7f5b on vim3-26.2.3, minigbm 6a36df3):**
 - `vendor/mesa3d-upstream` (branch vim3-26.2.3):
   1. `panvk_vX_device.c` check_global_priority: an unsupported priority ≤ MEDIUM → `VK_ERROR_INITIALIZATION_FAILED`
      (fixes the _khr test). **Still failing:** the EXT variant requires LOW to *succeed* → next fix: on arch < 10 also
