@@ -62,9 +62,9 @@ After each step: `adb shell cmd gpu vkprofiles` + the regression subset.
 - Perf: JM turns every vkCmdDrawIndexed into an indirect draw (write-value + GPU min/max search + single-thread patch
   helper); ~0.7 ms/frame extra at 285-400 MHz. A leaner direct indexed path is a bigger project (CPU index reads are
   invalid in Vulkan). Tried and rejected: CPU descriptor copies, inline min/max in the helper (both no gain).
-- Push (after the user's go-ahead): device (9 commits), vendor (2), kernel lineage-23.0 (1: panfrost uapi 1.3 backport,
-  58b1cbfec05b9), local_manifests (1: Mesa project), **minigbm 6a36df3** (on detached HEAD; protected by local branch
-  `vim3-gpu-data-buffer`). Mesa is pushed (github.com/gschuurman/mesa `vim3-26.2.3`, tip 38098e9).
+- Everything is committed and **pushed** (2026-09-27): device, vendor, kernel lineage-23.0 (panfrost uapi 1.3 backport
+  58b1cbfec05b9), local_manifests (Mesa project), minigbm 6a36df3 (lineage-23.2), Mesa (github.com/gschuurman/mesa
+  `vim3-26.2.3`, tip 38098e9).
 - Build an OTA to bake in the 285 MHz floor (and whatever is next).
 - Upstream MR candidates: 05f5f33 (Bifrost reconvergence), 38098e9 (NIR a + -a fold), JM timestamps/multiview queries,
   2-queue JM, 1.3/1.4 enablement.
