@@ -65,6 +65,11 @@ on boot
     write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor conservative
     write /sys/devices/system/cpu/cpufreq/conservative/sampling_rate 100000
 
+    # GPU (Mali-G52) floor: 285 MHz instead of 125 MHz. UI rendering averages well below panfrost's
+    # simple_ondemand upthreshold (45% over 50 ms), so the GPU never left 125 MHz while scrolling and
+    # frames took 11-12 ms. At 285 MHz: GL 11 -> 8 ms, Vulkan 12 -> 7 ms (Car Settings scroll, p50).
+    # The GPU still runtime-suspends when idle and can clock up to 800 MHz under load.
+    write /sys/class/devfreq/ffe40000.gpu/min_freq 285714281
 
     # Background app limit: 16 for 4GB device (was 4, tuned for 2GB)
     setprop ro.sys.fw.bg_apps_limit 16

@@ -124,9 +124,20 @@ gated to v10+.
   multiview timestamps/occlusion (N queries per view), and the NIR NaN fold.
 - Results: `~/android/vk12-wip/results-1.4-final.txt`, `results-gl-1.4-final.txt`.
 
-**Remaining / ideas:**
-- Performance of HWUI on Vulkan (GPU ~8 ms vs 6 ms for GL, measured at 1.2): try `PANVK_DEBUG=wsi_afbc` (AFBC for WSI
-  images), look at per-submit JM overhead and queue serialization. Measure before changing defaults.
+**Performance (2026-09-27):**
+- Tools: `~/android/vk12-wip/` (copied from the scratchpad): `bench2.sh <skiagl|skiavk>` (Car Settings scroll, gfxinfo
+  percentiles) and `gputime.sh` (real per-engine GPU time from panfrost fdinfo with `profiling=1`, plus devfreq
+  residency). An app's Vulkan driver is loaded per process (zygote only preloads GL), so bind mounts apply to new apps.
+- **The GPU never left 125 MHz** during UI work (simple_ondemand upthreshold 45% over 50 ms; average UI load ~20%).
+  Floor 285 MHz: GL frame p50 11 -> 8 ms, Vulkan 12 -> 7 ms. 400 MHz: GL 8 ms, Vulkan 6 ms. **init.vim3.rc now sets
+  min_freq 285714281** (device commit), not yet in an OTA (applied live for now).
+- The Vulkan-specific cost is vertex/tiler time: 2.3 ms vs 0.3 ms for GL per frame at 125 MHz (0.86 vs 0.17 at 400).
+  Cause: JM turns every vkCmdDrawIndexed into an indirect draw (write-value + GPU min/max search + single-thread
+  patch helper per draw), because Vulkan can't read index data on the CPU at record time (upstream dropped the CPU
+  path, e25064c026a/d936bb496c5). Tried and reverted (no gain): descriptor copies on the CPU, and an inline min/max in
+  the helper (fewer jobs, but vertex/tiler time went up). `PANVK_DEBUG=wsi_afbc` doesn't apply on Android (gralloc
+  buffers). A real fix would be a leaner direct indexed draw path on JM (bigger driver project).
+- Submits per frame are equal for GL and Vulkan (3.7). Vulkan adds ~11 syncobj/sync-fd ioctls per frame on the CPU.
 - Broader CTS coverage (the subsets are samples, not full mustpass). Android 17 may also want the Android Baseline
   Profile (descriptor indexing: Bifrost update-after-bind is real driver work).
 - Upstreaming: the reconvergence fix, the NIR fold fix and the JM timestamp/multiview work are good Mesa MR candidates.
