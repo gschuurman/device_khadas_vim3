@@ -127,9 +127,26 @@ upstreamable, since Mesa CI never runs these tests on the G52 (it runs at 1.0).
   `--deqp-surface-type=pbuffer --deqp-surface-width=256 --deqp-surface-height=256 --deqp-gl-config-name=rgba8888d24s8ms0`
   (without a size, the state reset hits GL_INVALID_VALUE and deqp exits after every case).
 
+**Vulkan as the Android renderer (2026-09-27, tested live, NOT the default):**
+- HWUI `debug.hwui.renderer=skiavk` first aborted: HWUI needs **2 queues** in the graphics family, and JM exposed 1. Fixed in
+  mesa **643962c `panvk: expose two GPU queues on JM`**. JM queues share the tiler heap / indirect-varying buffer, so every JM
+  submit also waits on and advances a device-wide `jm_submit.last_submit` syncobj under a mutex (the queues are serialized
+  against each other). CTS: 26,713 cases (subset12 + 6,033 multi-queue/timeline, `~/android/vk12-wip/subset12mq.txt`) →
+  0 fail. 24 `timeline_semaphore.wait_before_signal` cases went Pass→NotSupported: with 2 queues the test picks ops that need
+  vertexPipelineStoresAndAtomics, so that's not a regression.
+- HWUI on Vulkan: Car Settings renders correctly (`Pipeline=Skia (Vulkan)`). Scroll benchmark, ~250 frames: Vulkan p50 12 ms /
+  GPU 8 ms, GL p50 11 ms / GPU 6 ms; both 0–1 janky frames. So it works, slightly slower than GL.
+- RenderEngine `debug.renderengine.backend=skiavkthreaded` + `stop; start`: SF reports `RE Vulkan (Ganesh)`, and the UI and
+  screenshots are fine. Switched back to GL afterwards.
+- **The prebuilt a73 vulkan.mesa.so (b6db4e4) does NOT include 643962c yet.** Regenerate it (only vulkan changes) before making
+  skiavk the default. Then the choice is: `ro.hwui.use_vulkan=true` and/or `debug.renderengine.backend=skiavkthreaded` in
+  hal/graphics/device_vendor.mk, after a car soak.
+- Mesa is now pushed: github.com/gschuurman/mesa `vim3-26.2.3` (the local clone was unshallowed; remote `gschuurman`).
+  The local_manifests entry is committed (2bad6a2) but not pushed.
+
 **Not done yet:**
 - A car soak test with the new GL compiler (CarLauncher, Organic Maps, RVC).
-- Pushing the forks: Mesa still has no gschuurman fork / manifest entry.
+- Pushing the other forks: local_manifests 2bad6a2, device, vendor, minigbm 6a36df3.
 - The 1.3 step (below).
 - The deqp data pushed to /data/local/tmp/deqp is about 200 MB; delete it when done.
 
