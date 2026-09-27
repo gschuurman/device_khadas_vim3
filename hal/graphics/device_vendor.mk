@@ -17,10 +17,10 @@ PRODUCT_COPY_FILES += \
 
 # Vulkan: panvk only exposes Bifrost v7 behind PAN_I_WANT_A_BROKEN_VULKAN_DRIVER.
 # Our Mesa patches (vendor/mesa3d-upstream, vim3-26.2.3) make it report Vulkan
-# 1.2 there, so declare 1.2 / level 0. HWUI (skiagl) and RenderEngine
-# (skiaglthreaded) stay on GL.
+# 1.4 there (1.3 on kernels without panfrost uapi 1.3 timestamps), so declare
+# 1.4 / level 0. HWUI (skiagl) and RenderEngine (skiaglthreaded) stay on GL.
 PRODUCT_COPY_FILES += \
-    device/khadas/vim3/hal/graphics/android.hardware.vulkan.version-1_2.xml:vendor/etc/permissions/android.hardware.vulkan.version.xml \
+    frameworks/native/data/etc/android.hardware.vulkan.version-1_4.xml:vendor/etc/permissions/android.hardware.vulkan.version.xml \
     frameworks/native/data/etc/android.hardware.vulkan.level-0.xml:vendor/etc/permissions/android.hardware.vulkan.level.xml
 
 PRODUCT_VENDOR_PROPERTIES += \
