@@ -91,6 +91,46 @@ Goal: panfrost uapi ≥1.4 (currently 1.2 on 6.12.93), from BayLibre's mainline 
   `aarch64-linux-android34-clang -O2 vktest.c -lvulkan -landroid -lnativewindow` (NDK r29 in ~/android/sdk/ndk).
 - HWUI/RE stay GL whatever version panvk reports: `ro.hwui.use_vulkan` unset, `debug.renderengine.backend=skiaglthreaded`.
 
+### Vulkan 1.4 on Bifrost v7 — DONE (2026-09-27)
+Goal (user): Vulkan 1.4 on the board, to make the Android 17 move easier. The G52 now reports **Vulkan 1.4.354**, and the
+device declares `android.hardware.vulkan.version=4210688` (stock 1.4 XML) with level 0.
+
+**How the 1.4 gap was found:** force `MESA_VK_VERSION_OVERRIDE=1.4` and run the CTS requirement tests
+(`~/android/vk12-wip/req14.txt`: `dEQP-VK.info.device_mandatory_features`, `api.info.vulkan1p{2,3,4}*` incl. limits,
+`api.version_check.*`, …). Descriptor indexing is NOT mandatory for 1.4 (only if reported). The real gaps were:
+maxBoundDescriptorSets 4→7, timestampComputeAndGraphics (JM had no timestamps at all), and the extensions still
+gated to v10+.
+
+**Changes (all committed):**
+- Mesa `vim3-26.2.3` (**pushed** to github.com/gschuurman/mesa, tip 38098e9):
+  - 643962c: two JM queues, serialized via `panvk_device::jm_submit` (HWUI on Vulkan needs 2)
+  - 6d7ea4d: MAX_SETS 7 on Bifrost
+  - 06e5b72: 1.3 on v7 (maintenance4/5/6, float_controls2, subgroup_size_control, pipeline_binary)
+  - fb53c14: JM timestamp queries (WRITE_VALUE SYSTEM_TIMESTAMP + PANFROST_JD_REQ_CYCLE_COUNT; in-render-pass and
+    multiview handled). Reports 1.4 when the kernel has timestamps, else 1.3. KHR_shader_clock stays v10+.
+  - a58ad09: multiview occlusion queries on JM (N per-view queries reset/available)
+  - 38098e9: `nir/opt_algebraic` — the inexact `a + -a -> 0` rule ignored NaN/Inf preservation (float_controls2)
+- kernel `lineage-23.0` **58b1cbfec05b9** (local, unpushed): backport of panfrost uapi 1.3 (`PANFROST_JD_REQ_CYCLE_COUNT`,
+  `DRM_PANFROST_PARAM_SYSTEM_TIMESTAMP{,_FREQUENCY}`, minor 1.3). dmesg: `Initialized panfrost 1.3.0`. The 6.18 move
+  (Part B) has this natively, so drop the backport there.
+- vendor d02e07a (prebuilts + README), device ae0d2bd (1.4 declaration), minigbm 6a36df3: all local, unpushed.
+
+**Verification with the exact final binaries (bind-mounted, then OTA):**
+- CTS requirement checks at native 1.4: 210 pass / 14 NotSupported (optional extensions, roadmap profiles) / 0 fail.
+- Functional subset `subset14.txt` (28,926: previous subsets + multi-queue/timeline + maintenance4/5/6 + size_control +
+  7 sets + float_controls2 + all timestamp tests): **15,350 pass / 13,576 NotSupported / 0 fail / 0 crash**.
+- GLES subset (3,510): identical to before all compiler changes (2,532 pass / 0 fail).
+- Bugs found and fixed along the way: timestamps inside render passes (NULL cur_batch → crash in CmdEndRendering),
+  multiview timestamps/occlusion (N queries per view), and the NIR NaN fold.
+- Results: `~/android/vk12-wip/results-1.4-final.txt`, `results-gl-1.4-final.txt`.
+
+**Remaining / ideas:**
+- Performance of HWUI on Vulkan (GPU ~8 ms vs 6 ms for GL, measured at 1.2): try `PANVK_DEBUG=wsi_afbc` (AFBC for WSI
+  images), look at per-submit JM overhead and queue serialization. Measure before changing defaults.
+- Broader CTS coverage (the subsets are samples, not full mustpass). Android 17 may also want the Android Baseline
+  Profile (descriptor indexing: Bifrost update-after-bind is real driver work).
+- Upstreaming: the reconvergence fix, the NIR fold fix and the JM timestamp/multiview work are good Mesa MR candidates.
+
 ### Vulkan 1.2 on Bifrost v7 — DONE (2026-09-27), on slot `_b`
 The board runs slot `_b`: panvk reports **1.2** natively, and the device declares `android.hardware.vulkan.version=4202496`
 (`hal/graphics/android.hardware.vulkan.version-1_2.xml`; frameworks/native has no 1.2 file) and level 0.
@@ -157,7 +197,7 @@ ninja -C build src/panfrost/vulkan/libvulkan_panfrost.so` (1–3 min) → NDK `l
 after a reboot). Prebuilts: `VIM3_MESA_FROM_SOURCE=true m libgallium_dri libEGL_mesa libGLESv1_CM_mesa libGLESv2_mesa libgbm_mesa
 dri_gbm vulkan.panfrost` (~3 min with ccache) → the install loop in gpu/mesa/README.md.
 
-### Vulkan 1.3 / 1.4 gap on v7 (analysis, 26.2.3 source)
+### Vulkan 1.3 / 1.4 gap on v7 (original analysis, superseded by the 1.4 section above)
 - 1.3 needs `KHR_maintenance4` + `EXT_subgroup_size_control` (gated to v10+; the feature bits are already on) + vulkanMemoryModel
   (see above). Nearly everything else in 1.3 (inline uniform blocks, image robustness, dynamic state, sync2, dynamic rendering...) is on for v7.
 - 1.4 also needs maintenance5/6 and `shader_float_controls2`. **Check the spec** for whether 1.4 requires descriptor-indexing /
