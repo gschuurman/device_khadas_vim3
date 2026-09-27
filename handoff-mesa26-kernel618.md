@@ -76,7 +76,7 @@ Goal: panfrost uapi ≥1.4 (currently 1.2 on 6.12.93), from BayLibre's mainline 
   - The ueventd rule for tap-to-wake.
 - Bring-up order and checks: see plan B4.
 
-## Latest state (2026-09-26) — START HERE
+## Latest state (2026-09-27) — START HERE
 - The final Mesa 26 build (panfrost-only GL + standalone Teflon + panvk enabled) is **on slot `_a` and verified**
   WITHOUT `drm.gpu.vendor_name`: SF `GLES: Mali-G52 MC2 (Panfrost), OpenGL ES 3.1 Mesa 26.2.3`, UI screenshot OK.
   Slot `_b` = the earlier Mesa 26 build (etnaviv in libgallium_dri → black UI without the property).
@@ -91,65 +91,54 @@ Goal: panfrost uapi ≥1.4 (currently 1.2 on 6.12.93), from BayLibre's mainline 
   `aarch64-linux-android34-clang -O2 vktest.c -lvulkan -landroid -lnativewindow` (NDK r29 in ~/android/sdk/ndk).
 - HWUI/RE stay GL whatever version panvk reports: `ro.hwui.use_vulkan` unset, `debug.renderengine.backend=skiaglthreaded`.
 
-### Vulkan 1.1 → 1.2 on Bifrost v7 (IN PROGRESS, paused 2026-09-26)
-Goal agreed with the user: raise panvk on the G52 step by step (1.2 → 1.3 → maybe 1.4), with dEQP-VK subsets at each step.
-WIP artifacts (the scratchpad is gone): `~/android/vk12-wip/`: run.py, caselists (subset.txt = 1.1, subset12.txt
-= 1.2, sgtest.txt), results-1.1.txt / results-1.2.txt, mesa-vk12.diff, minigbm-blob.diff, vulkan.mesa.vk12.so.
+### Vulkan 1.2 on Bifrost v7 — DONE (2026-09-27), on slot `_b`
+The board runs slot `_b`: panvk reports **1.2** natively, and the device declares `android.hardware.vulkan.version=4202496`
+(`hal/graphics/android.hardware.vulkan.version-1_2.xml`; frameworks/native has no 1.2 file) and level 0.
+Slot `_a` = the previous build (Vulkan 1.0).
 
-**dEQP tooling:** `m deqp-binary` (external/deqp, ~6 min) → push `out/.../data/nativetest64/deqp-binary/{deqp-binary64,vulkan}`
-to `/data/local/tmp/deqp/`. Case list = union of `external/deqp/android/cts/main/vk-main-20*/*.txt` (1.58M cases).
-`python3 run.py <caselist> <outdir> [ENV=..]` runs it over adb and resumes after crash/timeout/ResourceError
-(each ResourceError ends the deqp process, so expect one restart per such case). Output goes to logcat + the .qpa.
-Mesa CI (`src/panfrost/ci/panfrost-g52-fails.txt`) runs the full CTS on the G52, but at **1.0**, so subgroup and
-memory-model tests have never been run upstream on v7.
+**Commits (local, NOT pushed):**
+- mesa `vendor/mesa3d-upstream` vim3-26.2.3:
+  - 9484156: global priority INIT_FAILED
+  - a8ebc90: pipeline_binary gated like maintenance5
+  - d7a7f5b: 1.2 on v7 + IndirectCount stubs
+  - **05f5f33 `pan/bi: reconverge on loop exits`**
+  - 555ab21: accept LOW priority on JM
+- minigbm 6a36df3: BLOB/R8 + GPU_DATA_BUFFER
+- vendor/khadas/vim3 b6db4e4: regenerated prebuilts (only libgallium_dri.so + hw/vulkan.mesa.so changed; README updated)
+- device b040f48: declare 1.2
 
-**1.1 result (override, stock 26.2.3 driver), 11,638 cases:** 8495 pass, 3126 NotSupported, 3 Fail, 14 ResourceError,
-0 crashes. The failures:
-- `info.device_extensions`: `VK_KHR_pipeline_binary` is exposed without its dependency `KHR_maintenance5` (on the CI fails list too).
-- `api.device_init.create_device_global_priority{,_khr}.basic`: v7 advertises only MEDIUM priority (also on the CI fails list).
-- `api.external.memory.android_hardware_buffer.*` (buffer / device_only / host_visible, 14×) ResourceError: **minigbm** rejects
-  BLOB/R8 + `GPU_DATA_BUFFER` ("Unsupported combination"), so Vulkan can't allocate buffer AHBs (image AHBs work).
+**Root cause of the 655 subgroup failures (fixed in 05f5f33):** `bi_reconverge_branches()` (compiler/bifrost/bir.c) only
+reconverged for conditional branches and for jumps into blocks with more than one predecessor. A loop with a single `break`
+(this is what nir_lower_subgroups emits for shuffles, and so for every reduce/scan/clustered/quad op) left the lanes
+diverged for the rest of the shader. Probe (`tools`-style sgprobe): after a subgroupShuffleXor, ballot(true) = own bit and
+subgroupAdd(1) = 1. Fix: the `bi_block.loop_exit` flag on break targets (carried along when a simple block is removed), and
+jumps to a loop exit always reconverge. (A subgroup size of 4 was tried and ruled out: the hardware lane ID goes to 7.) The fix is
+upstreamable, since Mesa CI never runs these tests on the G52 (it runs at 1.0).
 
-**Patches (committed locally 2026-09-26, NOT pushed; mesa 9484156 / a8ebc90 / d7a7f5b on vim3-26.2.3, minigbm 6a36df3):**
-- `vendor/mesa3d-upstream` (branch vim3-26.2.3):
-  1. `panvk_vX_device.c` check_global_priority: an unsupported priority ≤ MEDIUM → `VK_ERROR_INITIALIZATION_FAILED`
-     (fixes the _khr test). **Still failing:** the EXT variant requires LOW to *succeed* → next fix: on arch < 10 also
-     advertise/accept LOW (run it at medium; global priority is only a hint). Do this in both panvk_physical_device.c
-     (~l.525 prio_mask filter) and check_global_priority.
-  2. `panvk_vX_physical_device.c`: `KHR_pipeline_binary = has_vk1_1` (same gate as maintenance5).
-  3. `jm/panvk_vX_cmd_draw.c`: `CmdDraw{,Indexed}IndirectCount` stubs (UNREACHABLE). 1.2 makes them core entry points;
-     the drawIndirectCount feature stays off on JM, so apps may not call them.
-  4. `panvk_vX_physical_device.c`: `has_v7_vk1_2` → `KHR_spirv_1_4` + `KHR_shader_subgroup_extended_types` on v7;
-     `get_api_version()` returns **1.2** for PAN_ARCH == 7.
-- `external/minigbm` gbm_mesa_internals.cpp: add `BO_USE_GPU_DATA_BUFFER | BO_USE_SENSOR_DIRECT_DATA` to the R8 combination
-  (built OK with `m libminigbm_gralloc android.hardware.graphics.allocator-service.minigbm`, **not deployed/tested yet**; it needs
-  the allocator service restarted or an OTA, then rerun the `api.external.memory.android_hardware_buffer` group).
+**Test results (installed driver unless noted):**
+- dEQP-VK 1.2 subset (20,841): 12,051 pass / 8,775 NotSupported / 0 fail (bind-mounted build of the same source, plus the
+  global-priority 4/4 and AHB 116-case group rerun on the installed build: 14 ResourceError → Pass). 654 Fail → Pass, and no
+  Pass regressed.
+- dEQP-GLES3/31 subset (3,510: loops, switch, functions, compute, builtin common, ssbo, atomic counters, opaque indexing):
+  identical before and after the compiler fix (2,532 pass / 978 NotSupported / 0 fail).
+- vktest ALL PASSED at 1.2. SF GLES = Panfrost 26.2.3, and the UI screenshot is OK.
+- Everything is in `~/android/vk12-wip/`: run.py (resume-after-crash + 3-min stall watchdog; `--deqp-*` args pass through), the
+  caselists (subset.txt, subset12.txt, sgtest.txt, glsubset.txt), results-*.txt, the diffs. GL runs need
+  `--deqp-surface-type=pbuffer --deqp-surface-width=256 --deqp-surface-height=256 --deqp-gl-config-name=rgba8888d24s8ms0`
+  (without a size, the state reset hits GL_INVALID_VALUE and deqp exits after every case).
 
-**1.2 result (patched driver, native 1.2), 20,841 cases:** 11396 pass, 8775 NotSupported, **655 Fail**, 14 ResourceError (AHB,
-minigbm), 1 Timeout (memory_model). No regressions versus 1.1. vktest passes at native 1.2. The failures are all subgroup-related:
-- `subgroups.arithmetic.compute` 617: every reduce/inclusive/exclusive op, **including plain 32-bit int/uint/float**, so it's not
-  the new extended types. Also `subgroups.shuffle.compute.subgroupclusteredrotate_*` 18, `subgroups.shape.{compute.quad,
-  compute.clustered,graphics.clustered}`. All say "1 / 7 values passed". Plain shuffle/xor/up/down/rotate, vote, ballot,
-  ballot_broadcast and basic PASS.
-- `memory_model.message_passing.*` 17: **all subgroup-scope** cases (`.subgroup.` in the name); the other scopes pass.
-- In the compiler (`compiler/bifrost/bifrost_nir.c` ~l.1037), nir_lower_subgroups lowers reduce/scan/quad/clustered to shuffles, with
-  `subgroup_size = pan_subgroup_size(7) = 8` (`compiler/pan_compiler.h`).
-- **Experiment prepared, NOT run:** build with `pan_subgroup_size()` = 4 for arch 7, then run `sgtest.txt` (655 fails + 135 sampled
-  passes). Hypothesis: a warp/lockstep-width mismatch explains both the reductions and the subgroup-scope memory-model failures. (The
-  change was only made in the out/ MESON_MESA3D copy and has been reverted there.)
-- If it's not quickly fixable: advertise less on v7. Drop ARITHMETIC, CLUSTERED, QUAD and ROTATE_CLUSTERED from
-  `subgroupSupportedOperations` (1.1/1.2 only require BASIC in compute). vulkanMemoryModel is optional in 1.2 (required in 1.3),
-  so it either needs the fix or has to be turned off for v7 at 1.2 (then 1.3 is blocked on it).
-- After that: declare `android.hardware.vulkan.version-1_2` (+ maybe level-0/compute-0) in hal/graphics/device_vendor.mk,
-  regenerate the a73 prebuilt vulkan.mesa.so (README recipe), commit the Mesa patches on vim3-26.2.3, run an OTA and rerun
-  vktest + subset12.
+**Not done yet:**
+- A car soak test with the new GL compiler (CarLauncher, Organic Maps, RVC).
+- Pushing the forks: Mesa still has no gschuurman fork / manifest entry.
+- The 1.3 step (below).
+- The deqp data pushed to /data/local/tmp/deqp is about 200 MB; delete it when done.
 
-**Fast iteration loop (used this session):** edit vendor/mesa3d-upstream → `cp` the changed files into
-`out/target/product/vim3/obj/MESON_MESA3D/<same path>` → `cd` there and `PATH=~/android/teflon/venv/bin:/usr/bin:/bin:$PATH
-ninja -C build src/panfrost/vulkan/libvulkan_panfrost.so` (1–3 min) → NDK `llvm-strip --strip-unneeded` → push to
-`/data/local/tmp/`, `chcon u:object_r:same_process_hal_file:s0`, `mount --bind` over `/vendor/lib64/hw/vulkan.mesa.so`
-(new processes only; lost on reboot). **Right now the board has the 1.2 WIP driver bind-mounted** (a reboot restores stock).
-The next full `m` with VIM3_MESA_FROM_SOURCE=true re-copies the source (rm -rf + cp) anyway.
+**Fast iteration loop:** edit vendor/mesa3d-upstream → `cp` the changed files into
+`out/target/product/vim3/obj/MESON_MESA3D/<same path>` → in that dir `PATH=~/android/teflon/venv/bin:/usr/bin:/bin:$PATH
+ninja -C build src/panfrost/vulkan/libvulkan_panfrost.so` (1–3 min) → NDK `llvm-strip --strip-unneeded` → push to /data/local/tmp,
+`chcon u:object_r:same_process_hal_file:s0`, `mount --bind` over `/vendor/lib64/hw/vulkan.mesa.so` (new processes only; gone
+after a reboot). Prebuilts: `VIM3_MESA_FROM_SOURCE=true m libgallium_dri libEGL_mesa libGLESv1_CM_mesa libGLESv2_mesa libgbm_mesa
+dri_gbm vulkan.panfrost` (~3 min with ccache) → the install loop in gpu/mesa/README.md.
 
 ### Vulkan 1.3 / 1.4 gap on v7 (analysis, 26.2.3 source)
 - 1.3 needs `KHR_maintenance4` + `EXT_subgroup_size_control` (gated to v10+; the feature bits are already on) + vulkanMemoryModel
@@ -161,11 +150,13 @@ The next full `m` with VIM3_MESA_FROM_SOURCE=true re-copies the source (rm -rf +
   (World.mwm/WorldCoasts missing, no network). Check the renderer when it's back in the car (`logcat | grep -i vulkan`).
 - Not re-run this session (the 2026-09-25 test binaries were in an old scratchpad): GL `ahbtest` and the Teflon smoke
   test from /vendor.
-- **Boot hang seen once on `_b`:** after a long uptime, vold was stuck waiting for keystore2 (`Waited one second for
-  android.system.keystore2...` loop at ~600 s, init `Too many pending control messages`, no adb); SysRq over serial
-  did not respond, it needed a power cycle. The clean boot after it was fine (keystore2 up at 13.9 s, boot_completed
-  56 s). Root cause unknown; the first failure had scrolled out of the console. Screen logging is now on:
-  `screen -S <session> -X logfile <path>; -X log on`.
+- **Boot hang (vold waiting for keystore2) seen TWICE, root cause unknown:** 2026-09-26 on `_b` and 2026-09-27 on `_a`,
+  both found after a host/board power loss (~600 s / ~1724 s: the `Waited one second for android.system.keystore2...` loop,
+  init `Too many pending control messages`, no adb, SysRq ignored, needs a power cycle). Every warm boot, and the cold boot
+  right after the 09-27 hang, was clean (keystore2 up at ~13 s, boot_completed ~58 s). The start of a hanging boot has never
+  been captured. The console is now logged persistently to `~/android/console-logs/` (`screen -S <id> -X logfile <path>;
+  -X log on`; the screen session id changes after a host reboot, see `screen -ls`). Next time: read that log from `Linux version`
+  onward for keystore2 / KeyMint / tee-supplicant / OP-TEE errors.
 
 ## Deploy notes
 - The board is on the bench with no network, so OTAs are streamed over USB: `adb reverse tcp:8765 tcp:8765` + a Range HTTP server
