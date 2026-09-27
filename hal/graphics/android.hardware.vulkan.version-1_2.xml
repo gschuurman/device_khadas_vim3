@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- panvk reports Vulkan 1.2 (0x00402000) on the Mali-G52 (Bifrost v7).
+     frameworks/native has no 1.2 file, so it lives here. -->
+<permissions>
+    <feature name="android.hardware.vulkan.version" version="4202496" />
+</permissions>

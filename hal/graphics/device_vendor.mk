@@ -15,11 +15,12 @@ PRODUCT_VENDOR_PROPERTIES += ro.sf.lcd_density=100
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.opengles.deqp.level-2021-03-01.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.opengles.deqp.level.xml
 
-# Vulkan: panvk only exposes Bifrost v7 behind PAN_I_WANT_A_BROKEN_VULKAN_DRIVER
-# and then reports Vulkan 1.0, so declare 1.0 / level 0 only. HWUI (skiagl) and
-# RenderEngine (skiaglthreaded) stay on GL.
+# Vulkan: panvk only exposes Bifrost v7 behind PAN_I_WANT_A_BROKEN_VULKAN_DRIVER.
+# Our Mesa patches (vendor/mesa3d-upstream, vim3-26.2.3) make it report Vulkan
+# 1.2 there, so declare 1.2 / level 0. HWUI (skiagl) and RenderEngine
+# (skiaglthreaded) stay on GL.
 PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.vulkan.version-1_0_3.xml:vendor/etc/permissions/android.hardware.vulkan.version.xml \
+    device/khadas/vim3/hal/graphics/android.hardware.vulkan.version-1_2.xml:vendor/etc/permissions/android.hardware.vulkan.version.xml \
     frameworks/native/data/etc/android.hardware.vulkan.level-0.xml:vendor/etc/permissions/android.hardware.vulkan.level.xml
 
 PRODUCT_VENDOR_PROPERTIES += \
