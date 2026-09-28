@@ -27,6 +27,14 @@ cases), newest first, with `run.py` (resume after crash, 3-min stall watchdog).
   `adb shell 'cd /data/local/tmp/deqp && ./deqp-binary64 --deqp-case=<case> --deqp-log-filename=/data/local/tmp/deqp/x.qpa'`.
 - Expected: `dEQP-VK.wsi.android.*` are NotSupported (surfaceless deqp binary, no window); not a driver issue.
 - Fix our failures before starting the profile work below.
+- Status 2026-09-28: 2025/2024/2023/2022 = 0 Fail; 2021 had 9 Fail, all FIXED (Mesa, local):
+  - c1d3dc7a122 pan/bi scheduler: last tuple of a clause wrote 2 registers (a passthrough-only FMA result still gets a
+    register write) → INSTR_INVALID_ENC job fault → the 8 `robustness.image_robustness...r32i...cube*` cases (upstream's
+    G52 "Crash" list). Affects GL too. Vulkan subset14 0 Fail, GLES subset = baseline.
+  - a57ad93c6e6 panvk: exportable AHB memory reported as IMPORT → `device_memory_report...android_hardware_buffer`.
+  - 3aa7752492f panvk/jm: timestamp + availability in one batch (latent non-coherent-cache race, same as PGQ).
+  - Diagnose job faults with `dmesg | grep fault` (e.g. INSTR_INVALID_ENC): CTS just reports "Fail".
+  2020 and 2019 still running (on the stock driver).
 
 ## 1. The gap to the Android minimums profiles
 Profiles: `frameworks/native/vulkan/vkprofiles/profiles/VP_ANDROID_{15,16}_minimums.json`. Compare with the device via
@@ -36,9 +44,9 @@ Profiles: `frameworks/native/vulkan/vkprofiles/profiles/VP_ANDROID_{15,16}_minim
 | Requirement | Status | Work |
 |---|---|---|
 | `shaderFloat16` (Vulkan12 + Float16Int8 features) | **DONE 2026-09-28** (Mesa 00664e27f0d + 4e7ce4fdab8, pushed; not in prebuilts/OTA yet): enabled for v7 + `shaderFmaFloat16`; fixed Bifrost FP16 FTZ on f2f16/f2f32 (per-clause FTZ ignored FP16 mode for ops lowered to FP32). 25.6k fp16 cases: 10716 Pass / 0 Fail (`~/android/vk12-wip/f16.txt`) | — |
-| one of `primitivesGeneratedQuery` (+`VK_EXT_primitives_generated_query`) / `pipelineStatisticsQuery` | **neither on JM** | Medium: primitives-generated query on JM. CSF has it (`csf/panvk_vX_cmd_query.c`, v10+ only); JM needs its own way to count primitives (e.g. a counter written by the vertex/IDVS path or a tiler statistic). Research first. |
+| one of `primitivesGeneratedQuery` (+`VK_EXT_primitives_generated_query`) / `pipelineStatisticsQuery` | **Implemented on JM 2026-09-28** (Mesa 59f461824eb), NOT advertised: the extension `depends` on VK_EXT_transform_feedback (upstream reverted advertising it on CSF, 4959f45e99e, for that reason; CTS runs the whole `transform_feedback.*` group only with the extension). Enable it together with XFB (step 6); test-only enable patch: `~/android/vk12-wip/pgq-test-only-enable.diff`. Verified with that patch: pgq no_xfb+concurrent 1788 Pass / 0 Fail, query_pool 385 Pass, restart test `~/android/vk12-wip/pgq-restart/` 11/11 | Enable with XFB |
 | `VK_ANDROID_external_format_resolve` | missing | Medium: render/resolve to Android YUV external formats. See how other Mesa drivers (turnip) implement it. |
-| `VK_EXT_surface_maintenance1`, `VK_GOOGLE_surfaceless_query` | not in the *device* list | Probably instance extensions supplied by the Android loader: **check first** (`cmd gpu vkjson` instance section / `vulkaninfo`) before any work. |
+| `VK_EXT_surface_maintenance1`, `VK_GOOGLE_surfaceless_query` | **OK (checked 2026-09-28)**: instance extensions from the Android loader (vkjson instance list); vpGetInstanceProfileSupport checks them on the instance | — |
 | `customBorderColors`, `provokingVertexLast` | extensions present, feature not shown in vkjson | Verify in `panvk_vX_physical_device.c` (quick). |
 | subgroup ops BASIC/VOTE/ARITH/BALLOT/SHUFFLE/SHUFFLE_REL, limits, Bresenham lines, 16/8-bit storage, ycbcr, index_uint8, divisor, maintenance5, 4444, … | OK | — |
 
