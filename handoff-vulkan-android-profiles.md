@@ -9,8 +9,8 @@ section "Vulkan 1.4 on Bifrost v7 — DONE" and "Performance".
 - CTS: all 1.4 requirement checks pass; the 28.9k functional subset has 0 failures; GLES subset unchanged.
 - `adb shell cmd gpu vkprofiles`: **VP_ANDROID_baseline_2021/2022 SUPPORTED**; **VP_ANDROID_15_minimums and
   VP_ANDROID_16_minimums NOT supported** (logcat only says "supported = 0"; use the manual diff below).
-- GPU floor 285 MHz is set **live only** (`/sys/class/devfreq/ffe40000.gpu/min_freq`); it's committed in
-  `init.vim3.rc` (device a8a08bb) but not in an OTA yet. It's lost on reboot until the next OTA.
+- OTA 2026-09-28 14:10 (slot `_a`): Mesa prebuilts @ a57ad93c6e6 (vendor beef1c6) + the 285 MHz GPU floor (verified after
+  reboot). vkjson: Vulkan 1.4.354, shaderFloat16 = 1; baselines SUPPORTED, 15/16 minimums not yet.
 
 ## 0. First thing tomorrow: the full Android dEQP-VK run
 Started 2026-09-27 18:18 as a detached host job, so it keeps running after the session ends:
@@ -34,7 +34,11 @@ cases), newest first, with `run.py` (resume after crash, 3-min stall watchdog).
   - a57ad93c6e6 panvk: exportable AHB memory reported as IMPORT → `device_memory_report...android_hardware_buffer`.
   - 3aa7752492f panvk/jm: timestamp + availability in one batch (latent non-coherent-cache race, same as PGQ).
   - Diagnose job faults with `dmesg | grep fault` (e.g. INSTR_INVALID_ENC): CTS just reports "Fail".
-  2020 and 2019 still running (on the stock driver).
+  2020 = 0 Fail. 2019 (finished 14:03): 203,931 Pass, 0 Fail, 3 out-of-memory results in
+  `api.object_management.max_concurrent.*`: `device`/`device_group` = ResourceError (VK_ERROR_OUT_OF_DEVICE_MEMORY from
+  vkCreateDevice; in upstream's G52 fails list) and `command_buffer_secondary` = Crash (Scudo aborts on "internal map
+  failure (Out of memory)" in a malloc inside panvk, so no VK_ERROR_OUT_OF_HOST_MEMORY can be returned). Open question: does
+  a JM secondary command buffer preallocate too much host memory? **Full run done: 1.58M cases, no correctness failures left.**
 
 ## 1. The gap to the Android minimums profiles
 Profiles: `frameworks/native/vulkan/vkprofiles/profiles/VP_ANDROID_{15,16}_minimums.json`. Compare with the device via
