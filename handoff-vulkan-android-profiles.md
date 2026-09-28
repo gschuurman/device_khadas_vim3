@@ -35,7 +35,7 @@ Profiles: `frameworks/native/vulkan/vkprofiles/profiles/VP_ANDROID_{15,16}_minim
 ### Android 15 minimums (api 1.3.273)
 | Requirement | Status | Work |
 |---|---|---|
-| `shaderFloat16` (Vulkan12 + Float16Int8 features) | **false on v7** (`.shaderFloat16 = PAN_ARCH >= 10`, also `shaderFmaFloat16`) in `src/panfrost/vulkan/panvk_vX_physical_device.c` | Small: enable for v7, run `dEQP-VK.spirv_assembly.instruction.*float16*`, `dEQP-VK.glsl.*` f16, `dEQP-VK.subgroups.*f16*`, float_controls fp16. The Bifrost compiler does fp16 (GL uses it). |
+| `shaderFloat16` (Vulkan12 + Float16Int8 features) | **DONE 2026-09-28** (Mesa 00664e27f0d + 4e7ce4fdab8, pushed; not in prebuilts/OTA yet): enabled for v7 + `shaderFmaFloat16`; fixed Bifrost FP16 FTZ on f2f16/f2f32 (per-clause FTZ ignored FP16 mode for ops lowered to FP32). 25.6k fp16 cases: 10716 Pass / 0 Fail (`~/android/vk12-wip/f16.txt`) | — |
 | one of `primitivesGeneratedQuery` (+`VK_EXT_primitives_generated_query`) / `pipelineStatisticsQuery` | **neither on JM** | Medium: primitives-generated query on JM. CSF has it (`csf/panvk_vX_cmd_query.c`, v10+ only); JM needs its own way to count primitives (e.g. a counter written by the vertex/IDVS path or a tiler statistic). Research first. |
 | `VK_ANDROID_external_format_resolve` | missing | Medium: render/resolve to Android YUV external formats. See how other Mesa drivers (turnip) implement it. |
 | `VK_EXT_surface_maintenance1`, `VK_GOOGLE_surfaceless_query` | not in the *device* list | Probably instance extensions supplied by the Android loader: **check first** (`cmd gpu vkjson` instance section / `vulkaninfo`) before any work. |
@@ -85,6 +85,12 @@ After each step: `adb shell cmd gpu vkprofiles` + the regression subset.
     with `MESA_SHADER_CACHE_DISABLE=true --deqp-shadercache=disable` to see shaders. In app processes use properties:
     `debug.mesa.panvk.debug=…` (Mesa maps `FOO_BAR` → `debug.mesa.foo.bar`).
   - The out/ copy is replaced by the next `VIM3_MESA_FROM_SOURCE=true` build (removes temporary debug prints).
+- **Testing next to a running CTS job**: `~/android/vk12-wip/run-ns.py <tag> <driver.so on device|-> <caselist> <outdir>`
+  mounts the test driver in a private mount namespace (`unshare -m` + toybox `mount -o rprivate none /`; without the
+  rprivate step the bind mount LEAKS globally), uses its own device files, disables the shader cache and only kills its
+  own deqp. Plain `run.py` jobs collide (same rem.txt/run.qpa, `pkill deqp-binary64`).
+- **fastboot slot info is wrong on this U-Boot** (`current-slot` said a while booting _b; `set_active` unsupported).
+  Check `ro.boot.slot_suffix`; switch with `bootctl`.
 - **Prebuilts**: `VIM3_MESA_FROM_SOURCE=true m libgallium_dri libEGL_mesa libGLESv1_CM_mesa libGLESv2_mesa libgbm_mesa
   dri_gbm vulkan.panfrost` (~3 min), then install into `vendor/khadas/vim3/gpu/mesa/a73/lib64` (script: the loop in
   `vendor/khadas/vim3/gpu/mesa/README.md`; it strips and checks NEEDED). Never ship a build made with the switch on.
