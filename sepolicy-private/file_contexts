@@ -1,3 +1,3 @@
 /system/bin/rvc_early      u:object_r:rvc_early_exec:s0
 /system/bin/rvc_display    u:object_r:rvc_display_exec:s0
-/system_ext/bin/hw/vim3\.audio\.parameter_parser    u:object_r:vim3_audio_parameter_parser_exec:s0
+/(system_ext|system/system_ext)/bin/hw/vim3\.audio\.parameter_parser    u:object_r:vim3_audio_parameter_parser_exec:s0
