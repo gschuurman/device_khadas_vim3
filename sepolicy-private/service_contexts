@@ -1,1 +1,2 @@
 rvc_display    u:object_r:rvc_display_service:s0
+android.media.audio.IHalAdapterVendorExtension/default    u:object_r:vim3_audio_parameter_parser_service:s0

@@ -21,8 +21,16 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.automotive.audiocontrol-service \
 
-# PRODUCT_PACKAGES += \
-#     CarAudioTuner \
+# Lets audioserver hand the car audio parameters (balance, fader, equalizer, bus
+# gains) to the AIDL audio HAL: hal/audio/parameter_parser.
+PRODUCT_PACKAGES += \
+    vim3.audio.parameter_parser
+PRODUCT_SYSTEM_EXT_PROPERTIES += \
+    ro.audio.ihaladaptervendorextension_enabled=true
+
+# Equalizer and balance/fader entries on the CarSettings "Sound" page.
+PRODUCT_PACKAGES += \
+    CarAudioTuner
 
 # Copy BayLibre audio configuration files for Yukawa
 PRODUCT_COPY_FILES += \

@@ -1,0 +1,12 @@
+# IHalAdapterVendorExtension (device/khadas/vim3/hal/audio/parameter_parser): converts the car
+# audio parameters for libaudiohal in audioserver.
+type vim3_audio_parameter_parser, domain, coredomain;
+type vim3_audio_parameter_parser_exec, exec_type, file_type, system_file_type;
+type vim3_audio_parameter_parser_service, service_manager_type;
+init_daemon_domain(vim3_audio_parameter_parser)
+
+binder_use(vim3_audio_parameter_parser)
+add_service(vim3_audio_parameter_parser, vim3_audio_parameter_parser_service)
+
+allow audioserver vim3_audio_parameter_parser_service:service_manager find;
+binder_call(audioserver, vim3_audio_parameter_parser)

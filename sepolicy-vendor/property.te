@@ -2,3 +2,6 @@ vendor_internal_prop(vendor_sensors_prop)
 # Use vendor_public_prop to allow apps to read graphics properties
 # needed by gralloc/mesa for GPU operations
 vendor_public_prop(vendor_graphics_prop)
+
+# Car audio settings (balance, fader, equalizer), persisted by the audio HAL
+vendor_internal_prop(vendor_car_audio_prop)

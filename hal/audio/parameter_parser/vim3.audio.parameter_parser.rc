@@ -1,0 +1,6 @@
+# Must be up before audioserver: with ro.audio.ihaladaptervendorextension_enabled
+# set, libaudiohal waits for this service.
+service vim3_audio_parameter_parser /system_ext/bin/hw/vim3.audio.parameter_parser
+    class hal
+    user audioserver
+    group media

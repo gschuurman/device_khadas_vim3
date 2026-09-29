@@ -1,0 +1,29 @@
+// IHalAdapterVendorExtension for the VIM3: lets audioserver pass the car audio
+// parameters (balance, fader, equalizer, bus gains) as "key=value" strings to
+// the AIDL audio HAL, which expects typed VendorParameters.
+cc_binary {
+    name: "vim3.audio.parameter_parser",
+    system_ext_specific: true,
+    relative_install_path: "hw",
+    init_rc: ["vim3.audio.parameter_parser.rc"],
+    defaults: [
+        "latest_android_hardware_audio_core_ndk_shared",
+        "latest_android_media_audio_common_types_ndk_shared",
+    ],
+    srcs: [
+        "ParameterParser.cpp",
+        "main.cpp",
+    ],
+    shared_libs: [
+        "av-audio-types-aidl-ndk",
+        "libbase",
+        "libbinder_ndk",
+        "libmedia_helper",
+        "libutils",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wextra",
+    ],
+}

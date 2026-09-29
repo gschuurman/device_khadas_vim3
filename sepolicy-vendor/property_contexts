@@ -16,3 +16,4 @@ vendor.hwc.drm.exclude_non_hwfb_imports  u:object_r:vendor_graphics_prop:s0 exac
 vendor.hwc.drm.primary_display_order     u:object_r:vendor_graphics_prop:s0 exact string
 vendor.hwc.drm.scale_with_gpu                  u:object_r:vendor_graphics_prop:s0 exact int
 ro.vendor.hwc.drm.use_overlay_planes     u:object_r:vendor_graphics_prop:s0 exact int
+persist.vendor.audio.car.      u:object_r:vendor_car_audio_prop:s0
