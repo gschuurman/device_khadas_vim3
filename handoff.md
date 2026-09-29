@@ -116,8 +116,9 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 1. ~~Bake the CarRadioApp redesign into the image~~ — already done (checked 2026-09-29): repo-managed
    (`gschuurman/packages_apps_Car_Radio` `main` @ 9f792f5, manifest line 12), built into `/system/priv-app/CarRadioApp`
    (on-device APK == build output), installed for driver user 10. Open: DAB reception (see C6/D2).
-2. **Car audio EQ + loudness** 🖥 — DynamicsProcessing plan in memory `project_car_audio_volume_eq`
-   (CarAudioTuner app is disabled).
+2. ~~Car audio EQ + balance/fader~~ — DONE 2026-09-29 (audio HAL 80b5a81, device f8be257/b778e6f, vehicle_interfaces
+   9d106fc): parameter parser service, 5-band EQ in the HAL, persist.vendor.audio.car.*, Settings → Sound entries.
+   Verified on HW except listening (needs the USB sound card attached).
 3. **Radio polish** — stereo/RDS (C5), per-block DAB scan progress in the scan wizard.
 4. **Phone GPS into AAOS** — deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
    memory `project_phone_gps_into_aaos`.
