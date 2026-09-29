@@ -96,11 +96,10 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    path untested.
 
 ### D. Bugs
-0. **Organic Maps first-launch corruption** 🖥 — garbage triangles over world geometry on OM's first launch
-   (repro: delete /data/user/10/app.organicmaps/files/settings.ini, relaunch). NOT the GPU stack: reproduced on
-   Mesa 25.3 and every Mesa 26 build, on ANGLE/panvk, on kernel panfrost 1.3 and 1.6, and without the map card.
-   Suspect an app-side race when OM switches from built-in to downloaded World*.mwm on first run. Next: test an
-   unmodified upstream OM build; details in memory project_om_first_launch_corruption.
+0. **Organic Maps first-launch corruption** — low priority, not an issue in practice (2026-09-29): only on the
+   very first launch after a fresh install/data wipe (no settings.ini yet); clean on every later launch and across
+   reboots (3/3). Not the GPU stack. Test plan + screenshots on the OM fork branch aaos-issue-first-launch-corruption
+   if it ever needs fixing (suspect our AAOS surface attach/detach changes).
 1. **Bluetooth** 🚗
    - MapClient boot crash loop: FIXED in the Bluetooth fork (`packages/modules/Bluetooth`, gschuurman
      `lineage-23.2` @ ed6655a2ec, pushed 2026-09-29), not yet in an OTA. Only triggers once a phone has connected
