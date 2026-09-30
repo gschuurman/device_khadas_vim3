@@ -138,8 +138,9 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    4. RPMB rollback protection (**irreversible**: programs the eMMC RPMB key once): expose `mmcblk0rpmb`, OP-TEE
       `CFG_RPMB_FS=y` with a derived key. Decide first whether the eMMC stays in use.
    5. Attestation: without Google RKP provisioning only a self-signed chain is possible (limited value).
-4. **U-Boot USB3/PCIe PHY fix** (`bd205d88d25`, `68e5d22a4e8`) — notes never recorded a HW confirmation; check the
-   boot log for `vim3: PCIe mode, USB3 PHY left to PCIe` and that NVMe survives `fastboot usb 0`.
+4. ~~U-Boot USB3/PCIe PHY fix~~ (`bd205d88d25`, `68e5d22a4e8`) — confirmed in practice (2026-09-30): the NVMe was
+   provisioned and flashed through U-Boot fastboot (incl. `oem format`, `7428383a2ba`) and has booted from it since —
+   the exact path (`fastboot usb 0` killing the PCIe link) the fix addresses.
 
 ### C. Car features — verify on hardware
 1. **ACC-line suspend-to-RAM** 🚗 — VHAL implementation (vehicle_interfaces `1ba64cf`) + kernel wakeup-source DTS;
