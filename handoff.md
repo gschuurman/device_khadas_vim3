@@ -95,6 +95,32 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    hand (Actions → Weekly GKI rebase → Run workflow). After it pushes: build + test the new GKI kernel before the next
    OTA, and `git reset --hard gschuurman/lineage-23.0` locally.
 
+7. **panvk renders Organic Maps wrong** 🖥 — found 2026-09-30 in the head-unit harness. OM picks Vulkan on its own
+   (`support_manager.cpp:33 Init(): Renderer = Mali-G52 MC2 | Api = Vulkan | Version = API:1.4.354/Driver:26.2.3`).
+   - Symptom: map card at boot fully red, or top half black, or big green/yellow/cyan garbage polygons over
+     world-level geometry (North America, Caribbean, Pacific, Antarctica). Intermittent, on any launch (seen on
+     session 75), not only the first.
+   - A/B same boot, relaunching the card (force-stop OM + CarLauncher, HOME): Vulkan 3/3 corrupt, OpenGL ES 3.1
+     (panfrost) clean. No GPU faults / sched timeouts in dmesg, no VK errors in logcat → silent wrong output, not a
+     hang. Only noise: minigbm `Unsupported format 0x3b` (R10G10B10A10 probe during swapchain setup, harmless).
+   - This replaces the 2026-09-29 "first-launch corruption" analysis: everything ruled out then was a GLES library
+     (Mesa GL prebuilts, Mesa 25.3 GL, ANGLE) that OM wasn't using. The OM fork branch
+     `aaos-issue-first-launch-corruption` blames our AAOS surface changes — that is wrong; fix or delete its README.
+     Still possibly useful from that session: `debug.mesa.pan.mesa.debug nocache` raised the rate, clearing the
+     shader cache once gave a clean run; scoring script (count of g>200,b<80 pixels) + screens in
+     `~/android/vk12-wip/soak/`.
+   - **Workaround (device only):** `VulkanForbidden=true` appended to `/data/user/10/app.organicmaps/files/settings.ini`
+     (backup `/data/local/tmp/om_settings.bak`). Lost on `oem format`. For the image: add Mali-G52 + panvk to OM's
+     ban list in `libs/drape/support_manager.cpp` (`IsVulkanForbidden`, kBannedDevices/kBannedConfigurations) in our
+     OM fork.
+   - Next steps to find the driver bug: (1) repro loop = toggle the settings.ini key + relaunch + screencap +
+     pixel score; (2) swap only `vulkan.panfrost` via bind-mount (see "Mesa / GPU loop"): upstream main
+     (`~/android/mesa-mr-build`) vs our fork, to see whether one of our local panvk patches causes it; then older
+     Mesa panvk; (3) run OM with the Khronos validation layer (app-side misuse vs driver); (4) gfxreconstruct capture
+     of a bad frame → replay offline on fixed drivers and bisect draw calls; OM drape Vulkan code is in
+     `~/android/organicmaps/libs/drape/vulkan/`. Suspects given the world-level geometry: vertex/index buffer
+     updates in place (buffer sync / JM batch flushing), texture-array fallback, pipeline-cache reuse.
+
 ### B. Security / firmware
 1. **Cold-boot HUK fix** 🖥 — optee_os dea8b8656 verified via RAM-boot only; confirm from flash: power off for
    minutes, boot, grep serial for "huk: uncached view of the efuse buffer was stale", keystore2 up.
@@ -128,10 +154,7 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    path untested.
 
 ### D. Bugs
-0. **Organic Maps first-launch corruption** — low priority, not an issue in practice (2026-09-29): only on the
-   very first launch after a fresh install/data wipe (no settings.ini yet); clean on every later launch and across
-   reboots (3/3). Not the GPU stack. Test plan + screenshots on the OM fork branch aaos-issue-first-launch-corruption
-   if it ever needs fixing (suspect our AAOS surface attach/detach changes).
+0. ~~Organic Maps first-launch corruption~~ — root-caused 2026-09-30 to panvk (Vulkan), see A.7.
 1. **Bluetooth** 🚗
    - MapClient boot crash loop: FIXED in the Bluetooth fork (`packages/modules/Bluetooth`, gschuurman
      `lineage-23.2` @ ed6655a2ec, pushed 2026-09-29), not yet in an OTA. Only triggers once a phone has connected
