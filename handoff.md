@@ -128,15 +128,23 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    9d106fc): parameter parser service, 5-band EQ in the HAL, persist.vendor.audio.car.*, Settings → Sound entries.
    Verified on HW except listening (needs the USB sound card attached).
 3. **Radio polish** — stereo/RDS (C5), per-block DAB scan progress in the scan wizard.
-4. **Phone GPS into AAOS** — deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
+4. **Whisper speech recognition in Dicio** 🚗 — built 2026-09-30 for mixed-language commands (Dutch with English
+   names; Vosk models are one language each). Dicio fork `gschuurman/dicio-android` `preinstalled-models` @ 3a6a897
+   (whisper.cpp submodule + JNI, `WhisperInputDevice` with energy end-of-speech, default when
+   `/product/usr/share/dicio/whisper/*.bin` exists), vehicle_interfaces 04ca5de (APK + ggml-base-q5_1, 60 MB).
+   ~1.3 s per command on the A311D (greedy, audio_ctx ≥ 384, 64-token cap). Verified via bind-mount up to the
+   microphone (none attached). Open: **live test** with a mic — set Dicio's language to Dutch (it follows the system
+   language, English on the board), say "Speel Bohemian Rhapsody van Queen"; tune the end-of-speech thresholds in car
+   noise if needed. Benchmarks + test tool: `~/android/whisper`, `dicio_whisper_test` (app/src/main/cpp).
+5. **Phone GPS into AAOS** — deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
    memory `project_phone_gps_into_aaos`.
 
 ### F. Housekeeping
 1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
 
 ### G. Next build
-1. **OTA with the 2026-09-30 fixes** 🖥 — minigbm `113f471` (gralloc leak) and CarRadioApp `a987a34`; until then
-   they are lost on reboot. After install: re-run the soak, check `dmabuf_dump -b` stays small and CmaFree > 100 MB.
+1. **OTA with the 2026-09-30 fixes** 🖥 — minigbm `113f471` (gralloc leak), CarRadioApp `a987a34` and Dicio with
+   Whisper (vehicle_interfaces 04ca5de); until then they are lost on reboot. After install: re-run the soak, check `dmabuf_dump -b` stays small and CmaFree > 100 MB.
    Also re-check D3 ("video buffer" glitching) and the USB-camera mapping workaround `017a059`: both may have been
    the leak / the shared-mapping side effect.
 
@@ -192,6 +200,14 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 - Lessons: flush JM batches between a value and its availability flag; `suppress_prefetch` on jobs patched by other
   jobs; never load from address 0 in a shader; panvk meta passes replace the render state; JM dispatches can't be 0
   workgroups (size-1 fields).
+
+### Dicio (prebuilt APK from our fork)
+- `~/android/dicio-src` (branch `preinstalled-models`, submodules!): `JAVA_HOME=prebuilts/jdk/jdk21/linux-x86
+  ANDROID_HOME=~/android/sdk ./gradlew assembleRelease -Porg.gradle.java.installations.paths=~/android/jdk17`
+  (a subproject needs a JDK 17 toolchain), copy `app/build/outputs/apk/release/app-release-unsigned.apk` to
+  `vendor/gschuurman/vehicle_interfaces/automotive/dicio/Dicio.apk`, `m Dicio` (signs + stores native libs
+  uncompressed; output `system/product/app/Dicio/Dicio.apk`). Test: bind-mount it over `/product/app/Dicio/Dicio.apk`
+  (`umount -l` first if already mounted) + `stop; start`.
 
 ### Kernel
 - New kernel modules don't load into the running kernel (vermagic has the git SHA) → test via OTA.
