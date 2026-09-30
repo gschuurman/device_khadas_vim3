@@ -13,6 +13,7 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 **Board:** Khadas VIM3 (A311D, 4 GB), Android 16 / LineageOS 23.2 AAOS, product `lineage_vim3_nvme`, boots from NVMe
 (M2X + WD SN520). USB adb serial `CE88ECF8D115`. Driver user = 10, headless system user = 0.
+- Slot `_b` (OTA 2026-09-30, active): same kernel/Mesa + gralloc leak fix, CarRadioApp fix, Dicio with Whisper.
 - Slot `_a` (OTA 2026-09-29): kernel `6.12.93-4k-g0dd64554038e` (GKI android16-6.12.93 + fork, panfrost uapi 1.6),
   Mesa 26.2.3 + our patches `a67490155ea` (prebuilts vendor `692793c`). Slot `_b` = previous OTA (same kernel,
   older Mesa) as fallback.
@@ -33,7 +34,7 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 | kernel/khadas/vim3_overlay | gschuurman/kernel_overlay_amlogic_yukawa `main` | config fragment, aic8800 |
 | u-boot/khadas/vim3 | gschuurman/u-boot `master` @ 7428383a2ba | **plain checkout**; local branch name `optee-bl31-2019-ramboot-test` = master |
 | bootloader/arm-trusted-firmware, bootloader/optee_os | gschuurman forks `g12b-vim3` | |
-| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ 17cf8e2cc87 | 27 commits on mesa-26.2.3 (latest: etnaviv ML fix, not in prebuilts; Teflon isn't in the image) |
+| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ 6fb80f48f7c | 28 commits on mesa-26.2.3 (latest two: etnaviv ML padding, not in prebuilts; Teflon isn't in the image) |
 | external/minigbm | gschuurman/external_minigbm `lineage-23.2` | YUV rendering |
 | vendor/gschuurman/vehicle_interfaces | gschuurman `android-16` | VHAL, audiocontrol, GNSS, apps |
 | hardware/amlogic/yukawa/audio | gschuurman `lineage-23.0` | audio HAL fork |
@@ -60,35 +61,54 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
      8b03ae787f4 covers subgroups.arithmetic, so our 05f5f33 is not needed upstream (drop it at the next Mesa rebase).
      `command_buffer_secondary` is state-dependent: run it alone (unfixed 3/3 Crash, fixed 3/3 Pass).
      **Remaining: you write the commit messages/MR text and submit.**
-2. **JM index min/max remainder upstream** 🖥 — upstream 7e6f47400db already skips null-index-buffer indirect draws;
-   our remaining parts (bounded index loads; null jobs for indexCount 0 / min>max) need a dedicated repro first.
+2. **JM index min/max remainder upstream** 🖥 — repro done 2026-09-30 (`~/android/vk12-wip/indexbounds-test`):
+   `indexCount = 0` indirect draws hang the GPU on upstream main (sched timeout + reset each); fixed by the null-job
+   part of our 28e01e5eff9 → new MR branch `mr/panvk-jm-indexed-indirect-empty` (fbdaa938e08, local in
+   ~/android/mesa-mr, TODO body like the others; notes §8). The bounded-loads part isn't MR material: indices past the
+   buffer are invalid usage without robustBufferAccess2 (panvk: v11+), and the tiler faults on them anyway.
 3. ~~GPU soak test~~ — DONE 2026-09-30: 12 min CarLauncher + Organic Maps + RVC settings + radio, 0 GPU faults.
    It exposed a gralloc leak: minigbm gbm_mesa left `bo->handle` at 0, so all buffers shared one refcount and were
    never freed (1.99 GB of dma-bufs, CmaFree 0, lmkd kills). Fixed in minigbm `113f471` (per-bo handle); re-soak:
    58 MB dma-bufs, CMA ~220 MB free. Also fixed a CarRadioApp NPE on every relaunch (`a987a34`). Both verified via
    bind-mount only → **need an OTA** (see G1). Soak script: `soak.sh` in the 2026-09-30 session scratchpad (cycle:
    home 8s, OM + 8 swipes, RVC settings, radio; samples dmesg/crash/GPU freq/temps/CmaFree).
-4. **NPU (etnaviv + Teflon)** 🖥 — first real model run DONE 2026-09-30: MobileNet v1 224 uint8, 6.7 ms vs 32.9 ms
-   on 4 CPU threads, top-1 correct, 992/1001 outputs identical to CPU. Needed Mesa `17cf8e2cc87` (etnaviv write_core_6
-   read past the weights for padding kernels → SIGSEGV under Scudo; still unfixed upstream → MR candidate).
-   Harness `~/android/npu-run` (classify.c on the TFLite 2.16.1 AAR C API, benchmark_model), board `/data/local/tmp/npu`.
-   Open: `write_core_interleaved`/`write_core_sequential` have the same indexing (untested); a vision model for the
-   RVC (detection); for apps: public.libraries entry + file_contexts label for libteflon; every GL app probes
-   `/sys/devices/platform/etnaviv/uevent` (sysfs denial) → label it before enforcing.
+4. **NPU (etnaviv + Teflon)** 🖥 — classification works (MobileNet v1 6.7 ms, 4.9× CPU). All three V7 coefficient
+   encoders now pad their phantom kernels (Mesa fork 6fb80f48f7c; patch `~/android/teflon/etnaviv-v7-pad-kernel.patch`).
+   **Detection is broken:** SSD MobileNet v1 and SSDLite MobileDet run (MobileDet 23.5 ms with upstream main) but give
+   wrong boxes. Per-layer CPU-vs-NPU harness `~/android/npu-run/layercmp.c` (+ Mesa's per-layer test models): every
+   failing layer is a standalone residual ADD, flaky ~80%; Mesa's own CI skips exactly those layers and the full
+   MobileDet model (`src/etnaviv/ci/etnaviv-vipnano-skips.txt`). ADD on the CPU still leaves the full model wrong →
+   cross-partition issue. Kernel etnaviv and the NPU DT node already match mainline. Next: bisect partitions of the full
+   model (dump intermediate tensors), or report upstream. App exposure of libteflon (public.libraries + renderD129
+   label) parked until detection works.
 5. **Protected memory (Vulkan item 6)** — parked. Research only: stock BL2 decompiled
    (`~/android/optee-fip-test/re/stock_bl2_decomp.c`, Ghidra project `re/proj2`, JDK `prebuilts/jdk/jdk21`),
    DMC secure ranges at 0xff639000 programmed by BL2, Mali = DMC port 1, Amlogic's kbase has no protected-mode glue;
    whether G52 protected-mode traffic is distinguishable at the DMC is unproven. Not CTS-enforced on Android 16.
    Memory note `project_vulkan_protected_memory`.
-6. **Weekly GKI CI** 🖥 — `.github/workflows/rebase-gki.yml` now replays 28 fork commits incl. the panfrost 1.6
-   backport; check its first run (Mondays 08:00 UTC); after a force-push, reset local `lineage-23.0`.
+6. **Weekly GKI CI** — has never pushed: the 2026-09-28 run (first with upstream movement, 353 commits) failed at the
+   push. Plain `git push` after a rebase can't fast-forward, and the replayed range touches the workflow file, which
+   the default GITHUB_TOKEN may not update. Fix is **uncommitted** in `kernel/khadas/vim3/.github/workflows/rebase-gki.yml`
+   (checkout with `secrets.GKI_PUSH_TOKEN`, `--force-with-lease` on the start head) — commit/push needs your OK, and a
+   PAT with contents + workflows write stored as repo secret `GKI_PUSH_TOKEN`.
 
 ### B. Security / firmware
 1. **Cold-boot HUK fix** 🖥 — optee_os dea8b8656 verified via RAM-boot only; confirm from flash: power off for
    minutes, boot, grep serial for "huk: uncached view of the efuse buffer was stale", keystore2 up.
 2. **SELinux enforcing** 🚗 — sweep needs the peripherals attached (audio, RTL-SDR, GNSS, camera, BT).
-3. **Root of trust / AVB / RPMB rollback / own TA signing key / attestation** 🖥 — KeyMint compliance list
-   (RoT currently from HAL props, attestation keys software).
+3. **Root of trust / AVB / RPMB / TA key / attestation** — state 2026-09-30: AVB on with our own key
+   (`avb/vim3_avb.pem`, RSA-4096) but the device is **unlocked** (orange); KeyMint RoT from HAL props; TAs signed with
+   OP-TEE's public `default_ta.pem`; no RPMB device exposed. Plan, in order (each needs a new FIP → RAM-boot → you at the
+   board; nothing irreversible until step 4):
+   1. Own TA signing key: generate `optee/keys/vim3_ta.pem` (keep private key out of git or encrypted), build OP-TEE
+      with `TA_SIGN_KEY`/`TA_PUBLIC_KEY`, re-sign KeyMint + gatekeeper TAs.
+   2. RoT from the bootloader: U-Boot passes boot state + vbmeta digest + OS version/patch level to OP-TEE (DT node
+      or SMC), KeyMint TA reads it instead of HAL props.
+   3. Lock with our AVB key: embed the vbmeta public key in U-Boot, `fastboot flashing lock` (wipes data) → green
+      state; keep the unlock path tested before locking.
+   4. RPMB rollback protection (**irreversible**: programs the eMMC RPMB key once): expose `mmcblk0rpmb`, OP-TEE
+      `CFG_RPMB_FS=y` with a derived key. Decide first whether the eMMC stays in use.
+   5. Attestation: without Google RKP provisioning only a self-signed chain is possible (limited value).
 4. **U-Boot USB3/PCIe PHY fix** (`bd205d88d25`, `68e5d22a4e8`) — notes never recorded a HW confirmation; check the
    boot log for `vim3: PCIe mode, USB3 PHY left to PCIe` and that NVMe survives `fastboot usb 0`.
 
@@ -143,10 +163,10 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
 
 ### G. Next build
-1. **OTA with the 2026-09-30 fixes** 🖥 — minigbm `113f471` (gralloc leak), CarRadioApp `a987a34` and Dicio with
-   Whisper (vehicle_interfaces 04ca5de); until then they are lost on reboot. After install: re-run the soak, check `dmabuf_dump -b` stays small and CmaFree > 100 MB.
-   Also re-check D3 ("video buffer" glitching) and the USB-camera mapping workaround `017a059`: both may have been
-   the leak / the shared-mapping side effect.
+1. ~~OTA with the 2026-09-30 fixes~~ — DONE: installed to slot `_b` and verified (gralloc leak gone: 36 MB dma-buf
+   after 10 app switches, CMA 200 MB free; CarRadioApp + Dicio/Whisper from the image). Slot `_a` = previous build.
+2. **Next OTA** will add the etnaviv sysfs label (`sepolicy/genfs_contexts`, fcb19af) — check no more
+   `/sys/devices/platform/etnaviv/uevent` denials in dmesg.
 
 ---
 
