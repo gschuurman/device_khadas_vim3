@@ -147,8 +147,13 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 2. **OpenHeadunit** (USB Android Auto picker, `packages/apps/OpenHeadunit`) 🚗 — wired into the build but untested;
    currently not installed on the board.
 3. **Wireless Android Auto** 🚗 — live test with the phone as P2P group owner (both BoardConfig fixes are in).
-4. **Rear view camera with the real grabber** 🚗 — settings screen + early-boot RVC exist, never tested with the USB
-   grabber attached.
+4. **Rear view camera with the real grabber** 🚗 — 2026-09-30, MS210x grabber attached, no camera on it: camera 100
+   opens, Camera2 streams 720×480@30 (381 frames, two buffer-request timeouts at start only), black image as expected,
+   clean close. Settings panel fixed (RearViewCamera `1dd9592`, bind-mount verified, needs OTA): back button over the
+   image, back arrow in the panel header, list settings as tap-to-apply pick lists (the car UI list page only saved on
+   Back, and the panel's back handler swallowed it → choices were lost). Open: a real camera image, and the reverse
+   trigger itself: `cmd car_service inject-vhal-event GEAR_SELECTION 2` does NOT start it — GearMonitorService polls
+   the VHAL, which reads only the GPIO (`ro.vendor.vehicle.gear.gpio.*` = gpiochip0/51, header pin 32 high = reverse).
 5. **Native FM radio (RTL-SDR)** 🚗 — live FM listening test; stereo decode and RDS are TODO.
 6. **DAB** 🚗 — app-side "tune to default" built+deployed but the verify tap was never done; physical antenna unplug
    path untested.
@@ -184,6 +189,9 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    noise if needed. Benchmarks + test tool: `~/android/whisper`, `dicio_whisper_test` (app/src/main/cpp).
 5. **Phone GPS into AAOS** — deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
    memory `project_phone_gps_into_aaos`.
+
+6. **Local music player** (wish, 2026-09-30) — play music from the Music folder on the NVMe (plenty of space);
+   should show up as a media source in the car media UI (MediaBrowserService), like the radio.
 
 ### F. Housekeeping
 1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
