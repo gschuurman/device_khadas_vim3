@@ -177,7 +177,15 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    (on-device APK == build output), installed for driver user 10. Open: DAB reception (see C6/D2).
 2. ~~Car audio EQ + balance/fader~~ — DONE 2026-09-29 (audio HAL 80b5a81, device f8be257/b778e6f, vehicle_interfaces
    9d106fc): parameter parser service, 5-band EQ in the HAL, persist.vendor.audio.car.*, Settings → Sound entries.
-   Verified on HW except listening (needs the USB sound card attached).
+   Listening test DONE 2026-09-30 in the harness (USB card): EQ audible on a steady tone (a cycling tone sweep was too
+   short to judge), balance + fader follow. Tone tool: `Tone.java` in the 2026-09-30 session scratchpad (AudioTrack
+   USAGE_MEDIA via `CLASSPATH=/data/local/tmp/tone.dex app_process /system/bin Tone <secs> <Hz>[,<Hz>...]`).
+   **Next: graphic EQ UI** like github.com/igogrek/equalizer-apo-ui (user's reference, 2026-09-30): preamp slider +
+   15 vertical band sliders at 25/40/63/100/160/250/400/630/1k/1.6k/2.5k/4k/6.3k/10k/16k Hz with the combined
+   response curve drawn filled behind them, Reset button. Needs HAL: `PrimaryMixer::kEqBands` 5 → 15 at those
+   frequencies (Q ≈ 2.15 for 2/3-octave spacing), a manual `car.eq.preamp` (dB) alongside the auto headroom,
+   persist props for the new bands (migrate the 5 old ones or reset). UI: new Equalizer screen in CarAudioTuner
+   (touch-sized for 1024×600, curve from `CarEqualizer::responseDb` logic reimplemented in the app).
 3. **Radio polish** — stereo/RDS (C5), per-block DAB scan progress in the scan wizard.
 4. **Whisper speech recognition in Dicio** 🚗 — built 2026-09-30 for mixed-language commands (Dutch with English
    names; Vosk models are one language each). Dicio fork `gschuurman/dicio-android` `preinstalled-models` @ 3a6a897
