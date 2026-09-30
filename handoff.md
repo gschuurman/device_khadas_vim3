@@ -161,12 +161,16 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 
 ### D. Bugs
 0. ~~Organic Maps first-launch corruption~~ — root-caused 2026-09-30 to panvk (Vulkan), see A.7.
-1. **Bluetooth** 🚗
-   - MapClient boot crash loop: FIXED in the Bluetooth fork (`packages/modules/Bluetooth`, gschuurman
-     `lineage-23.2` @ ed6655a2ec, pushed 2026-09-29), not yet in an OTA. Only triggers once a phone has connected
-     over MAP (remote-SIM subscription record) → verify after pairing + reboot: `logcat -b crash` empty, BT pid stable.
-   - A2DP crash when music stops, HFP CONNECTING_TIMEOUT: last seen June; no phone paired since the 09-25 clean
-     flash → pair the phone, play/stop music, make a call, capture `logcat -b all` + `logcat -b crash`.
+1. **Bluetooth** 🚗 — 2026-09-30 with the Pixel 9 Pro XL: pairing, A2DP sink, AVRCP, HFP, MAP, PBAP and PAN
+   (internet via the phone's Bluetooth tethering) all connect — verified via bind-mount + setprop, **needs an OTA**:
+   - HFP never connected: RFCOMM collision left the HF client block half-open and every later incoming connection was
+     refused. Fixed in the BT fork `8c79330045` (take the block over, drop our own outgoing port).
+   - BT process abort on reconnect ("No prior connection request", classic_impl.h): the BCM4359 reports our page
+     as failed + the phone's as success; fixed `a10e0318f6` (unmatched success = incoming connection).
+   - The head unit also advertised phone-side roles (HFP AG, LE Audio servers, …) → collisions; removed in device
+     `1c2f217` (car_product/properties/bluetooth.prop provides the car-side roles).
+   - Still to test: A2DP crash when music stops, a real call (audio), MapClient crash-loop fix (`ed6655a2ec`) after a
+     reboot with the phone connected, wireless Android Auto.
 2. **DAB choppy audio** 🚗 — RTL-SDR (4 MB/s) starves the 8-ch USB sound card on the shared hub 1-1.4: move the
    dongle to another hub (audio code proven clean).
 3. **"Video buffer" glitching under first-boot load** — seen 2026-09-21 (CmaFree ~6 MB of 576 MB during
