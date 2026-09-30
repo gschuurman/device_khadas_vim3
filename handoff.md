@@ -86,11 +86,14 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    DMC secure ranges at 0xff639000 programmed by BL2, Mali = DMC port 1, Amlogic's kbase has no protected-mode glue;
    whether G52 protected-mode traffic is distinguishable at the DMC is unproven. Not CTS-enforced on Android 16.
    Memory note `project_vulkan_protected_memory`.
-6. **Weekly GKI CI** — has never pushed: the 2026-09-28 run (first with upstream movement, 353 commits) failed at the
-   push. Plain `git push` after a rebase can't fast-forward, and the replayed range touches the workflow file, which
-   the default GITHUB_TOKEN may not update. Fix is **uncommitted** in `kernel/khadas/vim3/.github/workflows/rebase-gki.yml`
-   (checkout with `secrets.GKI_PUSH_TOKEN`, `--force-with-lease` on the start head) — commit/push needs your OK, and a
-   PAT with contents + workflows write stored as repo secret `GKI_PUSH_TOKEN`.
+6. **Weekly GKI CI** — reworked 2026-09-30: the workflow moved to the new **`ci` branch** (de474ea54aadf, orphan,
+   only `.github` + README); `lineage-23.0` no longer carries it (397331d7446ad). It checks out `lineage-23.0` into
+   `kernel/`, replays the fork range without `.github` (the old push failed: plain push after a rebase, and replayed
+   workflow-file commits the default token may not push) and force-pushes with a lease. Local dry run against today's
+   upstream (353 commits): 27 patches, clean `git am`, verify ok. **You: set the repo's default branch to `ci`**
+   (GitHub → Settings → General → Default branch), otherwise the schedule won't find the workflow. Then run it once by
+   hand (Actions → Weekly GKI rebase → Run workflow). After it pushes: build + test the new GKI kernel before the next
+   OTA, and `git reset --hard gschuurman/lineage-23.0` locally.
 
 ### B. Security / firmware
 1. **Cold-boot HUK fix** 🖥 — optee_os dea8b8656 verified via RAM-boot only; confirm from flash: power off for
