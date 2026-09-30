@@ -33,7 +33,7 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 | kernel/khadas/vim3_overlay | gschuurman/kernel_overlay_amlogic_yukawa `main` | config fragment, aic8800 |
 | u-boot/khadas/vim3 | gschuurman/u-boot `master` @ 7428383a2ba | **plain checkout**; local branch name `optee-bl31-2019-ramboot-test` = master |
 | bootloader/arm-trusted-firmware, bootloader/optee_os | gschuurman forks `g12b-vim3` | |
-| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ a67490155ea | 26 commits on mesa-26.2.3 |
+| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ 17cf8e2cc87 | 27 commits on mesa-26.2.3 (latest: etnaviv ML fix, not in prebuilts; Teflon isn't in the image) |
 | external/minigbm | gschuurman/external_minigbm `lineage-23.2` | YUV rendering |
 | vendor/gschuurman/vehicle_interfaces | gschuurman `android-16` | VHAL, audiocontrol, GNSS, apps |
 | hardware/amlogic/yukawa/audio | gschuurman `lineage-23.0` | audio HAL fork |
@@ -62,10 +62,19 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
      **Remaining: you write the commit messages/MR text and submit.**
 2. **JM index min/max remainder upstream** 🖥 — upstream 7e6f47400db already skips null-index-buffer indirect draws;
    our remaining parts (bounded index loads; null jobs for indexCount 0 / min>max) need a dedicated repro first.
-3. **GPU soak test on the car screen** 🖥 — 10+ min CarLauncher + Organic Maps (GL) + RVC TextureView on the new
-   kernel/Mesa, watch `dmesg | grep -i panfrost`.
-4. **NPU (etnaviv + Teflon)** 🖥 — first real model run (MobileNet v1 uint8 via a TFLite runtime for Android arm64);
-   for apps: public.libraries entry + file_contexts label for libteflon.
+3. ~~GPU soak test~~ — DONE 2026-09-30: 12 min CarLauncher + Organic Maps + RVC settings + radio, 0 GPU faults.
+   It exposed a gralloc leak: minigbm gbm_mesa left `bo->handle` at 0, so all buffers shared one refcount and were
+   never freed (1.99 GB of dma-bufs, CmaFree 0, lmkd kills). Fixed in minigbm `113f471` (per-bo handle); re-soak:
+   58 MB dma-bufs, CMA ~220 MB free. Also fixed a CarRadioApp NPE on every relaunch (`a987a34`). Both verified via
+   bind-mount only → **need an OTA** (see G1). Soak script: `soak.sh` in the 2026-09-30 session scratchpad (cycle:
+   home 8s, OM + 8 swipes, RVC settings, radio; samples dmesg/crash/GPU freq/temps/CmaFree).
+4. **NPU (etnaviv + Teflon)** 🖥 — first real model run DONE 2026-09-30: MobileNet v1 224 uint8, 6.7 ms vs 32.9 ms
+   on 4 CPU threads, top-1 correct, 992/1001 outputs identical to CPU. Needed Mesa `17cf8e2cc87` (etnaviv write_core_6
+   read past the weights for padding kernels → SIGSEGV under Scudo; still unfixed upstream → MR candidate).
+   Harness `~/android/npu-run` (classify.c on the TFLite 2.16.1 AAR C API, benchmark_model), board `/data/local/tmp/npu`.
+   Open: `write_core_interleaved`/`write_core_sequential` have the same indexing (untested); a vision model for the
+   RVC (detection); for apps: public.libraries entry + file_contexts label for libteflon; every GL app probes
+   `/sys/devices/platform/etnaviv/uevent` (sysfs denial) → label it before enforcing.
 5. **Protected memory (Vulkan item 6)** — parked. Research only: stock BL2 decompiled
    (`~/android/optee-fip-test/re/stock_bl2_decomp.c`, Ghidra project `re/proj2`, JDK `prebuilts/jdk/jdk21`),
    DMC secure ranges at 0xff639000 programmed by BL2, Mali = DMC port 1, Amlogic's kbase has no protected-mode glue;
@@ -123,9 +132,13 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    memory `project_phone_gps_into_aaos`.
 
 ### F. Housekeeping
-1. Commit this handoff (and the deletions of the old ones) when you're happy with it.
-2. Kernel repo object store holds 7.25 GiB of `tmp_pack_*` garbage from interrupted fetches
-   (`.repo/projects/kernel/khadas/vim3.git/objects/pack/`); remove when no git process runs.
+1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
+
+### G. Next build
+1. **OTA with the 2026-09-30 fixes** 🖥 — minigbm `113f471` (gralloc leak) and CarRadioApp `a987a34`; until then
+   they are lost on reboot. After install: re-run the soak, check `dmabuf_dump -b` stays small and CmaFree > 100 MB.
+   Also re-check D3 ("video buffer" glitching) and the USB-camera mapping workaround `017a059`: both may have been
+   the leak / the shared-mapping side effect.
 
 ---
 
