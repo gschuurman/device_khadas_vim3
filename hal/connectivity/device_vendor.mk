@@ -5,26 +5,17 @@
 # Bluetooth service
 PRODUCT_PACKAGES += android.hardware.bluetooth-service.default
 
+# Car-side profiles only; the rest comes from car_product/properties/bluetooth.prop (A2DP sink,
+# AVRCP controller, HFP HF, MAP/PBAP client, PAN). No phone-side roles (HFP AG, LE Audio call/media
+# control servers, unicast client, broadcast source, hearing aids): with them the head unit also
+# looks like a phone, and the phone and the car open the same HFP connection at once (RFCOMM
+# collision) — HFP then never connected.
 PRODUCT_PROPERTY_OVERRIDES += \
     bluetooth.core.gap.le.privacy.enabled=false \
-    bluetooth.profile.asha.central.enabled=true \
-    bluetooth.profile.a2dp.source.enabled=true \
-    bluetooth.profile.avrcp.target.enabled=true \
-    bluetooth.profile.bap.broadcast.assist.enabled=true \
-    bluetooth.profile.bap.broadcast.source.enabled=true \
-    bluetooth.profile.bap.unicast.client.enabled=true \
     bluetooth.profile.bas.client.enabled=true \
-    bluetooth.profile.ccp.server.enabled=true \
-    bluetooth.profile.csip.set_coordinator.enabled=true \
     bluetooth.profile.gatt.enabled=true \
-    bluetooth.profile.hap.client.enabled=true \
-    bluetooth.profile.hfp.ag.enabled=true \
     bluetooth.profile.hid.host.enabled=true \
-    bluetooth.profile.mcp.server.enabled=true \
-    bluetooth.profile.opp.enabled=true \
-    bluetooth.profile.pan.nap.enabled=true \
-    bluetooth.profile.pan.panu.enabled=true \
-    bluetooth.profile.vcp.controller.enabled=true
+    bluetooth.profile.opp.enabled=true
 
 # WiFi service and supplicant
 # android.hardware.wifi-service is the IWifi vendor HAL. Without it the framework
