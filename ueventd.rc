@@ -24,6 +24,11 @@ subsystem usbmisc
 # Owner stays 'system' so the AAOS USB host framework keeps access as owner.
 /dev/bus/usb/*/*          0660   system     usb
 
+# Peripheral board MCU (RP2350B, USB 2e8a:ca50): the VHAL (user vehicle_network, group system)
+# talks to it over hidraw. hidraw nodes carry no VID/PID in their name, so all of them get
+# group system; the VHAL picks the MCU by HIDIOCGRAWINFO.
+/dev/hidraw*              0660   system     system
+
 /dev/video0               0660   system     camera
 /dev/video1               0660   system     camera
 /dev/video2               0660   system     camera
