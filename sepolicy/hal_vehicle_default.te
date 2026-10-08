@@ -30,3 +30,6 @@ allow vendor_vehicle_schuurman input_device:dir r_dir_perms;
 # 6. VPU sysfs for HDMI DPMS state (display power management)
 allow vendor_vehicle_schuurman sysfs_vpu:dir { search };
 allow vendor_vehicle_schuurman sysfs_vpu:file { read open getattr };
+
+# 7. Peripheral board MCU over USB HID (/dev/hidraw*, see McuLink.cpp)
+allow vendor_vehicle_schuurman hidraw_device:chr_file rw_file_perms;

@@ -2,10 +2,17 @@
 # Vehicle hardware integration — VHAL, GPIO, backlight, power policy
 # =============================================================================
 
-# Custom Schuurman VHAL service
+# Custom Schuurman VHAL service, and mcutool to inspect the peripheral board MCU (adb root)
 PRODUCT_PACKAGES += \
-    android.hardware.automotive.vehicle@schuurman-service
+    android.hardware.automotive.vehicle@schuurman-service \
+    mcutool
 
+# Handbrake wire on ISO A2: auto (use it once seen engaged, else GNSS speed) | wired | gnss
+PRODUCT_VENDOR_PROPERTIES += \
+    persist.vendor.vehicle.handbrake=auto
+
+# The GPIO and PWM settings below are for the old perfboard setup. With the rev 0.6 peripheral
+# board the MCU drives the backlight and reads reverse; the VHAL no longer uses them.
 # GPIO bus shared by vehicle controls
 PRODUCT_VENDOR_PROPERTIES += \
     ro.vendor.vehicle.gpio.chip=gpiochip0
