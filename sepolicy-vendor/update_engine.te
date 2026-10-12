@@ -8,3 +8,6 @@ userdebug_or_eng(`
 # so these grants have to be explicit here.
 allow update_engine boot_block_device:blk_file rw_file_perms;
 allow update_engine dtbo_block_device:blk_file rw_file_perms;
+# vbmeta, vbmeta_vendor_dlkm and vbmeta_system_dlkm are AB_OTA_PARTITIONS too (chained vbmeta, written
+# directly like dtbo). Under SELinux enforcing the OTA stopped at vbmeta_b with kInstallDeviceOpenError.
+allow update_engine vbmeta_block_device:blk_file rw_file_perms;

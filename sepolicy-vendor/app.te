@@ -25,3 +25,7 @@ dontaudit priv_app device:dir open;
 
 # Suppress rootfs dir read from untrusted apps (root detection in apps like HeadUnit Revived)
 dontaudit untrusted_app rootfs:dir read;
+
+# Mesa/libdrm resolve each DRM node's sysfs "device" symlink while enumerating GPUs
+allow appdomain sysfs_gpu:dir search;
+allow appdomain sysfs_gpu:lnk_file read;

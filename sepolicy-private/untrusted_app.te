@@ -1,0 +1,2 @@
+# Apps (e.g. Organic Maps) probe ro.lineage.*; LineageOS keeps these private, just quiet the denial
+dontaudit untrusted_app_all custom_version_prop:file r_file_perms;

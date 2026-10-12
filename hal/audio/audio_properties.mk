@@ -48,6 +48,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
-    persist.audio.car_audio_service.enabled=true \
-    audio.usb.enabled=true \
     persist.vendor.audio.use_aidl=true
+
+# Product: vendor_init may not set these (dropped from vendor build.prop under SELinux enforcing).
+PRODUCT_PRODUCT_PROPERTIES += \
+    persist.audio.car_audio_service.enabled=true \
+    audio.usb.enabled=true

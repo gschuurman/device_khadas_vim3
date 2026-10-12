@@ -43,7 +43,10 @@ PRODUCT_PACKAGES += \
 # getPredefinedP2pIfaceName() and honors the "p2p-dev-" prefix.
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0 \
-    wifi.direct.interface=p2p-dev-wlan0 \
+    wifi.direct.interface=p2p-dev-wlan0
+
+# Product: vendor_init may not set it (dropped from vendor build.prop under SELinux enforcing).
+PRODUCT_PRODUCT_PROPERTIES += \
     wifi.supplicant_scan_interval=15
 
 PRODUCT_COPY_FILES += \

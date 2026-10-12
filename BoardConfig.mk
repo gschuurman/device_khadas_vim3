@@ -17,7 +17,7 @@ endif
 
 BOARD_KERNEL_IMAGE_NAME := Image
 
-TARGET_SELINUX_ENFORCE := false
+TARGET_SELINUX_ENFORCE := true
 
 # =============================================================================
 # Platform base config (VIM3 / yukawa platform)

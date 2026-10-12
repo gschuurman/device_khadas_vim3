@@ -1,1 +1,4 @@
 allow vold sysfs_mmc:file write;
+
+# NVMe userdata: vold queries the drive with NVME_IOCTL_ADMIN_CMD (storage health/lifetime)
+allowxperm vold userdata_block_device:blk_file ioctl 0x4e41;

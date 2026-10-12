@@ -1,0 +1,2 @@
+# Play Services probes adb state; keep it denied, just quiet
+dontaudit gmscore_app adbd_prop:file r_file_perms;
