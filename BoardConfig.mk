@@ -37,9 +37,10 @@ BOARD_BOOT_HEADER_VERSION := 4
 BOARD_INIT_BOOT_HEADER_VERSION := 4
 PRODUCT_INIT_BOOT_IMAGE_HEADER_VERSION := 4
 
-# Puts odex files on system_other, as well as causing dex files not to get
-# stripped from APKs.
-BOARD_USES_SYSTEM_OTHER_ODEX := true
+# No system_other: neither flash.sh nor the OTA installs system_other.img (super holds only system, vendor
+# and the dlkm partitions), so odex files moved there never reached the device and those apps were compiled
+# on the device at first boot. Keep them in system.
+BOARD_USES_SYSTEM_OTHER_ODEX := false
 
 TARGET_BOOTLOADER_VERSION ?= 2025.10
 
@@ -188,12 +189,8 @@ BOARD_MKBOOTIMG_ARGS += --pagesize 4096
 # off again, drop the next line -- the in-memory log (adb shell dmesg) is unaffected.
 BOARD_KERNEL_CMDLINE += no_console_suspend console=ttyAML0,115200n8
 BOARD_KERNEL_CMDLINE += printk.devkmsg=on
-# Debugging the OP-TEE/KeyMint TA-load failure with only the serial console available (boot never gets far
-# enough for adb): the default console loglevel filters out KERN_DEBUG lines, which is exactly the level
-# tee-supplicant's DMSG() writes at (via stdio_to_kmsg -> /dev/kmsg_debug, see
-# vendor/khadas/vim3/optee/tee-supplicant.rc + cfg_tee_supp_log_level=3 in optee.mk). ignore_loglevel prints
-# everything live instead of only what would reach `dmesg`. Revert once root-caused.
-BOARD_KERNEL_CMDLINE += ignore_loglevel
+# (ignore_loglevel, added for the OP-TEE/KeyMint TA-load debugging, was removed after that was fixed on
+# 2026-09-25: it pushed every KERN_DEBUG line to the 115200 serial console and slowed boot.)
 BOARD_KERNEL_CMDLINE += init=/init
 BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M

@@ -15,6 +15,12 @@ on early-init
     # 256KB read-ahead improves sequential eMMC reads (map tiles, media)
     write /sys/block/mmcblk1/queue/read_ahead_kb 256
 
+    # NVMe system disk (lineage_vim3_nvme): no I/O scheduler (BFQ only adds overhead on NVMe), same read-ahead,
+    # no per-I/O accounting. On the eMMC product the node doesn't exist and the writes are skipped.
+    write /sys/block/nvme0n1/queue/scheduler none
+    write /sys/block/nvme0n1/queue/iostats 0
+    write /sys/block/nvme0n1/queue/read_ahead_kb 256
+
 on init
     write /proc/sys/vm/page-cluster 0
     # Low swappiness: keep navigation tiles and audio buffers in RAM
@@ -42,7 +48,6 @@ on init
     write /proc/sys/vm/dirty_background_ratio 5
     write /proc/sys/vm/dirty_ratio 15
     write /proc/sys/vm/min_free_kbytes 32768
-    write /proc/sys/vm/extra_free_kbytes 16384
     write /proc/sys/vm/watermark_boost_factor 0
     write /proc/sys/vm/compaction_proactiveness 0
 
@@ -70,13 +75,6 @@ on boot
     # frames took 11-12 ms. At 285 MHz: GL 11 -> 8 ms, Vulkan 12 -> 7 ms (Car Settings scroll, p50).
     # The GPU still runtime-suspends when idle and can clock up to 800 MHz under load.
     write /sys/class/devfreq/ffe40000.gpu/min_freq 285714281
-
-    # Background app limit: 16 for 4GB device (was 4, tuned for 2GB)
-    setprop ro.sys.fw.bg_apps_limit 16
-    setprop ro.vendor.perf.cores_online 4
-
-    setprop debug.sf.nobootanimation 1
-    setprop persist.sys.ui.hw 0
 
 on early-fs
     # Start bootanimation class before mount
