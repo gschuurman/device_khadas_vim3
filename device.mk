@@ -70,9 +70,12 @@ PRODUCT_MANUFACTURER := KHADAS
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=KHADAS \
     ro.soc.model=VIM3
-PRODUCT_PROPERTY_OVERRIDES += ro.product.device=vim3
 
 VENDOR_SECURITY_PATCH = $(PLATFORM_SECURITY_PATCH)
+# Boot image patch level; KeyMint's HAL reports it in the attestation root of trust (else it falls back to
+# the OS patch level).
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.vendor.boot_security_patch=$(PLATFORM_SECURITY_PATCH)
 BOOT_SECURITY_PATCH = $(PLATFORM_SECURITY_PATCH)
 PRODUCT_SHIPPING_API_LEVEL := 36
 PRODUCT_PRODUCT_VNDK_VERSION := current
@@ -161,6 +164,16 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.activities_on_secondary_displays.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.activities_on_secondary_displays.xml \
     frameworks/native/data/etc/android.software.companion_device_setup.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.software.companion_device_setup.xml
 
+# Features the hardware has but the image didn't declare (compared with Google's car image): GNSS HAL, BT LE,
+# Vulkan compute, and background audio while driving (implemented by our Car SystemUI). Not declared on
+# purpose: vulkan.deqp.level (claims a passed dEQP level) and car display_compatibility.safe_app_area (needs
+# framework support we don't have).
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
+    frameworks/native/data/etc/android.hardware.vulkan.compute-0.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.vulkan.compute-0.xml \
+    device/khadas/vim3/permissions/com.android.car.background_audio_while_driving.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/com.android.car.background_audio_while_driving.xml
+
 # =============================================================================
 # Input keylayout
 # =============================================================================
@@ -240,7 +253,10 @@ PRODUCT_VENDOR_PROPERTIES += ro.frp.pst=/dev/block/by-name/frp
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hdmi.device_type=4 \
-    persist.sys.hdmi.keep_awake=false \
+    persist.sys.hdmi.keep_awake=false
+
+# Product: vendor_init may not set persist.wm.*
+PRODUCT_PRODUCT_PROPERTIES += \
     persist.wm.debug.predictive_back=0 \
     persist.wm.debug.predictive_back_anim=0
 
