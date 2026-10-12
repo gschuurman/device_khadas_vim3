@@ -39,9 +39,12 @@ $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sa
 
 PRODUCT_PACKAGES += \
     CarSettingsIntelligence \
-    Dicio \
-    OrganicMaps
+    Dicio
 
+# Organic Maps left out: Google Maps is the navigation app, and a second APP_MAPS handler (OM's MapCardActivity)
+# makes the CarLauncher map card fall into the chooser (handoff D4). Module stays in
+# vendor/gschuurman/vehicle_interfaces/automotive/organicmaps.
+#
 # OpenHeadunit (HUR) left out for now: its MainActivity claims APP_MAPS/APP_NAVIGATION without DEFAULT, which
 # makes the package manager downgrade the map card's "Always" choice (handoff D4). Module stays in
 # vendor/gschuurman/vehicle_interfaces/automotive/openheadunit.
