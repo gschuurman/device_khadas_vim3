@@ -9,6 +9,37 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
+## 0. RESUME HERE (state at end of 2026-10-12)
+
+**Device:** running slot `_b` = the SPOOFED build (Google car emulator identity, see H6), boots green/locked/enforcing.
+Slot `_a` is marked UNBOOTABLE (old build bootlooped on the newer data after `bootctl set-active-boot-slot 0`;
+A/B fell back to `_b` after the 7 tries). Userdata was factory-reset (`fastboot oem format`) 2026-10-12; setup done,
+**Google account NOT signed in yet** (QR sign-in missing, see H8).
+Temporary device-only changes (undo when done):
+- user 10: `pm disable --user 10 com.google.android.gms/.fido.fido2.ui.Fido2FullScreenActivity` (D8) →
+  `pm enable --user 10 …` afterwards.
+- user 10: Google `CompanionDevice.apk` (com.google.android.companiondevicesupport) adb-installed from the A15 car
+  image (H8); not privileged.
+- `settings put global verifier_verify_adb_installs 0` (to sideload SPIC) → set back to 1.
+- SPIC (com.henrikherzig.playintegritychecker) installed for user 10.
+
+**Tree (device/khadas/vim3, uncommitted):** spoof REMOVED from `lineage_vim3_nvme.mk` (include + `VIM3_GCAR_IDENTITY`
+flag gone), `gcar_identity.mk` / `gcar_identity.prop` kept unused (+ dormant hooks: BoardConfig `ifeq
+($(PRODUCT_BRAND),google)` prop files, device.mk `ifneq ($(VIM3_GCAR_IDENTITY),true)` around ro.soc.*);
+`hal/graphics/device_vendor.mk`: `ro.surface_flinger.max_frame_buffer_acquired_buffers` 2 → **3** (triple buffer, D3);
+handoff. Build was STOPPED before finishing.
+
+**Next steps:**
+1. `brunch vim3_nvme` (bash), check `post-build` in the OTA metadata = Khadas fingerprint and
+   `max_frame_buffer_acquired_buffers=3` in vendor/build.prop.
+2. OTA over USB (allowed again): `adb push lineage_vim3_nvme-ota.zip /data/local/tmp/ota.zip` + `adb shell apply_ota
+   /data/local/tmp/ota.zip` (NOT `update_engine_client --payload=file:///data/local/tmp/...`: enforcing denies
+   update_engine reading shell_data_file → kDownloadTransferError). Writes slot `_a` (unbootable flag is cleared by
+   the update). `adb reboot`, then `bootctl mark-boot-successful`, then screen off.
+3. Sign in to Google with the QR (should be back with the real identity, H8). Then re-enable the FIDO activity.
+4. User checks the screen twitching with triple buffering (D3).
+5. Commit: triple buffer + spoof files (or delete them) + handoff.
+
 ## 1. Current state
 
 **Board:** Khadas VIM3 (A311D, 4 GB), Android 16 / LineageOS 23.2 AAOS, product `lineage_vim3_nvme`, boots from NVMe
@@ -252,8 +283,23 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    - MapClient crash-loop fix `ed6655a2ec`.
 2. **DAB choppy audio** 🚗 — RTL-SDR (4 MB/s) starves the 8-ch USB sound card on the shared hub 1-1.4: move the
    dongle to another hub (audio code proven clean).
-3. **"Video buffer" glitching under first-boot load** — seen 2026-09-21 (CmaFree ~6 MB of 576 MB during
-   dexopt/Play Store); needs a symptom description / repro before work.
+3. **Video glitching** — seen 2026-09-21 under first-boot load (CmaFree ~6 MB of 576 MB during dexopt/Play
+   Store) and again 2026-10-12 (user). 2026-10-12 check: no meson-drm/HDMI errors in dmesg, CmaFree 230 of 768 MB,
+   no allocation failures (only two `binder_alloc ... no address space`, unrelated). Still needs a symptom
+   description/photo to split: sparkles/snow/lines/whole-frame dropouts = HDMI signal (cable/connector/EMI, try
+   another cable + ferrite); wrong/stale blocks or one app only (e.g. map) = GPU/driver (cf. panvk OM corruption A.7).
+   RAM corruption would also show crashes/reboots — none seen.
+   **2026-10-12 later:** new HDMI cable/routing → still twitches. **scrcpy (SurfaceFlinger composition) shows NO
+   glitch** → frames are clean, problem is after composition (scanout). Ruled out: cable, late vsync IRQ (pinned
+   IRQ 43 `meson` to CPU5 via `/proc/irq/43/smp_affinity` → no change, reverted), OP-TEE memory overlap
+   (`/proc/iomem` reserves 0x05000000-0x072fffff = TZDRAM+SHM; CMA at 0xbda5a000+). All layers are CLIENT
+   (GPU-composed), only the FB target is scanned out. meson_crtc.c updates the OSD1 canvas address in the vsync IRQ
+   (takes effect immediately) and sends the flip event in the same IRQ. Panel = Waveshare 7" HDMI LCD (C) (touch
+   WS170120, EDID ADA/0004, one DTD 1024x600@59.85 49.00 MHz, htotal 1312, vtotal 624 → **vblank only 24 lines /
+   0.64 ms**); output matches exactly (49.10 MHz PLL). Remaining suspects: FB-target reuse race with only 2 buffers
+   (test: triple buffer, in tree), display underflow (DDR bandwidth), panel receiver. Next if triple buffer
+   doesn't help: static-screen test (no redraws), another HDMI monitor. First seen 2026-09-21 = day the TF-A+OP-TEE
+   FIP went in (BL2/DDR blob unchanged though).
 4. **Default app choice ("Always") doesn't stick** 🖥 — reported 2026-10-12: choosing Google Maps or Organic Maps as
    default with "Always" in the resolver is forgotten; the next time the home screen opens (CarLauncher map card) the
    same chooser appears again. **Mechanism found (2026-10-12):** "Always" IS saved (user 10 package-restrictions:
@@ -268,6 +314,33 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    restores it until the next such query. Fix options: drop APP_MAPS/APP_NAVIGATION from HUR's filter (repackage
    `vendor/gschuurman/vehicle_interfaces/automotive/openheadunit/OpenHeadunit.apk` or patch the source), and/or find
    the caller: pick "Always", then `logcat | grep "Result set changed"` and match the pid/time against the event log.
+
+5. **Brightness control dead after boot** 🚗 (note 2026-10-12: the backlight chip number moves between boots —
+   `pwmchip1/pwm1` one boot, `pwmchip0/pwm1` the next; both scripts look it up by the ffd19000 address) — 2026-10-12: backlight PWM (`/sys/class/pwm/pwmchip1/pwm1`) found
+   with period 3666 ns + enable 0 after boot although `init.vehicle.sh` (exit 0 at ~24 s) and the VHAL's `initPwm()`
+   both write 30518 / 1; every brightness write (duty > period) is then rejected by the kernel. Reproduced on reboot;
+   a display off/on cycle later restored it. Writer of 3666 not found (nothing in our tree). Fix pushed:
+   vehicle_interfaces `26e11f0` — `writePwm()` re-runs `initPwm()` when period/enable are wrong. Not on the device
+   until the next OTA; verify, and still find the culprit (`cat period` right after boot, then after each step).
+6. **App performance / Google Maps laggy** 🖥 — reported 2026-10-12. To do: profile Maps (`dumpsys gfxinfo
+   com.google.android.apps.maps framestats`, Perfetto trace with sched/freq/gpu), check CPU governor + big-core
+   use, GPU freq (min is pinned 285 MHz in init.vim3.rc), whether Maps runs GL or Vulkan (panvk) and on which
+   renderer (`dumpsys SurfaceFlinger`, HWC overlay vs client composition), memory/LMK pressure (4 GB, zram),
+   dex2oat state of Maps (`cmd package compile -m speed-profile`), and app density/scaling (CarDisplayCompat 0.7).
+
+7. **SystemUI crash → RescueParty reboot** 🖥 — 2026-10-12: one SystemUI crash in WM Shell
+   (`Transitions.onFinish` IndexOutOfBounds -1, under post-boot load while launching an app) → every restart fails
+   `KeyguardService` create: `BadTokenException ... another window of type 2040 already exists`
+   (`SystemUIOverlayWindowController.attach`): the dead instance's car overlay window is still registered → 5 crashes
+   → `reboot,rescueparty`. Any single SystemUI crash becomes a reboot. Look at CarSystemUI overlay window removal on
+   process death / WM token cleanup (packages/apps/Car/SystemUI fork). dropbox `system_app_crash` has both traces.
+8. **GMS FIDO grabs USB HID devices → touchscreen drops, all activities relaunch** 🖥 — 2026-10-12: when a sign-in
+   page offers a passkey, GMS `Fido2FullScreenActivity`/`UsbRequestController` probes every USB device for a security
+   key and detaches the kernel HID driver (`usbfs: process … did not claim interface`): WaveShare touchscreen and the
+   USB sound card's HID buttons disappear/reappear every ~2.3 s → global config change → every activity relaunches →
+   `CarMinuteMaidActivity` (sign-in) crashes "Required value was null". Workaround: disable that activity for user 10.
+   Real fix ideas: deny GMS USB host access to HID devices (USB permission/denylist), or make those devices not look
+   like FIDO candidates.
 
 ### E. Features to implement
 1. ~~Bake the CarRadioApp redesign into the image~~ — already done (checked 2026-09-29): repo-managed
@@ -320,7 +393,35 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    our TA, `tee/optee/ta/keymint/src/software/attest.rs`), unlocked/orange bootloader (B3), userdebug/test-keys,
    missing `ro.boot.vbmeta.public_key_digest` / `androidboot.flash.locked` (U-Boot). Cheapest next test: KeyMint
    without attestation keys.
-4. Follow-ups: persist the consent at boot once the key works; decide Google Maps vs Organic Maps as default nav
+5. **2026-10-12 results.** Device now locked + green (`5e5d3b9cd76`), enforcing, `ro.secure=1`. After reflash +
+   account setup Maps draws tiles and routes with live traffic; new GSF IDs user 10 `4555187659033306144`, user 0
+   `4468879502998419076`, both `uncertified_status=1` without registering. Device key STILL refused, so network
+   location stays dead (consent set → provider enabled, Wi-Fi scans sent, GLS rejects the header). Play Integrity
+   (SPIC, sideloaded with `verifier_verify_adb_installs=0`): no `deviceRecognitionVerdict` at all, everything
+   UNEVALUATED. Runtime spoof test (resetprop, all partitions → A15 sdk_gcar identity, framework restart, GMS NOT
+   cleared): no change. Play attaches a KeyMint key attestation (our OP-TEE root) to each request.
+   Mock location works fully in Maps (`cmd location providers add-test-provider gps|network|fused` +
+   `set-test-provider-location`; lost on framework restart).
+6. **Build-time spoof test (2026-10-12, uncommitted):** `gcar_identity.mk` (included last by lineage_vim3_nvme.mk,
+   flag `VIM3_GCAR_IDENTITY` read by device.mk) + `gcar_identity.prop` (BoardConfig, `PRODUCT_BRAND=google`) make
+   every partition report the Google car image identity (values extracted from its partitions; SDK 36 / release 16 /
+   patch kept real — KeyMint rollback otherwise). Verified on the generated build.props, no Khadas leaks. Plan: OTA →
+   clear GMS/GSF/Play Store data (users 0+10) → reboot → test devicekey + Play Integrity. If it fails, the
+   attestation chain is the wall; Magisk-in-init_boot + PIF can at best reach basic integrity (no leaked keyboxes).
+7. **Build-time spoof RESULT (2026-10-12): no effect.** Spoofed build on slot `_b`, verified on-device (no Khadas
+   leaks), `pm clear` GMS/GSF/Play (users 0+10) + reboot, later full `fastboot oem format`: devicekey still refused
+   (same Parsing Exception), Play Integrity still no deviceRecognitionVerdict. User 10 kept GSF ID
+   `4555187659033306144` across the pm clear. Conclusion: build identity is not the blocker → KeyMint attestation
+   chain (own OP-TEE root). Magisk+PIF spoofs the same values → not expected to help. And the spoof BROKE the QR
+   sign-in (H8) → spoof removed from the product (files kept).
+8. **QR ("sign in with your phone") sign-in** — worked with the real identity on builds WITHOUT CompanionDevice
+   (that APK was never in gapps_auto, only its googlecarui RRO); with the emulator identity there was no QR → the
+   spoofed identity is what hid it (server-side choice). GMS also logs `SecondDeviceSignInUrlFeature: Connector could
+   not connect` (no service for `com.google.android.connecteddevice.api.BIND_FEATURE_COORDINATOR_FG` = Google
+   CompanionDevice, product/priv-app/CompanionDevice in the A15 car image); that is NOT what hides the QR.
+   adb-installing CompanionDevice made the feature connect but brought no QR on the spoofed build. Expect the QR back
+   with the real identity; shipping CompanionDevice is optional (phone companion features), not required for QR.
+9. Follow-ups: persist the consent at boot once the key works; decide Google Maps vs Organic Maps as default nav
    (`gas_maps_playstore` makes Maps the default); Google keyboard gets SERVICE_INVALID (not investigated).
 
 ### F. Housekeeping
