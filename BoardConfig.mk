@@ -429,6 +429,14 @@ VIM3_OPTEE_FIP_BUILT = $(PRODUCT_OUT)/obj/ETC/u-boot_kvim3_ab_optee_intermediate
 VIM3_OPTEE_TA_SCRIPT := vendor/khadas/vim3/optee/scripts/build-optee-ta.sh
 # hook that optee_test's TA Android.mk files include to build a TA
 BUILD_OPTEE_MK := vendor/khadas/vim3/optee/build_optee_ta.mk
+# OP-TEE TA signing key (B3 step 1 / root-of-trust). When present, OP-TEE core embeds this key's public half
+# (TA_PUBLIC_KEY) and loads only TAs signed with it; build-g12b-optee-fip.sh also installs it as the dev kit's
+# keys/default_ta.pem so every from-source TA (KeyMint, gatekeeper, xtest) is re-signed with it. The private key
+# is gitignored (vendor/khadas/vim3/optee/keys/.gitignore); a checkout without it falls back to OP-TEE's stock
+# default_ta.pem so the tree still builds. Changing the signing key does NOT change TA secure-storage (keyed by
+# HUK+UUID), so existing /metadata/vendor/tee data stays readable.
+VIM3_TA_SIGN_KEY := $(abspath $(wildcard vendor/khadas/vim3/optee/keys/vim3_ta_signing.pem))
+
 # xtest's Android.mk takes its headers from $(TA_DEV_KIT_DIR)/host_include and makes every object depend on
 # $(OPTEE_BIN): point both at the from-source OP-TEE build so the freshly exported dev kit exists first.
 TA_DEV_KIT_DIR = $(abspath $(VIM3_OPTEE_TA_DEV_KIT))
