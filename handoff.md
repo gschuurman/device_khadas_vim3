@@ -19,13 +19,17 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
   older Mesa) as fallback.
 - Bootloader: inline-built `u-boot_kvim3_ab_optee.bin` (U-Boot + from-source TF-A g12b + OP-TEE 4.10) in eMMC boot0.
 - Security: KeyMint on OP-TEE (Rust TA), OP-TEE gatekeeper with persisted failure records, HUK from efuse, HW RNG.
-  SELinux **permissive**.
+  SELinux **permissive** on the running build; the next build boots **enforcing** (see G2).
+- Google: Play Store works; device registered as uncertified-exempt for user 0 and user 10 (2026-10-11). Google Maps
+  draws a black map — blocked on the GMS device key, see §2 H.
 - GPU: GLES 3.1 (panfrost), Vulkan 1.4 (panvk v7); `VP_ANDROID_15_minimums` SUPPORTED, `16_minimums` fails only on
   protected memory. Installed-system CTS: subset14 0 Fail, reconvergence 6237/6237, GLES = baseline.
 - Apps: LineageOS SetupWizard (car flow), Organic Maps (map card + nav banner, release-signed), Dicio assistant,
-  CarRadioApp (FM + DAB via RTL-SDR; the redesigned UI is only fast-deployed, see §2), HeadUnit Revived.
+  CarRadioApp (FM + DAB via RTL-SDR, redesigned UI baked in), HeadUnit Revived. Google Maps currently only as a
+  Play Store install for user 10; the next build adds MapsCarPrebuilt back (see G2).
 
-**Repos** (everything committed and pushed 2026-09-29, except this handoff and the deletions of the old ones):
+**Repos** (pushed 2026-09-30; **uncommitted as of 2026-10-11:** device/khadas/vim3 SELinux/enforcing/ro.secure/SKU
+changes + this handoff, vendor/google/gapps_auto `gapps-core.mk` — see G2):
 | Path | Remote / branch | Notes |
 |---|---|---|
 | device/khadas/vim3 | gschuurman/device_khadas_vim3 `lineage-23.2` | |
@@ -34,7 +38,7 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 | kernel/khadas/vim3_overlay | gschuurman/kernel_overlay_amlogic_yukawa `main` | config fragment, aic8800 |
 | u-boot/khadas/vim3 | gschuurman/u-boot `master` @ 7428383a2ba | **plain checkout**; local branch name `optee-bl31-2019-ramboot-test` = master |
 | bootloader/arm-trusted-firmware, bootloader/optee_os | gschuurman forks `g12b-vim3` | |
-| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ 6fb80f48f7c | 28 commits on mesa-26.2.3 (latest two: etnaviv ML padding, not in prebuilts; Teflon isn't in the image) |
+| vendor/mesa3d-upstream | gschuurman/mesa `vim3-26.2.3` @ 6fb80f48f7c | 28 commits on mesa-26.2.3 (latest two: etnaviv ML padding, not in prebuilts: the image's libteflon.so is vendor 27ccf94 from 2026-09-25, rebuild it from 6fb80f48f7c) |
 | external/minigbm | gschuurman/external_minigbm `lineage-23.2` | YUV rendering |
 | vendor/gschuurman/vehicle_interfaces | gschuurman `android-16` | VHAL, audiocontrol, GNSS, apps |
 | hardware/amlogic/yukawa/audio | gschuurman `lineage-23.0` | audio HAL fork |
@@ -122,19 +126,94 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
      updates in place (buffer sync / JM batch flushing), texture-array fallback, pipeline-cache reuse.
 
 ### B. Security / firmware
-1. **Cold-boot HUK fix** 🖥 — optee_os dea8b8656 verified via RAM-boot only; confirm from flash: power off for
-   minutes, boot, grep serial for "huk: uncached view of the efuse buffer was stale", keystore2 up.
-2. **SELinux enforcing** 🚗 — sweep needs the peripherals attached (audio, RTL-SDR, GNSS, camera, BT).
+1. ~~Cold-boot HUK fix~~ — confirmed fixed from flash (2026-10-11; optee_os dea8b8656).
+2. **SELinux enforcing** 🚗 — started 2026-10-11. Denials from one boot (graphics, apps, storage) fixed in the tree:
+   `/dev/dri/card2` + `renderD129` (etnaviv NPU) → `gpu_device`; vendor `libui.so` + `android.hardware.graphics.allocator@[234].0.so`
+   → `same_process_hal_file` (libEGL_mesa/vulkan.mesa → libui → HIDL allocators; zygote/surfaceflinger/bootanim were
+   denied); appdomain `sysfs_gpu` dir search + lnk_file read; vold `allowxperm` NVMe ioctl `0x4e41` on userdata;
+   dontaudit gmscore_app→adbd_prop and untrusted_app_all→custom_version_prop (`sepolicy-private/`). BoardConfig
+   `TARGET_SELINUX_ENFORCE := true`. **Next:** after the build, sweep with peripherals attached (audio, RTL-SDR radio,
+   GNSS, camera/RVC, BT, wireless AA, OP-TEE/KeyMint, Dicio); `adb shell setenforce 0` restores function meanwhile.
+   Prerequisite for a later user build (wanted, but postponed while root is still needed).
 3. **Root of trust / AVB / RPMB / TA key / attestation** — state 2026-09-30: AVB on with our own key
    (`avb/vim3_avb.pem`, RSA-4096) but the device is **unlocked** (orange); KeyMint RoT from HAL props; TAs signed with
    OP-TEE's public `default_ta.pem`; no RPMB device exposed. Plan, in order (each needs a new FIP → RAM-boot → you at the
    board; nothing irreversible until step 4):
-   1. Own TA signing key: generate `optee/keys/vim3_ta.pem` (keep private key out of git or encrypted), build OP-TEE
-      with `TA_SIGN_KEY`/`TA_PUBLIC_KEY`, re-sign KeyMint + gatekeeper TAs.
+   1. Own TA signing key — **DONE in tree 2026-10-12 (uncommitted), build pending RAM-boot verify.** Keys
+      `vendor/khadas/vim3/optee/keys/vim3_ta_signing.pem` (RSA-4096, private, **gitignored**) + `_pub.pem`
+      (committed); user generated them in `~/tee_signing`. Wiring: `BoardConfig.mk` `VIM3_TA_SIGN_KEY` (abspath of
+      the gitignored key, empty if absent → stock key) → `bootloader/Android.mk` passes it as arg 8 to
+      `build-g12b-optee-fip.sh`, which builds OP-TEE core with `TA_SIGN_KEY=/TA_PUBLIC_KEY=<key>` and copies the key
+      over the exported dev kit's `keys/default_ta.pem` so **every** from-source TA (KeyMint, gatekeeper, xtest) is
+      re-signed with it — downstream scripts (`build-optee-ta.sh`, `build-keymint-ta.sh`) unchanged. All-or-nothing:
+      OP-TEE loads only TAs signed with this key, and all our TAs are built from source each build, so they stay
+      consistent. TA secure storage is keyed by HUK+UUID, not the signing key → `/metadata/vendor/tee` stays
+      readable, no re-provision. Key added as a FIP prerequisite so it retriggers the build. **Verify at board:**
+      RAM-boot the new `u-boot_kvim3_ab_optee.bin` (do NOT flash first), confirm `/dev/tee0`, `keymint_aidl_test`,
+      lockscreen (gatekeeper) and FBE unlock all still work; power-cycle reverts to the current good FIP if a TA
+      fails to load.
    2. RoT from the bootloader: U-Boot passes boot state + vbmeta digest + OS version/patch level to OP-TEE (DT node
-      or SMC), KeyMint TA reads it instead of HAL props.
-   3. Lock with our AVB key: embed the vbmeta public key in U-Boot, `fastboot flashing lock` (wipes data) → green
-      state; keep the unlock path tested before locking.
+      or SMC), KeyMint TA reads it instead of HAL props (today `…/keymint/aidl/default/hal/lib.rs` reads them from
+      `ro.boot.vbmeta.*`/`verifiedbootstate` — userspace, and `public_key_digest` is missing → zero key).
+   3. Lock/unlock mechanism — **IMPLEMENTED in tree 2026-10-12 (uncommitted U-Boot edits), build/RAM-boot verify
+      pending.** The green/orange decision in `boot/bootmeth_android.c` was already complete and gated solely on
+      `read_is_device_unlocked()`, and the baked-in `avb_root_pub` (common/avb_verify.c) is confirmed **byte-identical
+      to our `device/khadas/vim3/avb/vim3_avb_pub.bin`** — so locking genuinely verifies images against our key and
+      earns green honestly. Changes (u-boot/khadas/vim3, a plain checkout):
+      - `common/avb_verify.c` `read_is_device_unlocked()`: reads `env_get_yesno("avb_device_locked")` (added
+        `#include <env.h>`); default (unset) = unlocked, so an un-provisioned board is unchanged until locked.
+      - `drivers/fastboot/fb_command.c` + `include/fastboot.h`: new `fastboot flashing lock` / `flashing unlock`
+        commands (enum entries, table entries gated on `CONFIG_IS_ENABLED(AVB_VERIFY)`, handlers `flashing_lock`/
+        `flashing_unlock`) that set `avb_device_locked` in the env (`CONFIG_ENV_IS_IN_MMC`, persists) + `env_save()`.
+      - **DEV DEVIATION (requested):** `flashing unlock` does **NOT wipe userdata**, so the full system can be tested
+        with data intact. This breaks Android's unlock-wipe protection; re-enable before any production/locked ship.
+      - Validated: standalone U-Boot build compiles clean and `u-boot.bin` contains the new commands/strings.
+      - Storage caveat: env is not tamper-resistant → RPMB-backed lock state is the step-4 hardening.
+      - **Userdata-intact implications (checked):** FBE class keys wrap via HUK + credential (gatekeeper), not the
+        verified-boot RoT, so flipping lock state does NOT orphan userdata; and TA secure storage is HUK+UUID-keyed so
+        the step-1 TA-key swap keeps `/metadata/vendor/tee` readable. Locking flips KeyMint's RoT device_locked→locked
+        and verifiedbootstate→green (correct, feeds attestation) without re-wrapping FBE → data survives.
+      - **Build note:** uncommitted U-Boot edits don't retrigger the Android u-boot/FIP module (keyed on `.git`
+        refs); force it with `rm -rf $OUT/obj/UBOOT_OBJ $OUT/obj/UBOOT_OPTEE_OBJ` + the FIP intermediate, then
+        `m u-boot_kvim3_ab_optee`.
+      - **Verify at board:** RAM-boot the FIP, `fastboot flashing lock` → reboot → `getprop ro.boot.verifiedbootstate`
+        = `green` and `ro.boot.vbmeta.device_state` = `locked`; `fastboot flashing unlock` → back to `orange`/`unlocked`
+        with data intact. A locked device that fails verification refuses to boot — keep the unlock path proven first.
+      - **2026-10-12 HW result: step 1 VERIFIED, lock BRICKED the device (accepted risk).** Flashed the new FIP
+        (`fastboot flash bootloader`, no RAM-boot — user accepted brick, has maskrom) → booted slot `_a` ORANGE/unlocked,
+        **KeyMint + gatekeeper + keystore2 all running, FBE unlocked, 0 denials** → step 1 (own TA key) proven on HW.
+        Then `fastboot flashing lock` → OKAY → reboot → **device does not enumerate at all** (no adb, no fastboot, no
+        USB) = hard brick, needs maskrom.
+      - **Cause analysis (not fully pinned, needs serial which user lacks right now):** NOT the AVB key — the signing
+        key's public key (`avbtool extract_public_key device/khadas/vim3/avb/vim3_avb.pem`) is byte-identical to
+        baked-in `avb_root_pub`/`vim3_avb_pub.bin`. `read_rollback_index` returns 0/OK without the TA, so not rollback.
+        Two live hypotheses: (A) strict AVB (`allow_verification_error=false`) of `_a` returns non-OK so U-Boot refuses
+        and reset-loops before USB (a clean refusal should still give fastboot — it didn't, which argues against A);
+        (B) `env_save()` to eMMC **boot1** (CONFIG_ENV_MMC_EMMC_HW_PARTITION=2) during `flashing lock` corrupted a
+        boot-critical region → BL2/U-Boot dies before USB. `_a` boots fine UNLOCKED (orange tolerates
+        ERROR_VERIFICATION/PUBLIC_KEY_REJECTED), only LOCKED dies.
+      - **Recovery (maskrom, physical):** Function ×3 via USB-2.0 hub → `~/.local/bin/boot-g12.py <FIP>` RAM-boots
+        U-Boot bypassing eMMC → get to fastboot → `fastboot flashing unlock` (clears the env flag) and re-`fastboot
+        flash bootloader`. Safest to RAM-boot a recovery FIP that forces unlocked (revert the read_is_device_unlocked
+        env read) so it boots regardless of the stuck lock flag.
+      - **Build AVB proven clean (host, 2026-10-12):** `avbtool verify_image --image vbmeta.img --key vim3_avb.pem
+        --follow_chain_partitions` verifies the whole chain OK (vbmeta struct; chained boot/init_boot/vbmeta_system_dlkm/
+        vbmeta_vendor_dlkm all our key; hash/hashtree for dtbo/vendor_boot/system/vendor/system_dlkm/vendor_dlkm). So
+        the lock brick is NOT a signing/vbmeta fault — it is device-side U-Boot `avb_slot_verify` returning non-OK
+        (tolerated→orange unlocked, fatal→refuse locked). `requested_partitions = {boot, vendor_boot}`; NVMe reads work
+        (unlocked produced a result, so not an IO error). Exact failing result is unknown without serial (it prints via
+        `str_avb_slot_error`). Host-side causes RULED OUT: key matches; `read_rollback_index` returns 0/OK; avbtool
+        passes the whole chain; `read/write_persistent_value` + their op-wiring are both inside `#ifdef
+        CONFIG_OPTEE_TA_AVB` (NOT set) → those ops are NULL and uninvolved for our non-persistent-digest descriptors.
+        The failing result must be read from the serial console on the next locked boot.
+      - **Before locking again (MANDATORY): attach the serial console** (Bus Pirate on /dev/ttyACM0, 115200) to read
+        the `avb_slot_verify` result string on the locked boot. Do NOT lock blind again.
+      - **Before locking again:** confirm `_a` strictly verifies
+        (RESULT_OK, not just tolerated-orange); and reconsider lock-flag storage if env_save to boot1 is implicated
+        (hypothesis B) — e.g. a dedicated store, not the eMMC env.
+      - Not done: `fastboot getvar unlocked`/`get_unlock_ability`; and the latent `avb_verify.c` `AVB_ORANGE`
+        fall-through to `AVB_RED` (missing `break`) in `avb_set_state` is still there (cosmetic — ORANGE still sets its
+        cmdline before falling through).
    4. RPMB rollback protection (**irreversible**: programs the eMMC RPMB key once): expose `mmcblk0rpmb`, OP-TEE
       `CFG_RPMB_FS=y` with a derived key. Decide first whether the eMMC stays in use.
    5. Attestation: without Google RKP provisioning only a self-signed chain is possible (limited value).
@@ -161,7 +240,8 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 
 ### D. Bugs
 0. ~~Organic Maps first-launch corruption~~ — root-caused 2026-09-30 to panvk (Vulkan), see A.7.
-1. **Bluetooth** 🚗 — 2026-09-30 with the Pixel 9 Pro XL: pairing, A2DP sink, AVRCP, HFP, MAP, PBAP and PAN
+1. ~~Bluetooth~~ — appears fixed (2026-10-11, user: A2DP stop / call audio / MapClient after reboot OK; wireless AA
+   stays under C3). Watch for regressions. History: 2026-09-30 with the Pixel 9 Pro XL: pairing, A2DP sink, AVRCP, HFP, MAP, PBAP and PAN
    (internet via the phone's Bluetooth tethering) all connect — verified via bind-mount + setprop, **needs an OTA**:
    - HFP never connected: RFCOMM collision left the HF client block half-open and every later incoming connection was
      refused. Fixed in the BT fork `8c79330045` (take the block over, drop our own outgoing port).
@@ -169,12 +249,25 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
      as failed + the phone's as success; fixed `a10e0318f6` (unmatched success = incoming connection).
    - The head unit also advertised phone-side roles (HFP AG, LE Audio servers, …) → collisions; removed in device
      `1c2f217` (car_product/properties/bluetooth.prop provides the car-side roles).
-   - Still to test: A2DP crash when music stops, a real call (audio), MapClient crash-loop fix (`ed6655a2ec`) after a
-     reboot with the phone connected, wireless Android Auto.
+   - MapClient crash-loop fix `ed6655a2ec`.
 2. **DAB choppy audio** 🚗 — RTL-SDR (4 MB/s) starves the 8-ch USB sound card on the shared hub 1-1.4: move the
    dongle to another hub (audio code proven clean).
 3. **"Video buffer" glitching under first-boot load** — seen 2026-09-21 (CmaFree ~6 MB of 576 MB during
    dexopt/Play Store); needs a symptom description / repro before work.
+4. **Default app choice ("Always") doesn't stick** 🖥 — reported 2026-10-12: choosing Google Maps or Organic Maps as
+   default with "Always" in the resolver is forgotten; the next time the home screen opens (CarLauncher map card) the
+   same chooser appears again. **Mechanism found (2026-10-12):** "Always" IS saved (user 10 package-restrictions:
+   APP_MAPS → Google Maps, `always="true"`, set = OM MapCardActivity + Google Maps + MapsPlaceholder). But any APP_MAPS
+   query whose result is not a subset of that set makes PMS downgrade it in memory to a "last chosen" entry
+   (`ComputerEngine.java` ~3474, logs `Result set changed, dropping preferred activity`; debug-resolution then shows
+   `Skipping mAlways=false entry` → CarResolverActivity in the map card). Extra candidate: OpenHeadunit/HUR
+   `MainActivity` declares MAIN + APP_MAPS + APP_NAVIGATION **without** DEFAULT, so it shows up in every query without
+   `MATCH_DEFAULT_ONLY` (e.g. `cmd package resolve-activity` with flags 0 — which also triggered it once during the
+   investigation). CarLauncher itself resolves with MATCH_DEFAULT_ONLY; the real-world flags-0 caller is still unknown
+   (not in Car SystemUI/Launcher/CarService/Settings source → likely a prebuilt). Disk keeps `always=true`, so a reboot
+   restores it until the next such query. Fix options: drop APP_MAPS/APP_NAVIGATION from HUR's filter (repackage
+   `vendor/gschuurman/vehicle_interfaces/automotive/openheadunit/OpenHeadunit.apk` or patch the source), and/or find
+   the caller: pick "Always", then `logcat | grep "Result set changed"` and match the pid/time against the event log.
 
 ### E. Features to implement
 1. ~~Bake the CarRadioApp redesign into the image~~ — already done (checked 2026-09-29): repo-managed
@@ -206,14 +299,69 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
 6. **Local music player** (wish, 2026-09-30) — play music from the Music folder on the NVMe (plenty of space);
    should show up as a media source in the car media UI (MediaBrowserService), like the radio.
 
+### H. Google Maps / GMS (2026-10-11) — detail in `~/android/lineage23/handoff.md`
+1. **Certification — fixed without a build.** GMS certification is per Android user: Driver (user 10) GSF ID
+   `4293328587998073264`, user 0 `4567343427325516544`; both registered at google.com/android/uncertified, then
+   `adb shell am broadcast --user <u> -a android.server.checkin.CHECKIN` → `uncertified_status=1`. Re-register both
+   after a wipe. The Android-15 `gms_spoof_*.prop` route stays rejected (`0a998b8`).
+2. **Black map = no location → no tiles.** The u-blox clone has no fix. Google location accuracy consent is
+   `network_location_opt_in` in `content://com.google.settings/partner`; GmsCoreAuto 26.18.33 resets it to 0 on every
+   location-module init (`LocationModuleInitIntentOperation` → `bpei.k(ctx,false,…)`), and its settings screen crashes
+   in the car UI. Workaround until the next GMS restart:
+   `adb shell content insert --user 10 --uri content://com.google.settings/partner --bind name:s:network_location_opt_in --bind value:s:1`.
+3. **Real blocker: no GMS device key.** The location server answers "Application credential header not valid"
+   (`X-Goog-Spatula`, from `IAppCertService`), because `android.googleapis.com/auth/devicekey` (DroidGuard-attested)
+   returns an HTML error. Runtime `setenforce 1` didn't help. Suspects: `ro.boot.selinux=permissive`, `ro.secure=0`
+   (both changed in the next build), unlocked bootloader (B3), userdebug/test-keys.
+   **2026-10-12 build (slot `_b`) did NOT fix it:** enforcing, `ro.secure=1`, `ro.adb.secure=0` (product),
+   GAS SKU features (google.software.gas.maps/playstore/components), `ro.com.google.locationfeatures=1`, GMS framework
+   RRO (persistentData/integrity/activity recognizer → gms), A15 GAS configs + default grants — devicekey still
+   returns HTML ("Parsing Exception", ~80 ms). Remaining suspects: KeyMint attestation chain (AOSP software root in
+   our TA, `tee/optee/ta/keymint/src/software/attest.rs`), unlocked/orange bootloader (B3), userdebug/test-keys,
+   missing `ro.boot.vbmeta.public_key_digest` / `androidboot.flash.locked` (U-Boot). Cheapest next test: KeyMint
+   without attestation keys.
+4. Follow-ups: persist the consent at boot once the key works; decide Google Maps vs Organic Maps as default nav
+   (`gas_maps_playstore` makes Maps the default); Google keyboard gets SERVICE_INVALID (not investigated).
+
 ### F. Housekeeping
 1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
 
 ### G. Next build
 1. ~~OTA with the 2026-09-30 fixes~~ — DONE: installed to slot `_b` and verified (gralloc leak gone: 36 MB dma-buf
    after 10 app switches, CMA 200 MB free; CarRadioApp + Dicio/Whisper from the image). Slot `_a` = previous build.
-2. **Next OTA** will add the etnaviv sysfs label (`sepolicy/genfs_contexts`, fcb19af) — check no more
-   `/sys/devices/platform/etnaviv/uevent` denials in dmesg.
+2. **Next build (planned 2026-10-12, uncommitted)** — `brunch vim3_nvme`, OTA via update_engine:
+   - etnaviv sysfs label (`sepolicy/genfs_contexts`, fcb19af, committed).
+   - SELinux fixes from B2 + **boot enforcing** (`TARGET_SELINUX_ENFORCE := true`).
+   - `developer.mk`: `ro.secure=0` removed; root comes from `service.adb.root=1` (adbd is compiled debuggable on
+     userdebug). If `adb shell id` isn't uid 0 after boot, roll back / restore `ro.secure=0`.
+   - GAS SKU `gas_maps_playstore` (was `gas_playstore`) + `vendor/google/gapps_auto/gapps-core.mk`: MapsCarPrebuilt
+     (priv-app) + its privapp perms, GoogleTemplatesHost + car-UI RRO, `gas_maps_playstore_overlay` instead of the
+     gas_playstore + car_launcher overlays.
+   - **Installed 2026-10-12 on slot `_a`: adb was off after boot.** With enforcing, init drops `vendor/build.prop`
+     props that `vendor_init` may not set, so `ro.adb.secure=0`, `persist.sys.usb.config=adb`, `service.adb.root=1`
+     and the tcp port were lost (permissive had hidden this). Also: Lineage's common.mk sets `ro.adb.secure=1` in
+     system_ext and `ro.debuggable=0` on userdebug (adbd still allows `adb root` via compiled-in ANDROID_DEBUGGABLE).
+     Fixed in tree: `developer.mk` uses `PRODUCT_PRODUCT_PROPERTIES` (product loads last, init context) → needs a
+     rebuild. 17 vendor props were dropped in total (`logcat | grep "Do not have permissions to set"`): besides the
+     adb ones also `persist.sys.timezone`, `persist.sys.powerstats.enabled` (developer.mk), `android.car.drawer.unlimited`,
+     `android.car.hvac.demo`, `com.android.car.radio.demo[.dual]` (car.mk), `audio.usb.enabled`,
+     `persist.audio.car_audio_service.enabled` (hal/audio/audio_properties.mk), `persist.wm.debug.predictive_back[_anim]`,
+     `ro.product.device` (device.mk), `ro.surface_flinger.max_graphics_buffers` (hal/graphics/device_vendor.mk),
+     `service.sf.prime_shader_cache` (source not found yet), `wifi.supplicant_scan_interval`
+     (hal/connectivity/device_vendor.mk) → move to system/product props (or add vendor property_contexts where the
+     prop really is vendor-owned). Only developer.mk is fixed so far.
+   - USB adb on this board only comes up via init (`init.usb.rc:109` copies `persist.sys.usb.config` →
+     `sys.usb.config` at boot; vendor rc then sets role `device`). The gadget HAL
+     (hardware/amlogic/yukawa/usb/aidl) is a stub that never answers for ADB → toggling USB debugging in Settings
+     does nothing ("Set functions timed out! no reply from usb hal"). Runtime recovery: wireless debugging →
+     `adb root` → `setprop sys.usb.config adb`, then add the host key to `/data/misc/adb/adb_keys`.
+   - Results on slot `_a`: Enforcing, `ro.secure=1`, SKU `gas_maps_playstore`, 0 avc denials so far (auditd works; no
+     peripherals exercised yet). **GMS device key still fails** (`AppCertManager Exception while requesting key`).
+     Device got IP 192.168.1.172 this boot.
+   - OpenHeadunit (HUR) removed from `car.mk` PRODUCT_PACKAGES for now (D4 cause; module kept). Wireless/USB
+     Android Auto (C2/C3) needs it back later.
+   - After boot check: root, `getenforce`, new denials (sweep), `ro.secure`=1, `ro.boot.hardware.sku`, GMS device key
+     (`logcat | grep -E "DeviceKeyStore|AppCertManager|Storing device key"`), then H2 workaround + Maps tiles.
 
 ---
 
@@ -287,6 +435,13 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
   (`VIM3_KEYMINT_TA_DEV=true`) — it deletes the production secure-deletion secret.
 - OP-TEE uses dynamic SHM only (the static pool at 0x05000000 lies in a BL2-secured range → SError).
 - Checks: `ls -l /dev/tee0`, `logcat -s keymint-hal-optee`, `keymint_aidl_test`.
+
+### Reverse engineering GMS / APKs
+- REA (github.com/morluto/rea) CLI, local install: `~/.local/bin/rea` (Node 24 in `~/.local/opt/node`, JDK
+  `prebuilts/jdk/jdk21/linux-x86`, JADX bridge `~/.local/opt/rea/jadx-headless-mcp-0.7.1-all.jar`). Obfuscated classes
+  are `defpackage.<name>`: `rea inspect-android-method <apk> defpackage.bpei k --json`, `trace-android-references`,
+  `search-android-classes`. Huge methods JADX can't decompile → `out/host/linux-x86/bin/dexdump -d classesN.dex`.
+- GMS APK: `adb pull /system/product/priv-app/com_google_android_gms/com_google_android_gms.apk`.
 
 ### Gotchas
 - zsh: no word-splitting of `$var`, no `declare -A` → use bash for scripts. Never `pkill -f` a pattern that matches
