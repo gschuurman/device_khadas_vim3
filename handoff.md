@@ -65,12 +65,12 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
   added for (may have been bring-up/power); if oopses return, revert 0bbba06.
 - **"Maps bailed out" = USB hub 1-1.4 reset**, not a Maps crash: during NVMe writes the hub (Terminus 1a40:0101:
   touch, sound card = HID keyboard, capture) drops → keyboard/touchscreen config change relaunches all activities →
-  on re-attach `android.car.usb.handler/.UsbHostManagementActivity` pops over Maps. Cause = 5 V sag under NVMe write
-  current (12 V → buck/boost → 5 V into VIN) or hub backfeed. Fix in hardware (stiffer 5 V, bulk cap at VIN, powered
-  hub without backfeed). Software mitigations worth doing: suppress the car USB handler for these known devices.
+  on re-attach `android.car.usb.handler/.UsbHostManagementActivity` pops over Maps. Cause NOT confirmed: 5 V sag
+  (12 V → buck/boost → 5 V into VIN), hub backfeed, or an interaction with the shared USB3/PCIe PHY under PCIe
+  traffic. User: will be addressed in the next hardware design revision. Software mitigations worth doing: suppress the car USB handler for these known devices.
 
 **Next steps (in order):**
-1. Hub 1-1.4 resets under NVMe writes (above): hardware power fix; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
+1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
 2. Verify map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
 3. Fork Car/Launcher (ask user), commit + push everything (device, Launcher fork, gapps_auto keyboard override, local_manifest).
 4. Hardware tests with the user: D7 (SystemUI crash recovery) / D8 (FIDO, re-enable flow), ACC desk test (POWER
