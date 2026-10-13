@@ -9,36 +9,36 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 0. RESUME HERE (state at end of 2026-10-12)
+## 0. RESUME HERE (state at end of 2026-10-13)
 
-**Device:** running slot `_b` = the SPOOFED build (Google car emulator identity, see H6), boots green/locked/enforcing.
-Slot `_a` is marked UNBOOTABLE (old build bootlooped on the newer data after `bootctl set-active-boot-slot 0`;
-A/B fell back to `_b` after the 7 tries). Userdata was factory-reset (`fastboot oem format`) 2026-10-12; setup done,
-**Google account NOT signed in yet** (QR sign-in missing, see H8).
-Temporary device-only changes (undo when done):
-- user 10: `pm disable --user 10 com.google.android.gms/.fido.fido2.ui.Fido2FullScreenActivity` (D8) →
-  `pm enable --user 10 …` afterwards.
-- user 10: Google `CompanionDevice.apk` (com.google.android.companiondevicesupport) adb-installed from the A15 car
-  image (H8); not privileged.
-- `settings put global verifier_verify_adb_installs 0` (to sideload SPIC) → set back to 1.
-- SPIC (com.henrikherzig.playintegritychecker) installed for user 10.
+**Device:** slot `_a` = 2026-10-13 build (Khadas fingerprint, no spoof, enforcing), OTA'd over a factory reset done
+the same day (setup + Google sign-in done, certified; GSF IDs user 0 `4189755791819895375`, user 10
+`4549620347983112952`). Friendly name **"vim 3"** (Bluetooth `bluetooth.device.default_name` via `device_name.prop`,
+Settings `def_device_name_simple` overlay); codename stays `vim3`, model string unchanged (GMS identity).
+Assistant role for user 10 switched to Google Assistant by hand (`cmd role add-role-holder`; build default only
+applies to unset roles). Old FIDO `pm disable` workaround gone with the wipe.
+**Never `fastboot oem format` right after `apply_ota`:** Virtual A/B COW lives in /data → new slot dm-verity
+corrupt. Boot new slot, `bootctl mark-boot-successful`, wait `snapshotctl dump` = none, THEN oem format.
 
-**Tree (device/khadas/vim3, uncommitted):** spoof REMOVED from `lineage_vim3_nvme.mk` (include + `VIM3_GCAR_IDENTITY`
-flag gone), `gcar_identity.mk` / `gcar_identity.prop` kept unused (+ dormant hooks: BoardConfig `ifeq
-($(PRODUCT_BRAND),google)` prop files, device.mk `ifneq ($(VIM3_GCAR_IDENTITY),true)` around ro.soc.*);
-`hal/graphics/device_vendor.mk`: `ro.surface_flinger.max_frame_buffer_acquired_buffers` 2 → **3** (triple buffer, D3);
-handoff. Build was STOPPED before finishing.
+**In this build (all committed 2026-10-13):** nav/GAS toggles `nav.mk` + `nav_sku.mk` (`VIM3_NAV_APP=google|organic`,
+`VIM3_GOOGLE_ASSISTANT=true|false`; default Google Maps + Assistant = SKU `gas_full`, Dicio only when Assistant off);
+NlpConsentKeeper (consent persisted, verified); `com.android.oem.tokens` lib; HUR 3.5.0-beta4 with patches 0001
+(APP_MAPS filter, D4 fixed+verified) + 0002 (NAVIGATE/geo/maps link filters); SystemUI D7 fixes (frameworks/base
+Transitions + DisplayPolicy stale singleton window) and D8 (gmscore_app USBDEVFS disconnect ioctls denied) — NOT yet
+tested on HW; RTL-SDR HAL sepolicy (`radio_loopback_device`, verified label); ACC: kernel gpio_keys of_irq_get +
+meson-gpio irq_set_wake (wake source registered, verified) + VHAL resume decision/debounce/IGNITION restore (untested)
++ `sysfs_wakeup` genfs label; VHAL touch/ACC poll loops reopen on POLLHUP (was 100% CPU spin after USB re-enum —
+verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_down_factor 2 (cold starts −8..20%,
+= performance governor); libteflon from Mesa 6fb80f48f7c; triple buffering (=3).
 
-**Next steps:**
-1. `brunch vim3_nvme` (bash), check `post-build` in the OTA metadata = Khadas fingerprint and
-   `max_frame_buffer_acquired_buffers=3` in vendor/build.prop.
-2. OTA over USB (allowed again): `adb push lineage_vim3_nvme-ota.zip /data/local/tmp/ota.zip` + `adb shell apply_ota
-   /data/local/tmp/ota.zip` (NOT `update_engine_client --payload=file:///data/local/tmp/...`: enforcing denies
-   update_engine reading shell_data_file → kDownloadTransferError). Writes slot `_a` (unbootable flag is cleared by
-   the update). `adb reboot`, then `bootctl mark-boot-successful`, then screen off.
-3. Sign in to Google with the QR (should be back with the real identity, H8). Then re-enable the FIDO activity.
-4. User checks the screen twitching with triple buffering (D3).
-5. Commit: triple buffer + spoof files (or delete them) + handoff.
+**Open / next:**
+1. **Power:** USB hub 1-1.4 (touch, sound card, capture) re-enumerates on every CPU load spike (7× in 20 min) =
+   5 V sag / powered-hub backfeed. Likely cause of the display twitch (D3). User gets a bigger PSU; then rerun load
+   test (`dmesg | grep "1-1.4: USB disconnect"`) and re-check twitch. Block hub VBUS backfeed.
+2. Verify Maps shows in Play Store with `gas_full` (search + Mijn apps).
+3. Test D7/D8 on HW, ACC desk test (POWER button, USB adb), USB + wireless AA with phone.
+4. GMS LocationAccuracyNonwearableActivity still crashes (H10) — low priority.
+5. Then items E2 (15-band EQ), E6 (music player); after that E3 radio polish + FM/DAB stereo.
 
 ## 1. Current state
 
@@ -423,6 +423,18 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    with the real identity; shipping CompanionDevice is optional (phone companion features), not required for QR.
 9. Follow-ups: persist the consent at boot once the key works; decide Google Maps vs Organic Maps as default nav
    (`gas_maps_playstore` makes Maps the default); Google keyboard gets SERVICE_INVALID (not investigated).
+10. **2026-10-13 status.** Consent persistence DONE + verified on HW: `NlpConsentKeeper` (device/khadas/vim3/apps,
+    system uid, persistent) rewrites `network_location_opt_in=1` ~2 s after GMS resets it (tested: force-stop GMS +
+    phenotype COMMITTED → 0 → 1, stable). Keyboard SERVICE_INVALID did not reproduce on the fresh build.
+    **LocationAccuracyNonwearableActivity still crashes** even with `com.android.oem.tokens`
+    (oem_token_shared_lib_vendor, now linked into GMS + SystemUI). Real error = "Failed to resolve attribute"
+    for TextView textColor `?attr/common_automotive_color_on_surface_variant` → `?attr/oemColorOnSurfaceVariant`
+    (unset in the theme GMS picks in code); the `0x7f06004a` NotFoundException is a red herring thrown by
+    `Resources.Theme.toString()` while building that error message. GMS's `TokenInstaller` lifecycle callback only
+    applies tokens if the theme has `oemTokenOverrideEnabled=true` (only `OemTokensBase` sets it). Google's
+    `demo-token-rro-vendor.apk` (oem.brand.model.rro) is an EMPTY overlay — not the missing piece. Next: find which
+    theme the activity sets in code and where Google's image gets oemTokenOverrideEnabled/oem* attrs (phenotype flag?
+    car framework theme?). Low priority — consent is persisted without this screen.
 
 ### F. Housekeeping
 1. ~~Commit this handoff~~, ~~kernel `tmp_pack_*` cleanup~~ — both done.
