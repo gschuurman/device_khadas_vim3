@@ -241,12 +241,15 @@ BOARD_BOOTCONFIG += androidboot.load_modules_parallel=true
 # first-boot I/O; without them it hit random memory corruption (oopses in unrelated subsystems
 # around the time apexd/vendor_dlkm start). Which one is the real fix is not narrowed down yet:
 #   - nvme.max_host_mem_size_mb=0  no Host Memory Buffer (the device DMAs into host RAM itself)
-#   - pci=pcie_bus_peer2peer       max payload 128 B instead of the 256 B the kernel picks
+#   - pci=pcie_bus_peer2peer       max payload 128 B; replaced 2026-10-13 by pci=pcie_bus_perf (MPS 256,
+#                                  MRRS 256): with peer2peer the HDMI output glitched on every NVMe write
+#                                  (Khadas forum t/12295). Setting the same MPS/MRRS live via config space did
+#                                  NOT help, only the boot-time parameter does.
 #   - nvme_core.default_ps_max_latency_us=0 / pcie_aspm=off  no NVMe/PCIe power-state games
 ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
 BOARD_KERNEL_CMDLINE += nvme.max_host_mem_size_mb=0
 BOARD_KERNEL_CMDLINE += nvme_core.default_ps_max_latency_us=0
-BOARD_KERNEL_CMDLINE += pci=pcie_bus_peer2peer
+BOARD_KERNEL_CMDLINE += pci=pcie_bus_perf
 BOARD_KERNEL_CMDLINE += pcie_aspm=off
 endif
 
