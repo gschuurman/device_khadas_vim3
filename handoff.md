@@ -9,7 +9,7 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 0. RESUME HERE (state at end of 2026-10-13)
+## 0. RESUME HERE (state at end of 2026-10-13, evening)
 
 **Device:** slot `_a` = 2026-10-13 build (Khadas fingerprint, no spoof, enforcing), OTA'd over a factory reset done
 the same day (setup + Google sign-in done, certified; GSF IDs user 0 `4189755791819895375`, user 10
@@ -72,7 +72,12 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
 **Next steps (in order):**
 1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
 2. Verify map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
-3. Fork Car/Launcher (ask user), commit + push everything (device, Launcher fork, gapps_auto keyboard override, local_manifest).
+3. **Pushed 2026-10-13 evening:** device tree (up to the handoff commits) and gapps_auto `b9072b4` (keyboard
+   override). **Still local only:** packages/apps/Car/Launcher auto-restart fix (working tree, uncommitted) — user
+   said "not yet" to creating the fork gschuurman/android_packages_apps_Car_Launcher; ask again before creating it,
+   then add a local_manifest entry. A `repo sync` of that project would drop the fix: keep a patch copy
+   (`git -C packages/apps/Car/Launcher diff > ~/android/carlauncher-autorestart.patch`).
+   Also untested: map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
 4. Hardware tests with the user: D7 (SystemUI crash recovery) / D8 (FIDO, re-enable flow), ACC desk test (POWER
    button, USB adb; procedure in the 2026-10-13 ACC notes below/C1), USB + wireless Android Auto with the phone
    (HUR 3.5.0-beta4), RTL-SDR FM/DAB under enforcing (plug into a different hub than the sound card, D2).
