@@ -38,19 +38,16 @@ $(call inherit-product-if-exists, packages/services/Car/car_product/rro/ThemeSam
 $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sample_rros.mk)
 
 PRODUCT_PACKAGES += \
-    CarSettingsIntelligence \
-    Dicio
+    CarSettingsIntelligence
 
-# Organic Maps vs Google Maps, Google Assistant vs Dicio: nav.mk / nav_sku.mk (only one maps app ships, handoff D4).
+# Organic Maps vs Google Maps, Google Assistant on/off: nav.mk / nav_sku.mk (only one maps app ships, handoff D4).
+# Dicio was removed from the image 2026-10-13 (module and models stay in vehicle_interfaces).
 
 # OpenHeadunit (HUR, USB + wireless Android Auto). Built with its MAIN + APP_MAPS/APP_NAVIGATION filter removed: that
 # filter (no DEFAULT) made the package manager downgrade the map card's "Always" choice (handoff D4).
 PRODUCT_PACKAGES += \
     OpenHeadunit
 
-# Dicio's speech recognition (English, Dutch) and wake word models, so voice works offline from the
-# first boot (our Dicio build loads them from here instead of downloading them).
-PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*,vendor/gschuurman/vehicle_interfaces/automotive/dicio/models,$(TARGET_COPY_OUT_PRODUCT)/usr/share/dicio)
 
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)

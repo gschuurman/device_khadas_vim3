@@ -1,5 +1,5 @@
-# Google apps selection: navigation app (Google Maps / Organic Maps) and assistant (Google car Assistant /
-# Dicio). Toggles and the resulting GAS SKU: nav_sku.mk.
+# Google apps selection: navigation app (Google Maps / Organic Maps) and assistant (Google car Assistant or
+# none). Toggles and the resulting GAS SKU: nav_sku.mk.
 #
 # Only one APP_MAPS handler ships: with both Google Maps and Organic Maps (MapCardActivity), the CarLauncher map
 # card falls into the chooser, which can't launch inside the TaskView (red card, handoff D4).
@@ -19,17 +19,12 @@ PRODUCT_PACKAGES += \
 endif
 
 ifeq ($(VIM3_GOOGLE_ASSISTANT),true)
-# Google car Assistant (GoogleSearchCarPrebuilt) holds the assistant role (GmsCarAssistantOverlay). Dicio stays
-# installed as a normal app.
+# Google car Assistant (GoogleSearchCarPrebuilt) holds the assistant role (GmsCarAssistantOverlay).
 PRODUCT_PACKAGES += \
     com_google_android_carassistant \
     com_google_android_carassistant_googlecarui_rro \
     privapp_permissions_com_google_android_carassistant \
     GmsCarAssistantOverlay
-else
-# Dicio holds the assistant role; its overlay outranks the gas_* overlays that blank config_defaultAssistant.
-PRODUCT_PACKAGES += \
-    DicioAssistantOverlay
 endif
 
 # GAS overlays for the SKU. They blank the framework/launcher configs of the Google apps the bundle leaves out;

@@ -1,6 +1,6 @@
 # Google apps selection, shared by nav.mk (packages) and BoardConfig.mk (GAS SKU on the kernel cmdline).
 #   VIM3_NAV_APP          := google (default) | organic   navigation app: Google Maps or Organic Maps
-#   VIM3_GOOGLE_ASSISTANT := true (default) | false       Google car Assistant; false = Dicio holds the assistant role
+#   VIM3_GOOGLE_ASSISTANT := true (default) | false       Google car Assistant; false = no assistant
 # Override per build: `VIM3_NAV_APP=organic VIM3_GOOGLE_ASSISTANT=false brunch vim3_nvme`.
 #
 # VIM3_GAS_SKU = androidboot.hardware.sku: SystemConfig loads sysconfig/sku_<sku>/ (google.software.gas.* features,
