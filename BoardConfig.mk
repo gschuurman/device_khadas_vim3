@@ -266,11 +266,11 @@ ifneq ($(TARGET_KERNEL_CFG),)
 BOARD_KERNEL_CMDLINE += $(TARGET_KERNEL_CFG)
 endif
 
-# Selects the "maps + play store" GAS feature bundle (Google Maps, no Google Assistant). The gas_*_overlay
-# modules in vendor/google/gapps_auto (RRO block in gapps-core.mk) are static RROs gated by
-# android:requiredSystemPropertyValue against ro.boot.hardware.sku; gas_maps_playstore activates
-# GasMapsPlaystoreOverlay (blanks the default assistant and speech recognizer, keeps Maps as navigation app).
-BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=gas_maps_playstore
+# GAS feature bundle (google.software.gas.* features + matching gas_*_overlay, shipped by nav.mk), chosen by
+# VIM3_NAV_APP / VIM3_GOOGLE_ASSISTANT in nav_sku.mk: gas_full (Maps + Assistant, as Google's car image),
+# gas_maps_playstore, gas_assistant_playstore or gas_playstore.
+include device/khadas/vim3/nav_sku.mk
+BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=$(VIM3_GAS_SKU)
 
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := build/make/target/board/mainline_arm64/bluetooth
 
@@ -412,6 +412,17 @@ BUILD_BROKEN_DUP_SYSPROP := true
 # TARGET_VENDOR_PROP += $(DEVICE_PATH)/gms_spoof_vendor.prop
 # TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
 # TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop
+
+# Friendly device name "vim 3" (Bluetooth default name; Settings device_name comes from the SettingsProvider overlay).
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/device_name.prop
+
+# Google car image identity (gcar_identity.mk, lineage_vim3_nvme only). Values with spaces can't go through
+# PRODUCT_*_PROPERTIES, and the product partition emits its own bare ro.build.description/display.id, so those two
+# come from a prop file on both partitions.
+ifeq ($(PRODUCT_BRAND),google)
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gcar_identity.prop
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gcar_identity.prop
+endif
 
 # ---------------------------------------------------------------------------
 # OP-TEE userspace (vendor/khadas/vim3/optee): tee-supplicant, xtest and the test TAs.

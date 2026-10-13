@@ -1,0 +1,3 @@
+# Google car image identity, see gcar_identity.mk. Included as system and product prop file by BoardConfig.mk.
+ro.build.description=sdk_gcar_arm64-user 15 AAI5.260516.001.A1 15446886 release-keys
+ro.build.display.id=AAI5.260516.001.A1

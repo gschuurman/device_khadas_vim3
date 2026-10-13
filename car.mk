@@ -41,13 +41,12 @@ PRODUCT_PACKAGES += \
     CarSettingsIntelligence \
     Dicio
 
-# Organic Maps left out: Google Maps is the navigation app, and a second APP_MAPS handler (OM's MapCardActivity)
-# makes the CarLauncher map card fall into the chooser (handoff D4). Module stays in
-# vendor/gschuurman/vehicle_interfaces/automotive/organicmaps.
-#
-# OpenHeadunit (HUR) left out for now: its MainActivity claims APP_MAPS/APP_NAVIGATION without DEFAULT, which
-# makes the package manager downgrade the map card's "Always" choice (handoff D4). Module stays in
-# vendor/gschuurman/vehicle_interfaces/automotive/openheadunit.
+# Organic Maps vs Google Maps, Google Assistant vs Dicio: nav.mk / nav_sku.mk (only one maps app ships, handoff D4).
+
+# OpenHeadunit (HUR, USB + wireless Android Auto). Built with its MAIN + APP_MAPS/APP_NAVIGATION filter removed: that
+# filter (no DEFAULT) made the package manager downgrade the map card's "Always" choice (handoff D4).
+PRODUCT_PACKAGES += \
+    OpenHeadunit
 
 # Dicio's speech recognition (English, Dutch) and wake word models, so voice works offline from the
 # first boot (our Dicio build loads them from here instead of downloading them).

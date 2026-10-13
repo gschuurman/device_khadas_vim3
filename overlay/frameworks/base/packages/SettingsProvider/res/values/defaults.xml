@@ -22,4 +22,6 @@
     <bool name="def_lockscreen_disabled">true</bool>
     <bool name="def_stay_on_while_plugged_in">true</bool>
     <bool name="def_show_ime_with_hard_keyboard">true</bool>
+    <!-- Friendly device name (Settings → About, Wi-Fi Direct / wireless AA); default is Build.MODEL -->
+    <string name="def_device_name_simple" translatable="false">vim 3</string>
 </resources>

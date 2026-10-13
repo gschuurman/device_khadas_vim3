@@ -1,0 +1,11 @@
+// Keeps Google's network-location consent (content://com.google.settings/partner network_location_opt_in) on.
+// GmsCoreAuto 26.18.33 resets it to 0 at the top of every LocationModuleInitIntentOperation run (boot, module
+// update, phenotype/gservices commits, account changes); the Google Location Accuracy screen that would set it is
+// not usable on this build. Runs persistent as system uid (the provider's write permission is signature-only).
+android_app {
+    name: "NlpConsentKeeper",
+    srcs: ["src/**/*.java"],
+    manifest: "AndroidManifest.xml",
+    platform_apis: true,
+    certificate: "platform",
+}

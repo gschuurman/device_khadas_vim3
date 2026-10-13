@@ -67,9 +67,12 @@ PRODUCT_INIT_BOOT_IMAGE_HEADER_VERSION := 4
 PRODUCT_MODEL := AAOS on VIM3
 PRODUCT_BRAND := Khadas
 PRODUCT_MANUFACTURER := KHADAS
+# gcar_identity.mk sets its own; a product list keeps the first definition of a key, so skip ours there.
+ifneq ($(VIM3_GCAR_IDENTITY),true)
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=KHADAS \
     ro.soc.model=VIM3
+endif
 
 VENDOR_SECURITY_PATCH = $(PLATFORM_SECURITY_PATCH)
 # Boot image patch level; KeyMint's HAL reports it in the attestation root of trust (else it falls back to

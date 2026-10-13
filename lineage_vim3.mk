@@ -9,6 +9,11 @@ $(call inherit-product, vendor/lineage/config/common.mk)
 
 # Google Automotive Apps
 $(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
+# Keeps Google's network-location consent on (GMS resets it on every location-module init; apps/NlpConsentKeeper).
+PRODUCT_PACKAGES += NlpConsentKeeper
+
+# Navigation app (Google Maps or Organic Maps) + matching GAS overlays: VIM3_NAV_APP in nav.mk
+$(call inherit-product, $(LOCAL_PATH)/nav.mk)
 
 # Product identity
 PRODUCT_BRAND := Khadas
