@@ -1,2 +1,11 @@
-# Play Services probes adb state; keep it denied, just quiet
+# Play Services probes adb + OEM-unlock state; keep it denied, just quiet
 dontaudit gmscore_app adbd_prop:file r_file_perms;
+dontaudit gmscore_app oem_unlock_prop:file r_file_perms;
+
+# GMS FIDO (Fido2FullScreenActivity/UsbRequestController) force-claims every USB HID interface while a sign-in
+# page offers a passkey: it detaches the kernel driver (USBDEVFS_IOCTL(DISCONNECT)) of the touchscreen and the
+# sound card buttons every ~2 s → input devices vanish → config change → all activities relaunch (handoff D8).
+# Keep GMS USB host access but never let it unbind kernel drivers; a claim of a driver-bound interface then fails.
+allowxperm gmscore_app usb_device:chr_file ioctl ~{
+    USBDEVFS_IOCTL USBDEVFS_IOCTL32 USBDEVFS_DISCONNECT USBDEVFS_CONNECT USBDEVFS_DISCONNECT_CLAIM
+};

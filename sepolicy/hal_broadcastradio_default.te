@@ -5,11 +5,20 @@
 allow hal_broadcastradio_default usb_device:dir r_dir_perms;
 allow hal_broadcastradio_default usb_device:chr_file rw_file_perms;
 
-# NOTE: this HAL also writes decoded PCM into the snd-aloop "Loopback" card (/dev/snd/*),
-# but a platform neverallow (system/sepolicy/private/hal_audio.te) forbids any non-audio-HAL
-# domain from accessing audio_device:chr_file, so we CANNOT add that allow here without a
-# build-time neverallow failure. This device runs SELinux permissive, so the loopback write
-# is granted at runtime anyway (the avc denial is only logged). To run under ENFORCING the
-# proper fix is to relabel the pinned Loopback playback node (/dev/snd/pcmC7D0p, since
-# snd_aloop.index=7) to a custom dev_type (e.g. radio_loopback_device) and allow that type
-# here, leaving the capture side as audio_device for the audio HAL. Deferred to P4.
+# libusb (via librtlsdr) enumerates through sysfs (statfs /sys, /sys/bus/usb/devices/*/{busnum,devnum,
+# descriptors}; the usb device dirs carry wakeup-related sysfs labels) and listens for hotplug on a uevent socket.
+allow hal_broadcastradio_default sysfs:filesystem getattr;
+r_dir_file(hal_broadcastradio_default, sysfs_type)
+allow hal_broadcastradio_default self:netlink_kobject_uevent_socket create_socket_perms_no_ioctl;
+
+# DeviceManager raises its worker thread priority (setpriority -19).
+allow hal_broadcastradio_default self:capability sys_nice;
+
+# Decoded PCM goes into the snd-aloop Loopback card (card pinned to 7 by snd_aloop.index=7, BoardConfig.mk).
+# A platform neverallow (system/sepolicy/private/hal_audio.te) keeps every non-audio HAL off audio_device:chr_file,
+# so the playback node the radio writes (pcmC7D0p) gets its own type; the capture side (pcmC7D1c) the audio HAL
+# reads stays audio_device. LoopbackSink finds the card by name in /proc/asound/cards.
+type radio_loopback_device, dev_type;
+allow hal_broadcastradio_default audio_device:dir r_dir_perms;
+allow hal_broadcastradio_default radio_loopback_device:chr_file rw_file_perms;
+allow hal_broadcastradio_default proc_asound:file r_file_perms;

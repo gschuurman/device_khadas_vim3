@@ -8,3 +8,5 @@ genfscon sysfs /devices/platform/soc/ff900000.vpu                   u:object_r:s
 # NPU (etnaviv): libdrm's device enumeration in every GL/Vulkan client reads the DRM device's
 # uevent; label it like the Mali GPU's sysfs so apps don't hit sysfs denials
 genfscon sysfs /devices/platform/etnaviv                              u:object_r:sysfs_gpu:s0
+# ACC wake source (gpio-keys-wake): system_suspend reads every /sys/class/wakeup/*/ stat
+genfscon sysfs /devices/platform/gpio-keys-wake/wakeup               u:object_r:sysfs_wakeup:s0

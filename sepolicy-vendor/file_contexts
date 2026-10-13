@@ -42,6 +42,8 @@
 /sys/devices/platform/soc/ff800000.bus/ff8000a8.rtc/rtc/rtc1/alarmtimer.0.auto(/.*)?  u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ffd00000.bus/ffd24000.serial(/.*)?     u:object_r:sysfs_suspend_stats:s0
 /sys/devices/platform/soc/ffe09000.usb/ff500000.usb(/.*)?        u:object_r:sysfs_suspend_stats:s0
+# ACC-line wake key (gpio-keys-wake DTS node) — system_suspend reads its wakeup source stats
+/sys/devices/platform/gpio-keys-wake/wakeup(/.*)?                  u:object_r:sysfs_suspend_stats:s0
 
 # files in /vendor
 /(vendor|system/vendor)/lib(64)?/hw/gralloc\.yukawa\.so u:object_r:same_process_hal_file:s0
