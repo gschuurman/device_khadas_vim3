@@ -31,14 +31,61 @@ meson-gpio irq_set_wake (wake source registered, verified) + VHAL resume decisio
 verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_down_factor 2 (cold starts −8..20%,
 = performance governor); libteflon from Mesa 6fb80f48f7c; triple buffering (=3).
 
-**Open / next:**
-1. **Power:** USB hub 1-1.4 (touch, sound card, capture) re-enumerates on every CPU load spike (7× in 20 min) =
-   5 V sag / powered-hub backfeed. Likely cause of the display twitch (D3). User gets a bigger PSU; then rerun load
-   test (`dmesg | grep "1-1.4: USB disconnect"`) and re-check twitch. Block hub VBUS backfeed.
-2. Verify Maps shows in Play Store with `gas_full` (search + Mijn apps).
-3. Test D7/D8 on HW, ACC desk test (POWER button, USB adb), USB + wireless AA with phone.
-4. GMS LocationAccuracyNonwearableActivity still crashes (H10) — low priority.
-5. Then items E2 (15-band EQ), E6 (music player); after that E3 radio polish + FM/DAB stereo.
+**Afternoon 2026-10-13 (uncommitted unless noted):**
+- **Kernel moved to the CI-rebased base** (GKI android16-6.12.94, `ca3f1d12d1f3`, 32 fork commits incl. ACC fixes;
+  old local state = branch `backup/pre-ci-rebase-2026-10-13`). Full brunch with it SUCCEEDED, NOT yet OTA'd/tested
+  (check NVMe/PCIe, panfrost+Vulkan, Wi-Fi/BT, USB audio + touch, OP-TEE/KeyMint, ACC wake source, avc, dmesg).
+- **Map card red/black = AOSP debug behaviour:** `CarLauncherViewModel.sAutoRestartOnCrash = Build.IS_USER` — on
+  userdebug the card does NOT restart Maps when its task vanishes (Play update, LMK, crash, Maps opened elsewhere)
+  and paints it RED. Fixed in packages/apps/Car/Launcher (always auto-restart; unused Build import dropped).
+  Launcher is plain AOSP `android-16.0.0_r4` = newest tag = what the LineageOS manifest pins (nothing newer
+  upstream). **Needs a fork** (gschuurman/android_packages_apps_Car_Launcher + local_manifest entry) before commit —
+  ask the user before creating the GitHub repo. Workaround until then: force-stop Maps + Home.
+- **Dicio removed from the image** (car.mk package + models copy, nav.mk DicioAssistantOverlay;
+  `VIM3_GOOGLE_ASSISTANT=false` now = no assistant). Module/models stay in vehicle_interfaces.
+- **Keyboard:** Driver user fell back to CarLatinIME after Play updated the Google car keyboard (09:10). Set back with
+  `ime set --user 10 com.google.android.apps.automotive.inputmethod/.InputMethodService`. The Google keyboard module
+  (vendor/google/gapps_auto Android.bp) now `overrides: ["CarLatinIME", "LatinIME"]`, so they're not installed (Google's
+  car image ships only the Google keyboard). A BoardConfig filter-out does NOT work: PRODUCT_PACKAGES is readonly there.
+- **Maps not listed in Play search / Mijn apps** while Assistant, keyboard and templates host are: Play's local DBs
+  (localappstate.db, library.db, user 10) are identical for all four (owned, auto_update=1, updated by Play — Maps
+  is now 26.09.280001.E from Play). So it's Google's server-side car catalogue (Maps shares the phone listing), not
+  the build. Direct link `market://details?id=com.google.android.apps.maps` works and offers updates. Not fixable here.
+- Build helper lesson: never put the pgrep pattern in a watcher's own command line (`pgrep -f "brunch vim3_nvme"`
+  matched the watcher itself and dead-locked vim3-m).
+
+**Evening 2026-10-13 — installed + tested:**
+- Slot `_a` = full build incl. CI kernel 6.12.94, CarLauncher auto-restart, Dicio removal (0852925), Google keyboard
+  only, `pci=pcie_bus_perf` (0bbba06). Slot `_b` = same minus pcie_bus_perf. Both booted; on `_b`: enforcing, root,
+  0 avc in dmesg, NVMe/OP-TEE/keystore2/gatekeeper/panfrost up, only Google IME for user 10, no Dicio.
+- **D3 display glitch SOLVED:** triggered by NVMe *writes* only (not CPU load, not reads). Not fixed by: pinned CPU
+  freq, NVMe PS2 (1.7 W, tool `nvmeps` = small static aarch64 admin-cmd binary in the session scratchpad), live
+  config-space MPS/MRRS 128/256/512/2048. Fixed by booting with `pci=pcie_bus_perf` (root port + SN520 MPS 256 /
+  MRRS 256), user-verified with a 3 GB dd. Watch for the old heavy-I/O memory corruption that peer2peer was once
+  added for (may have been bring-up/power); if oopses return, revert 0bbba06.
+- **"Maps bailed out" = USB hub 1-1.4 reset**, not a Maps crash: during NVMe writes the hub (Terminus 1a40:0101:
+  touch, sound card = HID keyboard, capture) drops → keyboard/touchscreen config change relaunches all activities →
+  on re-attach `android.car.usb.handler/.UsbHostManagementActivity` pops over Maps. Cause = 5 V sag under NVMe write
+  current (12 V → buck/boost → 5 V into VIN) or hub backfeed. Fix in hardware (stiffer 5 V, bulk cap at VIN, powered
+  hub without backfeed). Software mitigations worth doing: suppress the car USB handler for these known devices.
+
+**Next steps (in order):**
+1. Hub 1-1.4 resets under NVMe writes (above): hardware power fix; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
+2. Verify map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
+3. Fork Car/Launcher (ask user), commit + push everything (device, Launcher fork, gapps_auto keyboard override, local_manifest).
+4. Hardware tests with the user: D7 (SystemUI crash recovery) / D8 (FIDO, re-enable flow), ACC desk test (POWER
+   button, USB adb; procedure in the 2026-10-13 ACC notes below/C1), USB + wireless Android Auto with the phone
+   (HUR 3.5.0-beta4), RTL-SDR FM/DAB under enforcing (plug into a different hub than the sound card, D2).
+5. GMS LocationAccuracyNonwearableActivity still crashes (H10) — low priority.
+
+**Remaining feature requests (user's list, in priority order):**
+- **15. 15-band graphic EQ** (E2): preamp + 15 bands 25 Hz–16 kHz with response curve and Reset (like
+  igogrek/equalizer-apo-ui); HAL `kEqBands` 5 → 15, new `car.eq.preamp` + persist props
+  (`persist.vendor.audio.car.*`), Equalizer screen in CarAudioTuner. See memory "Car audio: vol buttons + curve/EQ".
+- **16. Local music player** (E6): play the Music folder on the NVMe as a car media source (MediaBrowserService,
+  shows in the car Media app / media card).
+- Only after 15 + 16: **17. Radio polish** (E3: per-block DAB scan progress in the wizard, UI polish) and
+  **18. FM/DAB stereo** (FM stereo pilot decode + RDS; DAB audio already stereo — verify end to end).
 
 ## 1. Current state
 
@@ -283,7 +330,7 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    - MapClient crash-loop fix `ed6655a2ec`.
 2. **DAB choppy audio** 🚗 — RTL-SDR (4 MB/s) starves the 8-ch USB sound card on the shared hub 1-1.4: move the
    dongle to another hub (audio code proven clean).
-3. **Video glitching** — seen 2026-09-21 under first-boot load (CmaFree ~6 MB of 576 MB during dexopt/Play
+3. ~~**Video glitching**~~ — SOLVED 2026-10-13: NVMe writes; fixed by `pci=pcie_bus_perf` (§0). History: seen 2026-09-21 under first-boot load (CmaFree ~6 MB of 576 MB during dexopt/Play
    Store) and again 2026-10-12 (user). 2026-10-12 check: no meson-drm/HDMI errors in dmesg, CmaFree 230 of 768 MB,
    no allocation failures (only two `binder_alloc ... no address space`, unrelated). Still needs a symptom
    description/photo to split: sparkles/snow/lines/whole-frame dropouts = HDMI signal (cable/connector/EMI, try
