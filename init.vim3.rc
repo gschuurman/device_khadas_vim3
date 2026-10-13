@@ -69,6 +69,12 @@ on boot
     write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor conservative
     write /sys/devices/system/cpu/cpufreq/policy2/scaling_governor conservative
     write /sys/devices/system/cpu/cpufreq/conservative/sampling_rate 100000
+    # Ramp faster than the defaults (5% steps at 80% load = ~1.1 s from 1.0 to 2.2 GHz). Measured cold starts
+    # (2026-10-13): Settings 1146 -> 1044 ms, Maps 1929 -> 1757 ms, Dialer 727 -> 568 ms; equal to the
+    # performance governor, scroll jank unchanged (0.2-0.3%, p90 9 ms).
+    write /sys/devices/system/cpu/cpufreq/conservative/freq_step 25
+    write /sys/devices/system/cpu/cpufreq/conservative/up_threshold 60
+    write /sys/devices/system/cpu/cpufreq/conservative/sampling_down_factor 2
 
     # GPU (Mali-G52) floor: 285 MHz instead of 125 MHz. UI rendering averages well below panfrost's
     # simple_ondemand upthreshold (45% over 50 ms), so the GPU never left 125 MHz while scrolling and
