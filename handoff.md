@@ -91,6 +91,29 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
   (12 V → buck/boost → 5 V into VIN), hub backfeed, or an interaction with the shared USB3/PCIe PHY under PCIe
   traffic. User: will be addressed in the next hardware design revision. Software mitigations worth doing: suppress the car USB handler for these known devices.
 
+**2026-10-14 afternoon (committed locally, NOT pushed; not yet in an image unless noted):**
+- **10-band EQ** — HAL `b251974` (hardware/amlogic/yukawa/audio: 31 Hz–16 kHz octave bands, Q √2, `car.eq.preamp`,
+  anti-clip from the sampled curve peak + 0.1 dB, 5-band settings reset once via `eq_layout=2`) + CarAudioTuner
+  `57023cc` (graphic EQ screen: curve from the HAL math, Pre + 10 vertical sliders, car-ui preset dialog; sizes for the
+  100 dpi panel). HAL is in the slot `_a` OTA; the new CarAudioTuner runs via bind mount. Verified on HW (props,
+  HAL restart persistence, presets, reset); not listened to yet.
+- **CarMusic** (vehicle_interfaces `automotive/carmusic`, `c9a6f95` `c480858` `b004f5d`; device `4007d64` adds it to
+  vehicle.mk, overrides LocalMediaPlayer): MediaBrowserService for the Driver user's Music folder — tabs Playlists /
+  Songs / Albums / Artists / Folders (RRO `CarMusicMediaOverlay`: car Media max_tabs 5, max_visible_actions 3),
+  shuffle items + Now Playing shuffle/repeat/favorite custom actions, Favorites/Recently played/Recently added, M3U/PLS
+  playlists (MediaProvider resolves members), search, resume after reboot. USB import (ImportActivity + ImportService +
+  MEDIA_MOUNTED notification): copies audio + playlists (entries rewritten, written as .m3u — MediaProvider appends the
+  MIME extension) + folder covers (app files dir, `Covers`). Album art: embedded → folder cover → CoverFetchJob
+  (MusicBrainz + Cover Art Archive front-500, unmetered, daily + after import, 1 req/s, 503 backoff, 30-day miss
+  memory, artist/album from folders for untagged files). Gotchas found: service needs meta-data
+  `androidx.car.app.launchable=true` (else the Media app skips it as "non media template app"); icon URIs must be
+  `android.resource://pkg/drawable/name` (numeric ids crash the Media app); an app first installed without INTERNET gets
+  LineageOS `REJECT_ALL` net policy (restricted_networking_mode=1) — reinstall fixes it. Verified via fake-USB folders
+  (adb test installs); real USB stick + tagged files with embedded art still to test. Test leftovers in user 10's library
+  (Demo/Road/Daft Punk/Cover Artist tones, "Mix.m3u8", "Road trip.m3u8", 5 stale rows) — clean up after the image build.
+- **Android Auto receiver** in the slot `_a` OTA (priv-app); HUR `pm disable-user` on the board for the test. User tests
+  tonight (USB, then wireless). Gemini onboarding dialog from the updated Car Assistant pops up periodically.
+
 **Next steps (in order):**
 1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
 3. **Map card does NOT auto-restart Maps (user, 2026-10-14) — open.** Pushed 2026-10-13: device tree + gapps_auto
@@ -217,7 +240,7 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    DMC secure ranges at 0xff639000 programmed by BL2, Mali = DMC port 1, Amlogic's kbase has no protected-mode glue;
    whether G52 protected-mode traffic is distinguishable at the DMC is unproven. Not CTS-enforced on Android 16.
    Memory note `project_vulkan_protected_memory`.
-6. **Weekly GKI CI** — reworked 2026-09-30: the workflow moved to the new **`ci` branch** (de474ea54aadf, orphan,
+6. **Weekly GKI CI** — DONE: default branch is `ci`, scheduled runs succeed (2026-10-05, 2026-10-12). Reworked 2026-09-30: the workflow moved to the new **`ci` branch** (de474ea54aadf, orphan,
    only `.github` + README); `lineage-23.0` no longer carries it (397331d7446ad). It checks out `lineage-23.0` into
    `kernel/`, replays the fork range without `.github` (the old push failed: plain push after a rebase, and replayed
    workflow-file commits the default token may not push) and force-pushes with a lease. Local dry run against today's
