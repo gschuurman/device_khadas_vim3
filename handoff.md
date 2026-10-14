@@ -111,8 +111,10 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
   LineageOS `REJECT_ALL` net policy (restricted_networking_mode=1) — reinstall fixes it. Verified via fake-USB folders
   (adb test installs); real USB stick + tagged files with embedded art still to test. Test leftovers in user 10's library
   (Demo/Road/Daft Punk/Cover Artist tones, "Mix.m3u8", "Road trip.m3u8", 5 stale rows) — clean up after the image build.
-- **Android Auto receiver** in the slot `_a` OTA (priv-app); HUR `pm disable-user` on the board for the test. User tests
-  tonight (USB, then wireless). Gemini onboarding dialog from the updated Car Assistant pops up periodically.
+- **Google Android Auto receiver: DROPPED (user, 2026-10-14)** — reports an evaluation device and wireless AA doesn't
+  work. Removed from gapps-core.mk together with the AARECEIVER(_WIRELESS) features (else Play installs it as a normal
+  app, which crashes); modules stay in Android.bp. On the board (slot `_a` still has it): `pm disable-user` for users 0
+  and 10, HUR re-enabled. Android Auto = HUR (C2/C3).
 
 **Next steps (in order):**
 1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
