@@ -157,8 +157,19 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
   CarAudioTuner `57023cc` (see §0). Listening test open.
 - ~~16. Local music player~~ — DONE 2026-10-14: CarMusic (see §0), incl. USB import, playlists, covers, search.
   Real-USB-stick test open.
-- **17. Radio polish** (E3): per-block DAB scan progress in the scan wizard, UI polish.
-- **18. FM/DAB stereo**: FM stereo pilot decode + RDS; DAB audio already stereo — verify end to end.
+- **17. Radio polish** — DONE 2026-10-14 without RTL-SDR (CarRadioApp `abfb9a4`, HAL `686bd05`): DAB scan progress per
+  block (HAL `getParameters` "com.gschuurman.dab.scan.*" → wizard progress bar "Block n of N · 8A · …"; DAB phase ends
+  on HAL "done"; `vendor.broadcastradio.dab.scan_test_delay_ms` simulates per-block dwell without a tuner), scan
+  without reception keeps the saved list (FM landings need signal > 0), RadioText shown (FM RT and DAB DLS both arrive
+  as RDS_RT; were never shown), genre from PTY, "87,5 MHz" (was "87,5 FM MHz"), "FM" monogram (was "8F"), single
+  signal meter, empty state when nothing is tuned. To verify with a dongle: real scan progress + gain/dwell stages.
+- **18. FM stereo + RDS** — DONE in code, host-tested (device `f6bbf67`, HAL `686bd05`): pilot PLL stereo decoder +
+  RDS (PS/RT/PI/PTY/TP/TA) in libfmdemod; host test `fmdemod_test` (synthetic broadcast): separation 30/26 dB, RDS
+  robust at high noise, no false RDS. HAL publishes RDS metadata (rdsPs/programName/rdsRt/rdsPty, RDS_PI, TP/TA flags).
+  On-air test with the RTL-SDR still open (plug it into another hub than the sound card, D2); DAB stereo end-to-end
+  check also still open.
+- The radio libraries (librtlsdr, welle-io core, libfmdemod) were unversioned in external/; now in the device tree under
+  `hal/broadcastradio/{rtl-sdr,welle-io,fmdemod}` (`d1a83c0`, `a7aeb81`, `f6bbf67`), module names unchanged.
 - E4 (Whisper in Dicio) is moot while Dicio is out of the image. Phone GPS into AAOS (E5) dropped: the next hardware
   iteration gets a much better GPS module.
 
