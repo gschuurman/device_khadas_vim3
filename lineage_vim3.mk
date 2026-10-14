@@ -11,6 +11,8 @@ $(call inherit-product, vendor/lineage/config/common.mk)
 $(call inherit-product, vendor/google/gapps_auto/gapps-core.mk)
 # Keeps Google's network-location consent on (GMS resets it on every location-module init; apps/NlpConsentKeeper).
 PRODUCT_PACKAGES += NlpConsentKeeper
+# Idle windows for JobScheduler when the screen is off, so Play updates the preinstalled Google apps (apps/IdleMaintenance).
+PRODUCT_PACKAGES += IdleMaintenance
 
 # Navigation app (Google Maps or Organic Maps) + matching GAS overlays: VIM3_NAV_APP in nav.mk
 $(call inherit-product, $(LOCAL_PATH)/nav.mk)

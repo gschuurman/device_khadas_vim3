@@ -86,7 +86,24 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
 4. Hardware tests with the user: D7 (SystemUI crash recovery) / D8 (FIDO, re-enable flow), ACC desk test (POWER
    button, USB adb; procedure in the 2026-10-13 ACC notes below/C1), USB + wireless Android Auto with the phone
    (HUR 3.5.0-beta4), RTL-SDR FM/DAB under enforcing (plug into a different hub than the sound card, D2).
-5. GMS LocationAccuracyNonwearableActivity still crashes (H10) — low priority.
+5. **GMS LocationAccuracyNonwearableActivity crash (H10) — GMS bug, parked.** Still crashes on GMS 26.39.33
+   (2026-10-14). Cause: the activity themes itself in code with `Theme.SubSettingsBase(.Expressive)` (settings theme),
+   but in uimode car the `(car)` variant of `layout/preference_footer` is used, whose TextView styles
+   (`theme.GmsCore.Automotive.Body3.OnSurfaceVariant`, `...TextLink`) need `?attr/common_automotive_color_*`, defined
+   only by GMS's automotive themes. An RRO can't fix it: GMS declares `<overlayable>` (only car-ui-lib, rotary-ui,
+   QuickStart, OTA config) → idmap2 "no resources were overlaid". Only remaining fix would be a frameworks/base hack
+   (apply GMS's automotive theme non-forced when GMS applies its settings theme) — not done; consent is kept by
+   NlpConsentKeeper. Recheck after GMS updates.
+6. **Play never updated the preinstalled Google apps — FIXED in tree (2026-10-14), needs OTA.** All Play update jobs
+   need JobScheduler IDLE; on automotive `CarIdlenessTracker` is idle only in Garage Mode, when forced, or on
+   `com.android.server.ACTION_TRIGGER_IDLE` while the screen is off — this board never got any, so GMS stayed at the
+   image's 26.18.33. Verified: forcing idle (`am broadcast --user 0 -a com.android.server.jobscheduler.FORCE_IDLE`)
+   started Play's "garage mode install" (`Finsky … GMI:`) → GMS 26.18.33 → 26.37.37 → 26.39.33, WebView 154, Play
+   Store, Maps, Car Assistant, keyboard, templates host all updated (then UNFORCE_IDLE). New system app
+   `apps/IdleMaintenance` (system uid, persistent, in lineage_vim3.mk) sends ACTION_TRIGGER_IDLE after 10 min
+   screen-off; screen-on ends idle (both paths verified by hand via broadcast). After the OTA check
+   `logcat | grep IdleMaintenance` and `dumpsys jobscheduler | grep mIdle:` after 10 min screen-off. Note: idle jobs
+   write to the NVMe → may trigger the hub 1-1.4 reset (D3/§0) while the screen is off.
 
 **Remaining feature requests (user's list, in priority order):**
 - **15. 15-band graphic EQ** (E2): preamp + 15 bands 25 Hz–16 kHz with response curve and Reset (like
