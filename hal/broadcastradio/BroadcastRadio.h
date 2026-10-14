@@ -126,6 +126,9 @@ class BroadcastRadio final : public BnBroadcastRadio {
 
     std::mutex mSeekMutex;  // serialises the per-instance worker thread lifecycle
     std::thread mSeekThread;
+    // FM seek in flight (set before mSeekThread starts, cleared after it reports); the meter
+    // thread stays quiet meanwhile.
+    std::atomic<bool> mFmSeekActive{false};
 
     // DAB worker + state (the DAB instance only).
     std::thread mDabThread;

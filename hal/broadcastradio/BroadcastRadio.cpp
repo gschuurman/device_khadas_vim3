@@ -127,6 +127,7 @@ void BroadcastRadio::seekWorker(bool directionUp, std::shared_ptr<ITunerCallback
             cb->onTuneFailed(Result::TIMEOUT, utils::makeSelectorAmfm(mCurrentFreqKhz.load()));
         }
     }
+    mFmSeekActive = false;
 }
 
 ProgramInfo BroadcastRadio::makeDabProgramInfo(uint64_t sidExt, uint32_t ensemble,
@@ -470,6 +471,9 @@ void BroadcastRadio::meterLoop() {
             freqKhz = mCurrentFreqKhz.load();
         }
         if (cb == nullptr || mActiveBand.load() != Band::kAmFm) continue;
+        // A program-info update mid-seek reads as the seek's result to the framework/app
+        // (which then mutes and cancels the seek), so only the seek worker reports then.
+        if (mFmSeekActive.load()) continue;
         const double pwr = rtlsdr::DeviceManager::getInstance().fmChannelPower();
         LOG(VERBOSE) << "FM meter " << freqKhz << " kHz power=" << pwr
                      << " quality=" << fmSignalQuality(pwr);
@@ -788,6 +792,7 @@ ndk::ScopedAStatus BroadcastRadio::seek(bool directionUp, bool /*skipSubChannel*
     }
 
     std::lock_guard<std::mutex> g(mSeekMutex);
+    mFmSeekActive = true;
     mSeekThread = std::thread([this, directionUp, cb]() { seekWorker(directionUp, cb); });
     return ndk::ScopedAStatus::ok();
 }
