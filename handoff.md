@@ -9,14 +9,36 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 0. RESUME HERE (state at end of 2026-10-13, evening)
+## 0. RESUME HERE (state 2026-10-14, midday)
 
-**Device:** slot `_a` = 2026-10-13 build (Khadas fingerprint, no spoof, enforcing), OTA'd over a factory reset done
-the same day (setup + Google sign-in done, certified; GSF IDs user 0 `4189755791819895375`, user 10
-`4549620347983112952`). Friendly name **"vim 3"** (Bluetooth `bluetooth.device.default_name` via `device_name.prop`,
-Settings `def_device_name_simple` overlay); codename stays `vim3`, model string unchanged (GMS identity).
-Assistant role for user 10 switched to Google Assistant by hand (`cmd role add-role-holder`; build default only
-applies to unset roles). Old FIDO `pm disable` workaround gone with the wipe.
+**Device (2026-10-14 11:30):** slot `_b` = 2026-10-14 build (updated Google apps in the image, see below), `oem format`
+the same day, setup + Google sign-in done, **certified** (`uncertified_status=1` both users, no registration needed).
+New GSF IDs user 0 `3664123509167330977`, user 10 `4145514122090683456` (old IDs 4189…/4549… went uncertified=3 after
+GMS downgrade cycling — see memory project_gms_certification_flip; never downgrade GMS on the real identity).
+Slot `_a` = 2026-10-13 evening build (pcie_bus_perf, old Google apps). Friendly name **"vim 3"**. Assistant role and
+Google keyboard verified by default after the fresh setup.
+
+**2026-10-14 vendor/google/gapps_auto (UNCOMMITTED, built + on slot `_b` except the AA receiver):**
+- Google apps updated to the Play versions: GMS 26.39.33, Play Store 53.4.24, Maps 26.09.280001.E, Car Assistant 13.1.788,
+  keyboard 26.34, templates host 1.007.951929592, WebView 154. GMS / Play Store / Maps ship as Play's full split set
+  (`android_app_set` + `.apks` from `tools/make_apks.py`; `*.apks` added to LFS). Reason: Google rotated the GMS key
+  (lineage f0fd6c5b → 7ce83c1b → 5f239127); Play's split-only installs onto the old-key image APK failed with
+  `INSTALL_FAILED_INVALID_APK: Existing signatures are inconsistent` (image GMS had only ~150 strings per non-English
+  locale → mostly English UI). Play Store had the same rotation.
+- privapp allowlist: GMS + `INSTALL_LOCATION_PROVIDER`, Car Assistant + `EXECUTE_APP_FUNCTIONS` (missing platform
+  privileged permissions = system_server boot loop "Signature|privileged permissions not in privileged permission
+  allowlist"). Check every app update: requested permissions with protection `privileged` whose defining package is
+  `android` must be allowlisted (script in the 2026-10-14 session; aapt2 dump permissions + `pm list permissions -f`).
+- Car Assistant: `skip_preprocessed_apk_checks` (Play APK has compressed dex).
+- **Android Auto receiver** (`com.google.android.embedded.projection` 1.4.604945098) now shipped as priv-app;
+  the old `AndroidAutoReceiverStubPrebuilt.apk` had a stripped v2/v3 signature (PackageManager ignored it) — removed.
+  Verified via bind-mount: starts, "AvailableIcon", location prompt. For wireless AA it has CarService start a
+  projection soft AP → Wi-Fi client goes down (BCM4359, no STA+AP concurrency). User wants to test it instead of HUR.
+  Build with it running (brunch 2026-10-14 ~11:35); then OTA + phone test.
+- Push of gapps_auto (~600 MB LFS) pending.
+- Play auto-updates: `apps/IdleMaintenance` (device 1cdff84) gives JobScheduler idle; Play's install still waits for
+  its own internal task delay (hours) — `cmd jobscheduler run` does not bypass it (Play reschedules internally).
+
 **Never `fastboot oem format` right after `apply_ota`:** Virtual A/B COW lives in /data → new slot dm-verity
 corrupt. Boot new slot, `bootctl mark-boot-successful`, wait `snapshotctl dump` = none, THEN oem format.
 
