@@ -71,7 +71,6 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
 
 **Next steps (in order):**
 1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
-2. Verify map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
 3. **Map card does NOT auto-restart Maps (user, 2026-10-14) — open.** Pushed 2026-10-13: device tree + gapps_auto
    `b9072b4`. The CarLauncher `sAutoRestartOnCrash = true` patch is in the image but did not fix it; it stays only in
    the working tree (+ `~/android/carlauncher-autorestart.patch`). **User does NOT want a Car/Launcher fork** for
