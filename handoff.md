@@ -151,13 +151,13 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
    write to the NVMe → may trigger the hub 1-1.4 reset (D3/§0) while the screen is off.
 
 **Remaining feature requests (user's list, in priority order):**
-- **15. 15-band graphic EQ** (E2): preamp + 15 bands 25 Hz–16 kHz with response curve and Reset (like
-  igogrek/equalizer-apo-ui); HAL `kEqBands` 5 → 15, new `car.eq.preamp` + persist props
-  (`persist.vendor.audio.car.*`), Equalizer screen in CarAudioTuner. See memory "Car audio: vol buttons + curve/EQ".
-- **16. Local music player** (E6): play the Music folder on the NVMe as a car media source (MediaBrowserService,
-  shows in the car Media app / media card).
-- Only after 15 + 16: **17. Radio polish** (E3: per-block DAB scan progress in the wizard, UI polish) and
-  **18. FM/DAB stereo** (FM stereo pilot decode + RDS; DAB audio already stereo — verify end to end).
+- ~~15. Graphic EQ~~ — DONE 2026-10-14 as a **10-band** octave EQ + preamp (user's choice, not 15): HAL `b251974`,
+  CarAudioTuner `57023cc` (see §0). Listening test open.
+- ~~16. Local music player~~ — DONE 2026-10-14: CarMusic (see §0), incl. USB import, playlists, covers, search.
+  Real-USB-stick test open.
+- **17. Radio polish** (E3): per-block DAB scan progress in the scan wizard, UI polish.
+- **18. FM/DAB stereo**: FM stereo pilot decode + RDS; DAB audio already stereo — verify end to end.
+- Deferred: phone GPS into AAOS (E5). E4 (Whisper in Dicio) is moot while Dicio is out of the image.
 
 ## 1. Current state
 
