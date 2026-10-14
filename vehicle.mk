@@ -53,3 +53,7 @@ PRODUCT_PACKAGES += \
 # Volume control receiver (up / down / mute buttons in the system bar)
 PRODUCT_PACKAGES += \
     VolumeControl
+
+# Local music player (car media source for the Music folder, import from USB). Replaces LocalMediaPlayer.
+PRODUCT_PACKAGES += \
+    CarMusic
