@@ -393,12 +393,22 @@ void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
         // accumulates while we stay tuned. Budget tunable via property.
         const int dwellMs =
                 ::android::base::GetIntProperty("vendor.broadcastradio.dab.dwellms", 12000);
-        const auto dwellDeadline =
-                std::chrono::steady_clock::now() + std::chrono::milliseconds(dwellMs);
+        // Service names (FIG 1/1) come in separately from the service list (FIG 0/2) and, on a
+        // marginal signal, much later. While some services are still unnamed keep dwelling, up
+        // to this longer budget, so the scan saves names instead of placeholders.
+        const int labelDwellMs =
+                ::android::base::GetIntProperty("vendor.broadcastradio.dab.label_dwellms", 30000);
+        const auto start = std::chrono::steady_clock::now();
+        const auto dwellDeadline = start + std::chrono::milliseconds(dwellMs);
+        const auto labelDeadline = start + std::chrono::milliseconds(std::max(dwellMs, labelDwellMs));
         size_t emitted = 0;
+        size_t emittedLabeled = 0;
         std::string ensembleName;
         setScanStatus([&](DabScanStatus& s) { s.state = "dwell"; });
-        while (std::chrono::steady_clock::now() < dwellDeadline && !mDabCancel.load()) {
+        while (!mDabCancel.load()) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= labelDeadline) break;
+            if (now >= dwellDeadline && (emitted == 0 || emittedLabeled == emitted)) break;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             ensembleName = dm.dabEnsembleLabel();
             setScanStatus([&](DabScanStatus& s) {
@@ -406,20 +416,24 @@ void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
                 s.services = totalServices + static_cast<int>(dm.dabServices().size());
             });
             std::vector<ProgramInfo> found;
+            size_t labeled = 0;
             for (const auto& s : dm.dabServices()) {
                 const uint64_t sidExt = s.sid;  // programme SId fits the SID_EXT low bits
+                if (!s.label.empty()) ++labeled;
                 found.push_back(
                         makeDabProgramInfo(sidExt, /*ensemble=*/0, block.freqKhz, s.label));
             }
-            if (found.size() > emitted) {
+            // Re-publish when services appear and when names arrive for known ones.
+            if (found.size() > emitted || labeled > emittedLabeled) {
                 ProgramListChunk chunk = {};
                 chunk.purge = false;
                 chunk.complete = false;
                 chunk.modified = std::move(found);
                 emitted = chunk.modified.size();
+                emittedLabeled = labeled;
                 cb->onProgramListUpdated(chunk);
                 LOG(INFO) << "DAB scan: " << block.label << " (" << ensembleName << ") "
-                          << emitted << " services";
+                          << emitted << " services, " << emittedLabeled << " named";
             }
         }
         totalServices += static_cast<int>(emitted);
