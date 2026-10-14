@@ -9,7 +9,49 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 0. RESUME HERE (state 2026-10-14, midday)
+## 0. RESUME HERE (state 2026-10-14, evening)
+
+**Device (2026-10-14 ~19:55, powered off at handoff):** slot `_a` = 2026-10-14 17:43 UTC build (boot marked
+successful, SELinux enforcing): everything below *except* CarRadioApp `90261b2`. Slot `_b` = 15:47 build. AA receiver is
+out of the image (HUR is the AA app). The radio app runs from /system again (`pm uninstall-system-updates` removed the
+adb test install). Test leftovers in user 10 (Demo/Road/Daft Punk/Cover Artist tones, "Mix.m3u8", "Road trip.m3u8",
+5 stale MediaStore rows) still need cleaning up.
+
+**Radio, first on-air test (64 cm vertical DAB dipole; RTL-SDR on port 1-1.2, sound card behind hub 1-1.4):**
+- Full scan under enforcing: **3 FM (88.3, 98.0, 104.1) + 29 DAB** (9C 15 services, 11C 14). 25 of 29 DAB services
+  are named; the 4 "DAB" entries are 9C services whose labels didn't arrive within the 30 s budget, and they get named once tuned.
+  12C syncs (SNR ~5) but almost no FIBs. Reception is marginal (FIB pass rate 1–6 %): try the antenna higher or at a window.
+- FM 104.1: **STEREO + RDS PI 0x8806, PTY 27, TP decoded on air** (`dumpsys broadcastradio` infoFlags=117). The PS name
+  hadn't arrived after ~30 s (weak signal; the polling was interrupted). Offline: `rtl_sdr` IQ capture (10 s @1.152 MS/s) run
+  through libfmdemod on the host (`fmfile.cpp` in the session scratchpad) also locks stereo after 1 s; RDS there gave
+  `valid=1, pi=0000`, which is worth a look (valid set without a PI?).
+- Fixed today (all local, not pushed): device `ea72400` (sepolicy proc_asound dir search: under enforcing every tune
+  failed "Loopback card not found"; FM meter updates mid-seek made the app mute and cancel the seek), `be5a09b` (DAB scan
+  re-publishes when service labels arrive, dwells up to 30 s `vendor.broadcastradio.dab.label_dwellms`); CarRadioApp
+  `e474827` (DAB phase ends only on HAL "done"; FM seek timeout 20 s), `4a10089` (**StationName table, DB v3 +
+  MIGRATION_2_3**: learned DAB/RDS names persist by primary id and survive rescans and clears; Browse, Now Playing, mini player and Favorites
+  use them; ensemble name and RadioText no longer used as a station name), `90261b2` (**NOT COMPILED yet**: Browse dial
+  stuck at 98.0/96.0 because it parsed the localised "104,1"; now reads the selector. FM shows one decimal, the row frequency
+  column is 76 dp on one line, the FM seek timeout is per seek; a stale timeout ended the FM phase 3 s into a seek). Next: `m CarRadioApp`, then build + OTA.
+- Not done yet: listening test (audible audio, stereo image, RDS PS/RT in the UI), DAB audio on 9C/11C.
+- **Gotchas:** scrcpy with audio (shell uid, REMOTE_SUBMIX capture) moves STRATEGY_MEDIA to r_submix, so the tuner
+  patch fails (AF "invalid source combination", startAudioSource -38) and the loopback spams "busy". Use `scrcpy --no-audio`.
+  `adb install -r` of CarRadioApp while it is the media source **crashed CarService** (UsageStatsService
+  reportUserInteraction IllegalArgumentException), which left SystemUI u10 crash-looping ("window type 2040 exists"). Only a reboot
+  recovers it. Deploy the app via bind mount or OTA. The same crash could plausibly hit Play updates of the active media app.
+- GMS AppOps "com.android.phone does not belong to uid 1010094" + "Timeout Waiting for CellInfo" = harmless (GMS asks
+  for cell location, there's no modem).
+
+**Repos not pushed:** device/khadas/vim3 (14 ahead), packages/apps/Car/Radio (4 ahead), vendor/gschuurman/
+vehicle_interfaces (5 ahead: CarMusic, CarAudioTuner EQ), hardware/amlogic/yukawa/audio (10-band EQ `b251974`, branch
+`optee-audio-sync`, no upstream), vendor/google/gapps_auto (**uncommitted**, 22 changes: Play versions + receiver removal).
+Push all after the user's tests (user: "push after the receiver test"; the receiver has been dropped since).
+
+**User's evening tests still open:** HUR Android Auto, CarMusic with a real USB stick, EQ listening, radio listening.
+
+---
+
+## 0b. Earlier 2026-10-14 (midday state)
 
 **Device (2026-10-14 11:30):** slot `_b` = 2026-10-14 build (updated Google apps in the image, see below), `oem format`
 the same day, setup + Google sign-in done, **certified** (`uncertified_status=1` both users, no registration needed).
