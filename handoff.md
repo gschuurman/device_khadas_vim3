@@ -159,7 +159,8 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
   Real-USB-stick test open.
 - **17. Radio polish** (E3): per-block DAB scan progress in the scan wizard, UI polish.
 - **18. FM/DAB stereo**: FM stereo pilot decode + RDS; DAB audio already stereo — verify end to end.
-- Deferred: phone GPS into AAOS (E5). E4 (Whisper in Dicio) is moot while Dicio is out of the image.
+- E4 (Whisper in Dicio) is moot while Dicio is out of the image. Phone GPS into AAOS (E5) dropped: the next hardware
+  iteration gets a much better GPS module.
 
 ## 1. Current state
 
@@ -487,7 +488,7 @@ Legend: 🖥 doable from the desk over adb · 🚗 needs peripherals / the car /
    microphone (none attached). Open: **live test** with a mic — set Dicio's language to Dutch (it follows the system
    language, English on the board), say "Speel Bohemian Rhapsody van Queen"; tune the end-of-speech thresholds in car
    noise if needed. Benchmarks + test tool: `~/android/whisper`, `dicio_whisper_test` (app/src/main/cpp).
-5. **Phone GPS into AAOS** — deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
+5. ~~**Phone GPS into AAOS**~~ — DROPPED 2026-10-14 (user): the next hardware iteration gets a much better GPS module. Was deferred; options A (BT-NMEA → mock provider) / B (2nd NMEA source in the GNSS HAL),
    memory `project_phone_gps_into_aaos`.
 
 6. **Local music player** (wish, 2026-09-30) — play music from the Music folder on the NVMe (plenty of space);
