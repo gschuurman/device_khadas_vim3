@@ -20,7 +20,9 @@
 
 #include <atomic>
 #include <memory>
+#include <functional>
 #include <mutex>
+#include <string>
 #include <thread>
 
 #include "DeviceManager.h"
@@ -81,6 +83,20 @@ class BroadcastRadio final : public BnBroadcastRadio {
     // Ensemble scan: sweep the Band III blocks, collect services, stream them to the
     // client as ProgramListChunks.
     void dabScanWorker(std::shared_ptr<ITunerCallback> cb);
+
+    // Progress of the Band III scan for the app (getParameters "com.gschuurman.dab.scan.*").
+    struct DabScanStatus {
+        std::string state = "idle";  // idle | probe | gain | dwell | done
+        int index = 0;                // 1-based block being scanned
+        int total = 0;
+        std::string block;            // e.g. "12B"
+        std::string ensemble;         // label of the ensemble on this block
+        int services = 0;             // services found so far (all blocks)
+        int ensembles = 0;            // blocks with a synced ensemble so far
+    };
+    void setScanStatus(const std::function<void(DabScanStatus&)>& update);
+    std::mutex mScanStatusLock;
+    DabScanStatus mScanStatus;
     // Diagnostic/recovery sweep (prop vendor.broadcastradio.dab.scansweep): probe every
     // Band III block, log sync/services, land on the first ensemble that decodes.
     void dabSweepWorker(std::shared_ptr<ITunerCallback> cb);
