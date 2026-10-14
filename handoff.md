@@ -72,12 +72,18 @@ verified 0.8%); governor conservative freq_step 25 / up_threshold 60 / sampling_
 **Next steps (in order):**
 1. Hub 1-1.4 resets under NVMe writes (above): next HW revision; recheck with dd + `dmesg | grep "1-1.4: USB disconnect"`.
 2. Verify map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
-3. **Pushed 2026-10-13 evening:** device tree (up to the handoff commits) and gapps_auto `b9072b4` (keyboard
-   override). **Still local only:** packages/apps/Car/Launcher auto-restart fix (working tree, uncommitted) — user
-   said "not yet" to creating the fork gschuurman/android_packages_apps_Car_Launcher; ask again before creating it,
-   then add a local_manifest entry. A `repo sync` of that project would drop the fix: keep a patch copy
-   (`git -C packages/apps/Car/Launcher diff > ~/android/carlauncher-autorestart.patch`).
-   Also untested: map card auto-restart with the screen on (`am force-stop --user 10 com.google.android.apps.maps`).
+3. **Map card does NOT auto-restart Maps (user, 2026-10-14) — open.** Pushed 2026-10-13: device tree + gapps_auto
+   `b9072b4`. The CarLauncher `sAutoRestartOnCrash = true` patch is in the image but did not fix it; it stays only in
+   the working tree (+ `~/android/carlauncher-autorestart.patch`). **User does NOT want a Car/Launcher fork** for
+   this — find a fix in repos we already own (frameworks/base, Car/SystemUI, vehicle_interfaces) or drop the patch.
+   Restart logic (packages/services/Car/car-lib `ControlledRemoteCarTaskView`): restart on `onTaskVanished` only while
+   the host is visible; else `showEmbeddedTask()` on host-appeared restarts it if `getTaskInfo()==null`.
+   `startActivityInternal` silently gives up (no retry) when the user isn't unlocked or the display is not ON.
+   Next: reproduce with logcat (`CarTaskView|ControlledRemoteCarTaskView|MapsTaskView|wm_` + `logcat -b events`) and
+   decide which case it is: (a) Maps task still present but its surface black — e.g. after the activity relaunch caused
+   by the hub 1-1.4 reset (config change keyboard/touchscreen); no vanish → no restart; (b) restart attempted with
+   display off, never retried; (c) start failed (intent → chooser / BAL block). Original "black screen on the home
+   screen" report fits (a).
 4. Hardware tests with the user: D7 (SystemUI crash recovery) / D8 (FIDO, re-enable flow), ACC desk test (POWER
    button, USB adb; procedure in the 2026-10-13 ACC notes below/C1), USB + wireless Android Auto with the phone
    (HUR 3.5.0-beta4), RTL-SDR FM/DAB under enforcing (plug into a different hub than the sound card, D2).
