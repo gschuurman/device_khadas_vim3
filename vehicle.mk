@@ -7,6 +7,10 @@ PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@schuurman-service \
     mcutool
 
+# Head Unit Debug: live peripheral board (MCU) and GNSS status on the head unit
+PRODUCT_PACKAGES += \
+    HeadUnitDebug
+
 # Handbrake wire on ISO A2: auto (use it once seen engaged, else GNSS speed) | wired | gnss
 PRODUCT_VENDOR_PROPERTIES += \
     persist.vendor.vehicle.handbrake=auto
