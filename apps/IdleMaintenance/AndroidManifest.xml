@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.schuurman.idlemaintenance"
+    android:sharedUserId="android.uid.system">
+
+    <application
+        android:name=".IdleMaintenanceApp"
+        android:label="Idle maintenance"
+        android:persistent="true"
+        android:hasCode="true" />
+</manifest>

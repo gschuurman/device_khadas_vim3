@@ -58,7 +58,10 @@ class DeviceManager {
     uint32_t seekFm(bool directionUp, uint32_t lowerHz, uint32_t upperHz, uint32_t stepHz);
     void cancelSeek() { mSeekCancel = true; }
 
-    bool isStereo() const { return false; }  // mono for now (P2); stereo decode is P4
+    // 19 kHz pilot locked (stereo decode), and the station's RDS (empty until decoded).
+    bool isStereo() const { return mDemod.stereo(); }
+    fmdemod::RdsInfo fmRds() const { return mDemod.rds(); }
+    uint32_t fmRdsGeneration() const { return mDemod.rdsGeneration(); }
 
     // Latest in-channel FM power (mean |IQ|^2 after channel filtering; linear RSSI
     // proxy updated on the RX thread). Used to derive ProgramInfo.signalQuality.

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lets Car SystemUI's ActivityBlockingActivity keep a blocked media app's audio playing while driving
+     (BlockerViewModel path), as Google's car image declares it. -->
+<permissions>
+    <feature name="com.android.car.background_audio_while_driving" />
+</permissions>

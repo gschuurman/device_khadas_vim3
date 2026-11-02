@@ -7,6 +7,9 @@
 
 /dev/gpiochip[0-9]+                                  u:object_r:vendor_gpio_device:s0
 
+# --- Native radio: snd-aloop Loopback playback node the RTL-SDR HAL writes (card 7 = snd_aloop.index) ---
+/dev/snd/pcmC7D0p                                    u:object_r:radio_loopback_device:s0
+
 # --- Vehicle HAL (Schuurman) ---
 /vendor/bin/hw/android\.hardware\.automotive\.vehicle@schuurman-service    u:object_r:vendor_vehicle_schuurman_exec:s0
 /vendor/bin/init\.vehicle\.sh                                            u:object_r:vendor_vehicle_setup_exec:s0

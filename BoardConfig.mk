@@ -17,7 +17,7 @@ endif
 
 BOARD_KERNEL_IMAGE_NAME := Image
 
-TARGET_SELINUX_ENFORCE := false
+TARGET_SELINUX_ENFORCE := true
 
 # =============================================================================
 # Platform base config (VIM3 / yukawa platform)
@@ -37,9 +37,10 @@ BOARD_BOOT_HEADER_VERSION := 4
 BOARD_INIT_BOOT_HEADER_VERSION := 4
 PRODUCT_INIT_BOOT_IMAGE_HEADER_VERSION := 4
 
-# Puts odex files on system_other, as well as causing dex files not to get
-# stripped from APKs.
-BOARD_USES_SYSTEM_OTHER_ODEX := true
+# No system_other: neither flash.sh nor the OTA installs system_other.img (super holds only system, vendor
+# and the dlkm partitions), so odex files moved there never reached the device and those apps were compiled
+# on the device at first boot. Keep them in system.
+BOARD_USES_SYSTEM_OTHER_ODEX := false
 
 TARGET_BOOTLOADER_VERSION ?= 2025.10
 
@@ -188,12 +189,8 @@ BOARD_MKBOOTIMG_ARGS += --pagesize 4096
 # off again, drop the next line -- the in-memory log (adb shell dmesg) is unaffected.
 BOARD_KERNEL_CMDLINE += no_console_suspend console=ttyAML0,115200n8
 BOARD_KERNEL_CMDLINE += printk.devkmsg=on
-# Debugging the OP-TEE/KeyMint TA-load failure with only the serial console available (boot never gets far
-# enough for adb): the default console loglevel filters out KERN_DEBUG lines, which is exactly the level
-# tee-supplicant's DMSG() writes at (via stdio_to_kmsg -> /dev/kmsg_debug, see
-# vendor/khadas/vim3/optee/tee-supplicant.rc + cfg_tee_supp_log_level=3 in optee.mk). ignore_loglevel prints
-# everything live instead of only what would reach `dmesg`. Revert once root-caused.
-BOARD_KERNEL_CMDLINE += ignore_loglevel
+# (ignore_loglevel, added for the OP-TEE/KeyMint TA-load debugging, was removed after that was fixed on
+# 2026-09-25: it pushed every KERN_DEBUG line to the 115200 serial console and slowed boot.)
 BOARD_KERNEL_CMDLINE += init=/init
 BOARD_KERNEL_CMDLINE += firmware_class.path=/vendor/firmware
 BOARD_KERNEL_CMDLINE += log_buf_len=1M
@@ -244,12 +241,15 @@ BOARD_BOOTCONFIG += androidboot.load_modules_parallel=true
 # first-boot I/O; without them it hit random memory corruption (oopses in unrelated subsystems
 # around the time apexd/vendor_dlkm start). Which one is the real fix is not narrowed down yet:
 #   - nvme.max_host_mem_size_mb=0  no Host Memory Buffer (the device DMAs into host RAM itself)
-#   - pci=pcie_bus_peer2peer       max payload 128 B instead of the 256 B the kernel picks
+#   - pci=pcie_bus_peer2peer       max payload 128 B; replaced 2026-10-13 by pci=pcie_bus_perf (MPS 256,
+#                                  MRRS 256): with peer2peer the HDMI output glitched on every NVMe write
+#                                  (Khadas forum t/12295). Setting the same MPS/MRRS live via config space did
+#                                  NOT help, only the boot-time parameter does.
 #   - nvme_core.default_ps_max_latency_us=0 / pcie_aspm=off  no NVMe/PCIe power-state games
 ifeq ($(TARGET_PRODUCT),lineage_vim3_nvme)
 BOARD_KERNEL_CMDLINE += nvme.max_host_mem_size_mb=0
 BOARD_KERNEL_CMDLINE += nvme_core.default_ps_max_latency_us=0
-BOARD_KERNEL_CMDLINE += pci=pcie_bus_peer2peer
+BOARD_KERNEL_CMDLINE += pci=pcie_bus_perf
 BOARD_KERNEL_CMDLINE += pcie_aspm=off
 endif
 
@@ -269,12 +269,11 @@ ifneq ($(TARGET_KERNEL_CFG),)
 BOARD_KERNEL_CMDLINE += $(TARGET_KERNEL_CFG)
 endif
 
-# Selects the "play store only" GAS feature bundle (no Google Maps, no Google Assistant; neither works on
-# this uncertified head unit). The gas_*_overlay modules in vendor/google/gapps_auto (RRO block in
-# gapps-core.mk) are static RROs gated by android:requiredSystemPropertyValue against ro.boot.hardware.sku;
-# gas_playstore activates GasPlaystoreOverlay (blanks the default assistant, navigation app and speech
-# recognizer) and CarLauncherGasPlaystoreOverlay.
-BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=gas_playstore
+# GAS feature bundle (google.software.gas.* features + matching gas_*_overlay, shipped by nav.mk), chosen by
+# VIM3_NAV_APP / VIM3_GOOGLE_ASSISTANT in nav_sku.mk: gas_full (Maps + Assistant, as Google's car image),
+# gas_maps_playstore, gas_assistant_playstore or gas_playstore.
+include device/khadas/vim3/nav_sku.mk
+BOARD_KERNEL_CMDLINE += androidboot.hardware.sku=$(VIM3_GAS_SKU)
 
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := build/make/target/board/mainline_arm64/bluetooth
 
@@ -417,6 +416,17 @@ BUILD_BROKEN_DUP_SYSPROP := true
 # TARGET_ODM_PROP += $(DEVICE_PATH)/gms_spoof_odm.prop
 # TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/gms_spoof_system_ext.prop
 
+# Friendly device name "vim 3" (Bluetooth default name; Settings device_name comes from the SettingsProvider overlay).
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/device_name.prop
+
+# Google car image identity (gcar_identity.mk, lineage_vim3_nvme only). Values with spaces can't go through
+# PRODUCT_*_PROPERTIES, and the product partition emits its own bare ro.build.description/display.id, so those two
+# come from a prop file on both partitions.
+ifeq ($(PRODUCT_BRAND),google)
+TARGET_SYSTEM_PROP += $(DEVICE_PATH)/gcar_identity.prop
+TARGET_PRODUCT_PROP += $(DEVICE_PATH)/gcar_identity.prop
+endif
+
 # ---------------------------------------------------------------------------
 # OP-TEE userspace (vendor/khadas/vim3/optee): tee-supplicant, xtest and the test TAs.
 # These must exist before external/optee_test/**/Android.mk are parsed.
@@ -430,6 +440,14 @@ VIM3_OPTEE_FIP_BUILT = $(PRODUCT_OUT)/obj/ETC/u-boot_kvim3_ab_optee_intermediate
 VIM3_OPTEE_TA_SCRIPT := vendor/khadas/vim3/optee/scripts/build-optee-ta.sh
 # hook that optee_test's TA Android.mk files include to build a TA
 BUILD_OPTEE_MK := vendor/khadas/vim3/optee/build_optee_ta.mk
+# OP-TEE TA signing key (B3 step 1 / root-of-trust). When present, OP-TEE core embeds this key's public half
+# (TA_PUBLIC_KEY) and loads only TAs signed with it; build-g12b-optee-fip.sh also installs it as the dev kit's
+# keys/default_ta.pem so every from-source TA (KeyMint, gatekeeper, xtest) is re-signed with it. The private key
+# is gitignored (vendor/khadas/vim3/optee/keys/.gitignore); a checkout without it falls back to OP-TEE's stock
+# default_ta.pem so the tree still builds. Changing the signing key does NOT change TA secure-storage (keyed by
+# HUK+UUID), so existing /metadata/vendor/tee data stays readable.
+VIM3_TA_SIGN_KEY := $(abspath $(wildcard vendor/khadas/vim3/optee/keys/vim3_ta_signing.pem))
+
 # xtest's Android.mk takes its headers from $(TA_DEV_KIT_DIR)/host_include and makes every object depend on
 # $(OPTEE_BIN): point both at the from-source OP-TEE build so the freshly exported dev kit exists first.
 TA_DEV_KIT_DIR = $(abspath $(VIM3_OPTEE_TA_DEV_KIT))

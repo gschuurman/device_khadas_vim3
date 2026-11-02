@@ -38,14 +38,16 @@ $(call inherit-product-if-exists, packages/services/Car/car_product/rro/ThemeSam
 $(call inherit-product-if-exists, packages/apps/Car/SystemUI/samples/systemui_sample_rros.mk)
 
 PRODUCT_PACKAGES += \
-    CarSettingsIntelligence \
-    Dicio \
-    OpenHeadunit \
-    OrganicMaps
+    CarSettingsIntelligence
 
-# Dicio's speech recognition (English, Dutch) and wake word models, so voice works offline from the
-# first boot (our Dicio build loads them from here instead of downloading them).
-PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*,vendor/gschuurman/vehicle_interfaces/automotive/dicio/models,$(TARGET_COPY_OUT_PRODUCT)/usr/share/dicio)
+# Organic Maps vs Google Maps, Google Assistant on/off: nav.mk / nav_sku.mk (only one maps app ships, handoff D4).
+# Dicio was removed from the image 2026-10-13 (module and models stay in vehicle_interfaces).
+
+# OpenHeadunit (HUR, USB + wireless Android Auto). Built with its MAIN + APP_MAPS/APP_NAVIGATION filter removed: that
+# filter (no DEFAULT) made the package manager downgrade the map card's "Always" choice (handoff D4).
+PRODUCT_PACKAGES += \
+    OpenHeadunit
+
 
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product, frameworks/base/data/fonts/fonts.mk)
@@ -97,11 +99,15 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     device/khadas/vim3/sysconfig/disable_customization_provider.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/disable_customization_provider.xml
 
-PRODUCT_PROPERTY_OVERRIDES += \
+# Product, not vendor: with SELinux enforcing init drops vendor build.prop entries vendor_init may not set.
+# service.sf.prime_shader_cache comes from AOSP car.mk (vendor, dropped); its system_ext copy lives in
+# car_system_ext.mk, which this product doesn't inherit.
+PRODUCT_PRODUCT_PROPERTIES += \
     android.car.drawer.unlimited=true \
     android.car.hvac.demo=false \
     com.android.car.radio.demo=false \
-    com.android.car.radio.demo.dual=false
+    com.android.car.radio.demo.dual=false \
+    service.sf.prime_shader_cache=0
 
 PRODUCT_COPY_FILES += \
     packages/services/Car/car_product/init/init.bootstat.rc:root/init.bootstat.rc \

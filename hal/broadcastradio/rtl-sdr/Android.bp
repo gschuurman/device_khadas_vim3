@@ -1,0 +1,102 @@
+// rtl-sdr (Osmocom) — librtlsdr + command-line tools.
+// Ported for AAOS (Khadas VIM3) to back the native BroadcastRadio HAL.
+// GPLv2. Links the in-tree external/libusb.
+
+package {
+    default_applicable_licenses: ["external_rtl-sdr_license"],
+}
+
+license {
+    name: "external_rtl-sdr_license",
+    visibility: [":__subpackages__"],
+    license_kinds: ["SPDX-license-identifier-GPL-2.0"],
+    license_text: ["COPYING"],
+}
+
+cc_defaults {
+    name: "rtlsdr_defaults",
+    cflags: [
+        "-Wno-unused-parameter",
+        "-Wno-missing-field-initializers",
+        "-Wno-sign-compare",
+    ],
+    // libusb headers install under include/libusb/, but rtl-sdr does
+    // #include <libusb.h>, matching the in-tree convention (see external/qdl).
+    include_dirs: ["external/libusb/include/libusb"],
+}
+
+cc_library {
+    name: "librtlsdr",
+    defaults: ["rtlsdr_defaults"],
+    vendor_available: true,
+    srcs: [
+        "src/librtlsdr.c",
+        "src/tuner_e4k.c",
+        "src/tuner_fc0012.c",
+        "src/tuner_fc0013.c",
+        "src/tuner_fc2580.c",
+        "src/tuner_r82xx.c",
+    ],
+    local_include_dirs: ["include"],
+    export_include_dirs: ["include"],
+    shared_libs: ["libusb"],
+}
+
+// Shared CLI helper used by all the tools.
+cc_library_static {
+    name: "librtlsdr_convenience",
+    defaults: ["rtlsdr_defaults"],
+    vendor_available: true,
+    srcs: ["src/convenience/convenience.c"],
+    local_include_dirs: ["include", "src"],
+    static_libs: ["librtlsdr"],
+    shared_libs: ["libusb"],
+}
+
+cc_defaults {
+    name: "rtlsdr_tool_defaults",
+    defaults: ["rtlsdr_defaults"],
+    vendor: true,
+    local_include_dirs: ["include", "src"],
+    static_libs: [
+        "librtlsdr",
+        "librtlsdr_convenience",
+    ],
+    shared_libs: ["libusb"],
+}
+
+cc_binary {
+    name: "rtl_test",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_test.c"],
+}
+
+cc_binary {
+    name: "rtl_sdr",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_sdr.c"],
+}
+
+cc_binary {
+    name: "rtl_fm",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_fm.c"],
+}
+
+cc_binary {
+    name: "rtl_tcp",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_tcp.c"],
+}
+
+cc_binary {
+    name: "rtl_eeprom",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_eeprom.c"],
+}
+
+cc_binary {
+    name: "rtl_biast",
+    defaults: ["rtlsdr_tool_defaults"],
+    srcs: ["src/rtl_biast.c"],
+}

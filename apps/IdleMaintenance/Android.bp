@@ -1,0 +1,13 @@
+// Gives JobScheduler idle windows on this head unit. On automotive builds CarIdlenessTracker only reports idle
+// during Garage Mode, when forced, or on ACTION_TRIGGER_IDLE while the screen is off. This board rarely sees Garage
+// Mode (no ignition-off on the desk, power is cut instead), so idle jobs never ran: Play's auto-updates and
+// "garage mode installs" of the preinstalled Google apps (GMS stayed at the image version), plus other idle
+// maintenance. Sends ACTION_TRIGGER_IDLE after the screen has been off for a while; screen-on ends idle again.
+// Runs persistent as system uid (the broadcast is protected).
+android_app {
+    name: "IdleMaintenance",
+    srcs: ["src/**/*.java"],
+    manifest: "AndroidManifest.xml",
+    platform_apis: true,
+    certificate: "platform",
+}

@@ -127,6 +127,7 @@ void BroadcastRadio::seekWorker(bool directionUp, std::shared_ptr<ITunerCallback
             cb->onTuneFailed(Result::TIMEOUT, utils::makeSelectorAmfm(mCurrentFreqKhz.load()));
         }
     }
+    mFmSeekActive = false;
 }
 
 ProgramInfo BroadcastRadio::makeDabProgramInfo(uint64_t sidExt, uint32_t ensemble,
@@ -289,6 +290,11 @@ void BroadcastRadio::dabSweepWorker(std::shared_ptr<ITunerCallback> cb) {
     if (cb != nullptr) cb->onTuneFailed(Result::TIMEOUT, utils::makeSelectorDab(0));
 }
 
+void BroadcastRadio::setScanStatus(const std::function<void(DabScanStatus&)>& update) {
+    std::lock_guard<std::mutex> lk(mScanStatusLock);
+    update(mScanStatus);
+}
+
 void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
     auto& dm = rtlsdr::DeviceManager::getInstance();
 
@@ -298,11 +304,27 @@ void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
     purge.complete = false;
     cb->onProgramListUpdated(purge);
 
+    const int totalBlocks = static_cast<int>(std::size(kDabBlocks));
+    int blockIndex = 0;
+    int totalServices = 0;
+    setScanStatus([&](DabScanStatus& s) { s = DabScanStatus(); s.total = totalBlocks; });
     for (const auto& block : kDabBlocks) {
         if (mDabCancel.load()) break;
         mDabBlockKhz = block.freqKhz;
+        ++blockIndex;
+        setScanStatus([&](DabScanStatus& s) {
+            s.state = "probe";
+            s.index = blockIndex;
+            s.block = block.label;
+            s.ensemble.clear();
+        });
 
         if (!dm.tuneDab(static_cast<int>(block.freqKhz) * 1000, /*doScan=*/true)) {
+            // No tuner. For testing the app's scan progress without one, dwell per block:
+            // setprop vendor.broadcastradio.dab.scan_test_delay_ms 300
+            const int testDelayMs =
+                    ::android::base::GetIntProperty("vendor.broadcastradio.dab.scan_test_delay_ms", 0);
+            if (testDelayMs > 0) std::this_thread::sleep_for(std::chrono::milliseconds(testDelayMs));
             continue;
         }
         // Give the demod time to acquire null-symbol sync; skip dead blocks.
@@ -320,6 +342,10 @@ void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
         // the service-decode dwell; the chosen gain becomes sticky for service tuning.
         // Disable with `setprop vendor.broadcastradio.dab.autogain 0` (then the fixed
         // vendor.broadcastradio.dab.gain is used).
+        setScanStatus([&](DabScanStatus& s) {
+            s.state = "gain";
+            ++s.ensembles;
+        });
         if (::android::base::GetBoolProperty("vendor.broadcastradio.dab.autogain", true)) {
             static const int kGainSteps[] = {220, 260, 280, 300, 320, 340, 380, 420};
             // welle's per-frame SNR estimate is noisy, so average a few reads per step.
@@ -367,36 +393,58 @@ void BroadcastRadio::dabScanWorker(std::shared_ptr<ITunerCallback> cb) {
         // accumulates while we stay tuned. Budget tunable via property.
         const int dwellMs =
                 ::android::base::GetIntProperty("vendor.broadcastradio.dab.dwellms", 12000);
-        const auto dwellDeadline =
-                std::chrono::steady_clock::now() + std::chrono::milliseconds(dwellMs);
+        // Service names (FIG 1/1) come in separately from the service list (FIG 0/2) and, on a
+        // marginal signal, much later. While some services are still unnamed keep dwelling, up
+        // to this longer budget, so the scan saves names instead of placeholders.
+        const int labelDwellMs =
+                ::android::base::GetIntProperty("vendor.broadcastradio.dab.label_dwellms", 30000);
+        const auto start = std::chrono::steady_clock::now();
+        const auto dwellDeadline = start + std::chrono::milliseconds(dwellMs);
+        const auto labelDeadline = start + std::chrono::milliseconds(std::max(dwellMs, labelDwellMs));
         size_t emitted = 0;
+        size_t emittedLabeled = 0;
         std::string ensembleName;
-        while (std::chrono::steady_clock::now() < dwellDeadline && !mDabCancel.load()) {
+        setScanStatus([&](DabScanStatus& s) { s.state = "dwell"; });
+        while (!mDabCancel.load()) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= labelDeadline) break;
+            if (now >= dwellDeadline && (emitted == 0 || emittedLabeled == emitted)) break;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             ensembleName = dm.dabEnsembleLabel();
+            setScanStatus([&](DabScanStatus& s) {
+                s.ensemble = ensembleName;
+                s.services = totalServices + static_cast<int>(dm.dabServices().size());
+            });
             std::vector<ProgramInfo> found;
+            size_t labeled = 0;
             for (const auto& s : dm.dabServices()) {
                 const uint64_t sidExt = s.sid;  // programme SId fits the SID_EXT low bits
+                if (!s.label.empty()) ++labeled;
                 found.push_back(
                         makeDabProgramInfo(sidExt, /*ensemble=*/0, block.freqKhz, s.label));
             }
-            if (found.size() > emitted) {
+            // Re-publish when services appear and when names arrive for known ones.
+            if (found.size() > emitted || labeled > emittedLabeled) {
                 ProgramListChunk chunk = {};
                 chunk.purge = false;
                 chunk.complete = false;
                 chunk.modified = std::move(found);
                 emitted = chunk.modified.size();
+                emittedLabeled = labeled;
                 cb->onProgramListUpdated(chunk);
                 LOG(INFO) << "DAB scan: " << block.label << " (" << ensembleName << ") "
-                          << emitted << " services";
+                          << emitted << " services, " << emittedLabeled << " named";
             }
         }
+        totalServices += static_cast<int>(emitted);
+        setScanStatus([&](DabScanStatus& s) { s.services = totalServices; });
         if (mDabCancel.load()) break;
         LOG(INFO) << "DAB synced " << block.label << ": snr=" << dm.dabSnr()
                   << " iqLevel=" << dm.dabIqLevel() << " fib=" << dm.dabFibOk() << "/"
                   << dm.dabFibTotal() << " services=" << emitted;
     }
 
+    setScanStatus([&](DabScanStatus& s) { s.state = mDabCancel.load() ? "idle" : "done"; });
     ProgramListChunk done = {};
     done.purge = false;
     done.complete = true;
@@ -419,9 +467,16 @@ void BroadcastRadio::reportAntennaState(bool connected) {
 }
 
 void BroadcastRadio::meterLoop() {
+    // Signal quality every 2 s; RDS changes (new station name / RadioText) within 0.5 s.
+    uint32_t lastRds = 0;
+    int ticks = 0;
     while (mMeterRun.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         if (!mMeterRun.load()) break;
+        const uint32_t rdsGen = rtlsdr::DeviceManager::getInstance().fmRdsGeneration();
+        if (++ticks < 4 && rdsGen == lastRds) continue;
+        ticks = 0;
+        lastRds = rdsGen;
         std::shared_ptr<ITunerCallback> cb;
         uint32_t freqKhz;
         {
@@ -430,6 +485,9 @@ void BroadcastRadio::meterLoop() {
             freqKhz = mCurrentFreqKhz.load();
         }
         if (cb == nullptr || mActiveBand.load() != Band::kAmFm) continue;
+        // A program-info update mid-seek reads as the seek's result to the framework/app
+        // (which then mutes and cancels the seek), so only the seek worker reports then.
+        if (mFmSeekActive.load()) continue;
         const double pwr = rtlsdr::DeviceManager::getInstance().fmChannelPower();
         LOG(VERBOSE) << "FM meter " << freqKhz << " kHz power=" << pwr
                      << " quality=" << fmSignalQuality(pwr);
@@ -610,6 +668,23 @@ ProgramInfo BroadcastRadio::makeFmProgramInfo(uint32_t freqKhz) const {
         info.infoFlags |= ProgramInfo::FLAG_STEREO;
     }
     info.signalQuality = fmSignalQuality(dm.fmChannelPower());
+
+    // RDS: station name (also as programName, which CarRadioApp shows), RadioText, PTY,
+    // traffic flags, and the PI code as secondary identifier.
+    const fmdemod::RdsInfo rds = dm.fmRds();
+    if (rds.valid) {
+        info.selector.secondaryIds.push_back(utils::makeIdentifier(IdentifierType::RDS_PI, rds.pi));
+        std::vector<Metadata> md;
+        if (!rds.ps.empty()) {
+            md.push_back(Metadata::make<Metadata::rdsPs>(rds.ps));
+            md.push_back(Metadata::make<Metadata::programName>(rds.ps));
+        }
+        if (!rds.rt.empty()) md.push_back(Metadata::make<Metadata::rdsRt>(rds.rt));
+        md.push_back(Metadata::make<Metadata::rdsPty>(rds.pty));
+        info.metadata = std::move(md);
+        if (rds.tp) info.infoFlags |= ProgramInfo::FLAG_TRAFFIC_PROGRAM;
+        if (rds.ta) info.infoFlags |= ProgramInfo::FLAG_TRAFFIC_ANNOUNCEMENT;
+    }
     return info;
 }
 
@@ -731,6 +806,7 @@ ndk::ScopedAStatus BroadcastRadio::seek(bool directionUp, bool /*skipSubChannel*
     }
 
     std::lock_guard<std::mutex> g(mSeekMutex);
+    mFmSeekActive = true;
     mSeekThread = std::thread([this, directionUp, cb]() { seekWorker(directionUp, cb); });
     return ndk::ScopedAStatus::ok();
 }
@@ -811,9 +887,33 @@ ndk::ScopedAStatus BroadcastRadio::setParameters(
 }
 
 ndk::ScopedAStatus BroadcastRadio::getParameters(
-        const std::vector<std::string>& /*keys*/,
+        const std::vector<std::string>& keys,
         std::vector<VendorKeyValue>* returnParameters) {
     *returnParameters = {};
+    // "com.gschuurman.dab.scan.*": progress of the Band III scan (CarRadioApp scan wizard).
+    static const std::string kScanPrefix = "com.gschuurman.dab.scan.";
+    bool wantScan = false;
+    for (const auto& k : keys) wantScan |= k.rfind(kScanPrefix, 0) == 0;
+    if (wantScan) {
+        DabScanStatus s;
+        {
+            std::lock_guard<std::mutex> lk(mScanStatusLock);
+            s = mScanStatus;
+        }
+        const auto add = [&](const char* key, const std::string& value) {
+            VendorKeyValue kv;
+            kv.key = kScanPrefix + key;
+            kv.value = value;
+            returnParameters->push_back(kv);
+        };
+        add("state", s.state);
+        add("index", std::to_string(s.index));
+        add("total", std::to_string(s.total));
+        add("block", s.block);
+        add("ensemble", s.ensemble);
+        add("services", std::to_string(s.services));
+        add("ensembles", std::to_string(s.ensembles));
+    }
     return ndk::ScopedAStatus::ok();
 }
 
