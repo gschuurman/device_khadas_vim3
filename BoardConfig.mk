@@ -211,11 +211,10 @@ BOARD_KERNEL_CMDLINE += cma=768M
 # Pin ALSA card indices so they're deterministic across boots/replug. snd-aloop and
 # snd-usb-audio are both built-in (=y), so their module params go on the kernel cmdline.
 # snd-aloop (native radio loopback) -> card 7. USB audio pinned by VID:PID:
-#   ICUSBAUDIO7D (0d8c:0102, car media output) -> card 5
-#   MS210x       (534d:0021, HDMI capture)      -> card 6
-# Onboard axg sound card loads later as a module and takes a low free index (0).
-# NOTE: media output is also name-resolved (persist.vendor.audio.primary.card_name) so it
-# tracks ICUSBAUDIO7D regardless; these pins just make the whole layout predictable.
+#   ICUSBAUDIO7D (0d8c:0102, old USB DAC, no longer used for output) -> card 5
+#   MS210x       (534d:0021, HDMI capture)                           -> card 6
+# The onboard axg sound card (car audio module, speaker output + mic) loads later as a module
+# and takes a low free index (0); the audio HAL resolves it by name (KHADASVIM3) anyway.
 BOARD_KERNEL_CMDLINE += snd_aloop.index=7
 # Slave the loopback's PCM timer to the speaker output PCM instead of letting it free-run on
 # the jiffies system timer. The radio HAL writes decoded audio into the loopback and the audio
@@ -223,13 +222,8 @@ BOARD_KERNEL_CMDLINE += snd_aloop.index=7
 # against the output card's real 48kHz, periodically over/underrunning the ~85ms capture
 # buffer -> DAB audio stutters then "catches up" fast. Slaving locks both to one clock.
 # snd-aloop resolves the card by id when the loopback PCM opens, so the onboard card (a
-# vendor_dlkm module) may probe after snd-aloop. VIM3_AUDIO_OUTPUT: hal/audio/device_vendor.mk.
-VIM3_AUDIO_OUTPUT ?= module
-ifeq ($(VIM3_AUDIO_OUTPUT),usb)
-BOARD_KERNEL_CMDLINE += snd_aloop.timer_source=5.0.0
-else
+# vendor_dlkm module) may probe after snd-aloop.
 BOARD_KERNEL_CMDLINE += snd_aloop.timer_source=KHADASVIM3.0.0
-endif
 BOARD_KERNEL_CMDLINE += snd_usb_audio.vid=0x0d8c,0x534d snd_usb_audio.pid=0x0102,0x0021 snd_usb_audio.index=5,6
 BOARD_BOOTCONFIG += androidboot.hardware=vim3
 # Boot device = the controller whose block device holds the GPT (ueventd matches this against

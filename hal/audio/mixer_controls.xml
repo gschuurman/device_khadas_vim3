@@ -24,7 +24,6 @@
 
     <init>
         <!-- Car audio module (onboard card, TDM-B; see dai-link-8 in meson-khadas-vim3.dtsi).
-             Controls the card doesn't have are skipped, so this is harmless with the USB card.
              Playback: PCM 0 (FRDDR_A) -> TDMOUT_B -> front DAC (lane 0) + rear DAC (lane 1).
              HDMI (TDMOUT_A) is left without a source. -->
         <set name="FRDDR_A SINK 1 SEL" value="OUT 1"/>
@@ -33,21 +32,5 @@
         <!-- Capture: TDM-B lane 3 (PCM1808 mic ADC) -> TDMIN_B -> TODDR_A = PCM 3. -->
         <set name="TDMIN_B SRC SEL" value="IN 1"/>
         <set name="TODDR_A SRC SEL" value="IN 1"/>
-
-        <set name="Line Playback Switch" value="0"/>
-        <set name="Line Playback Volume" value="0"/>
-
-        <set name="Mic Playback Switch" value="0"/>
-        <set name="Mic Playback Volume" value="0"/>
-
-        <set name="Speaker Playback Switch" value="1"/>
-        <!-- 8-channel control (FL FR FC LFE RL RR SL SR). MUST list all 8 values:
-             the parser sets only the channels it's given a (comma-separated) token for,
-             so a single "70" set ONLY FL and left FR..SR at the hw default (196),
-             which made all audio lean right. Keep all channels equal for L/R balance. -->
-        <set name="Speaker Playback Volume" value="196,196,196,196,196,196,196,196"/>
-
-        <set name="Mic Capture Switch" value="1"/>
-        <set name="PCM Capture Switch" value="1"/>
     </init>
 </mixerControls>
