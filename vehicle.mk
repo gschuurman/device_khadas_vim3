@@ -11,6 +11,11 @@ PRODUCT_PACKAGES += \
 PRODUCT_VENDOR_PROPERTIES += \
     persist.vendor.vehicle.handbrake=auto
 
+# Auto brightness from the BH1750 on the peripheral board (MCU_PROP_LUX). Only active while the MCU
+# reports a light level; without the sensor Android's brightness slider applies.
+PRODUCT_VENDOR_PROPERTIES += \
+    persist.vendor.vehicle.auto_brightness=1
+
 # The GPIO and PWM settings below are for the old perfboard setup. With the rev 0.6 peripheral
 # board the MCU drives the backlight and reads reverse; the VHAL no longer uses them.
 # GPIO bus shared by vehicle controls
