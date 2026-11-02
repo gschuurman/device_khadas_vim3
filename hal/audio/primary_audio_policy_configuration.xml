@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module name="primary" halVersion="3.0">
+    <!-- Car audio module (rev 0.6): onboard sound card, TDM-B. Every output is quad
+         (FL FR BL BR = front DAC L/R, rear DAC L/R); the HAL copies the fronts to the
+         rears when a stream leaves them silent (stereo content) and applies
+         balance/fader. The mic is the PCM1808 ADC on the same card.
+         96 kHz / 32-bit throughout: the highest rate at which the mic can record while
+         music plays (capture and playback share the TDM-B clocks, the PCM1808 tops out
+         at 96 kHz), and 32-bit headroom for the HAL's volume/EQ/balance processing.
+         The PCM5102A takes 32-bit words up to 384 kHz.
+         The USB 7.1 card setup is primary_audio_policy_configuration_usb.xml
+         (VIM3_AUDIO_OUTPUT=usb). -->
 
     <attachedDevices>
         <item>bus0_media_out</item>
@@ -20,16 +30,20 @@
         <mixPort name="primary output"
                 role="source"
                 flags="AUDIO_OUTPUT_FLAG_PRIMARY">
-            <!-- Enable 5.1 + stereo on primary output -->
-            <profile format="AUDIO_FORMAT_PCM_16_BIT"
-                    samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
+            <!-- Quad: front + rear DAC -->
+            <profile format="AUDIO_FORMAT_PCM_32_BIT"
+                    samplingRates="96000"
+                    channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
 
+        <!-- Built-in mic (PCM1808 on TDM-B, 24-bit in 32-bit words). Same rate as the
+             outputs: capture shares the TDM-B clocks with playback; AudioFlinger
+             resamples for 16 kHz clients such as the voice assistant. Mono = the mic
+             channel. -->
         <mixPort name="primary input" role="sink">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT"
-                     samplingRates="48000"
-                     channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT"
+                     samplingRates="96000"
+                     channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO"/>
         </mixPort>
 
         <!-- Native radio: capture port for the FM/DAB tuner (fed via snd-aloop Loopback). -->
@@ -42,38 +56,38 @@
         <mixPort name="mixport_bus0_media_out"
                 role="source"
                 flags="AUDIO_OUTPUT_FLAG_PRIMARY">
-            <!-- Enable 5.1 + stereo on media bus -->
-            <profile format="AUDIO_FORMAT_PCM_16_BIT"
-                    samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
+            <!-- Quad: front + rear DAC -->
+            <profile format="AUDIO_FORMAT_PCM_32_BIT"
+                    samplingRates="96000"
+                    channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
 
         <mixPort name="mixport_bus1_navigation_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus2_voice_command_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus3_call_ring_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus4_call_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus5_alarm_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus6_notification_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
         <mixPort name="mixport_bus7_system_sound_out" role="source">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
         </mixPort>
     </mixPorts>
 
     <devicePorts>
         <devicePort tagName="Built-In Mic" type="AUDIO_DEVICE_IN_BUILTIN_MIC" role="source" address="bottom_mic">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_IN_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO"/>
         </devicePort>
 
         <!-- Native radio FM/DAB tuner source. The audio HAL captures this from the
@@ -84,10 +98,10 @@
         </devicePort>
 
         <devicePort tagName="bus0_media_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus0_media_out">
-            <!-- Enable 5.1 + stereo on media bus device -->
-            <profile format="AUDIO_FORMAT_PCM_16_BIT"
-                    samplingRates="48000"
-                    channelMasks="AUDIO_CHANNEL_OUT_5POINT1 AUDIO_CHANNEL_OUT_STEREO"/>
+            <!-- Quad: front + rear DAC -->
+            <profile format="AUDIO_FORMAT_PCM_32_BIT"
+                    samplingRates="96000"
+                    channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus0_media"
                     mode="AUDIO_GAIN_MODE_JOINT"
@@ -97,49 +111,49 @@
         </devicePort>
 
         <devicePort tagName="bus1_navigation_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus1_navigation_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus1_nav" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus2_voice_command_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus2_voice_command_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus2_voice" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus3_call_ring_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus3_call_ring_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus3_ring" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus4_call_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus4_call_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus4_call" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus5_alarm_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus5_alarm_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus5_alarm" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus6_notification_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus6_notification_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus6_notif" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>
         </devicePort>
 
         <devicePort tagName="bus7_system_sound_out" role="sink" type="AUDIO_DEVICE_OUT_BUS" address="bus7_system_sound_out">
-            <profile format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="48000" channelMasks="AUDIO_CHANNEL_OUT_STEREO"/>
+            <profile format="AUDIO_FORMAT_PCM_32_BIT" samplingRates="96000" channelMasks="AUDIO_CHANNEL_OUT_QUAD"/>
             <gains>
                 <gain name="gain_bus7_sys" mode="AUDIO_GAIN_MODE_JOINT" channelMasks="AUDIO_CHANNEL_OUT_STEREO" minValueMB="-6000" maxValueMB="0" defaultValueMB="-2000" stepValueMB="100"/>
             </gains>

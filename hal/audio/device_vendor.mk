@@ -1,5 +1,15 @@
 # BayLibre Generic Audio HAL configuration for Yukawa
 
+# Speaker output: "module" = rev 0.6 car audio module (I2S/TDM-B on the onboard card, quad
+# front/rear + PCM1808 mic), "usb" = the old ICUSBAUDIO7D 7.1 USB card. BoardConfig.mk has
+# the same default (snd-aloop timer source). Override with VIM3_AUDIO_OUTPUT=usb in the env.
+VIM3_AUDIO_OUTPUT ?= module
+ifeq ($(VIM3_AUDIO_OUTPUT),usb)
+VIM3_PRIMARY_AUDIO_POLICY := device/khadas/vim3/hal/audio/primary_audio_policy_configuration_usb.xml
+else
+VIM3_PRIMARY_AUDIO_POLICY := device/khadas/vim3/hal/audio/primary_audio_policy_configuration.xml
+endif
+
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.audio.low_latency.xml
 
@@ -35,7 +45,7 @@ PRODUCT_PACKAGES += \
 # Copy BayLibre audio configuration files for Yukawa
 PRODUCT_COPY_FILES += \
     device/khadas/vim3/hal/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
-    device/khadas/vim3/hal/audio/primary_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml \
+    $(VIM3_PRIMARY_AUDIO_POLICY):$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml \
     device/khadas/vim3/hal/audio/mixer_controls.xml:$(TARGET_COPY_OUT_VENDOR)/etc/mixer_controls.xml \
     hardware/amlogic/yukawa/audio/audio_effects_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects_config.xml \
     frameworks/av/services/audiopolicy/config/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \

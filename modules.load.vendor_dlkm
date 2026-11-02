@@ -60,6 +60,7 @@ snd-soc-meson-g12a-toacodec.ko
 snd-soc-meson-g12a-tohdmitx.ko
 snd-soc-meson-gx-sound-card.ko
 snd-soc-meson-t9015.ko
+snd-soc-pcm5102a.ko
 snd-soc-spdif-rx.ko
 snd-soc-spdif-tx.ko
 spi-meson-spicc.ko

@@ -23,6 +23,17 @@
     </control>
 
     <init>
+        <!-- Car audio module (onboard card, TDM-B; see dai-link-8 in meson-khadas-vim3.dtsi).
+             Controls the card doesn't have are skipped, so this is harmless with the USB card.
+             Playback: PCM 0 (FRDDR_A) -> TDMOUT_B -> front DAC (lane 0) + rear DAC (lane 1).
+             HDMI (TDMOUT_A) is left without a source. -->
+        <set name="FRDDR_A SINK 1 SEL" value="OUT 1"/>
+        <set name="FRDDR_A SRC 1 EN Switch" value="1"/>
+        <set name="TDMOUT_B SRC SEL" value="IN 0"/>
+        <!-- Capture: TDM-B lane 3 (PCM1808 mic ADC) -> TDMIN_B -> TODDR_A = PCM 3. -->
+        <set name="TDMIN_B SRC SEL" value="IN 1"/>
+        <set name="TODDR_A SRC SEL" value="IN 1"/>
+
         <set name="Line Playback Switch" value="0"/>
         <set name="Line Playback Volume" value="0"/>
 
