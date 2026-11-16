@@ -9,6 +9,14 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
+## 00. 2026-11-16: ACC-off suspend-to-RAM works; next = CPU/SYSTEM suspend
+
+Car unit runs slot _b (OTA 2026-11-16). Fixed and verified on the car: VHAL answers FINISHED (Android
+really suspends), MCU no longer hangs in WAKING, pci-meson link_up accepts L1 (NVMe survives resume),
+audio: volume applied once (-36..0 dB curve), output PCM always running + MCU mute until it runs.
+All pushed. **Next session: `plan-cpu-suspend.md`** (PSCI CPU_SUSPEND, then SYSTEM_SUSPEND), plus the open
+items listed at its end (OTA of vehicle_interfaces fc41ccd, MCU firmware 0.2.0 PC flash, MCU self-update).
+
 ## 0. RESUME HERE (state 2026-10-14, evening)
 
 **Device (2026-10-14 ~19:55, powered off at handoff):** slot `_a` = 2026-10-14 17:43 UTC build (boot marked
