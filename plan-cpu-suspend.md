@@ -62,6 +62,25 @@ Two levels, in this order:
 
 ## Phase A — CPU_SUSPEND (core / cluster power-down)
 
+**Status 2026-11-16: steps 1, 2 and 4 written, nothing validated on hardware, nothing committed.**
+- Step 1 RE → `re-stock-bl31-suspend.md`. Key results: original StateID format (0x00010000 core,
+  0x01010000 cluster, StateID 0); stock powers CPU0 down like any core (our WFE-loop restriction
+  is ours); the Amlogic vendor dtsi defines these idle states but comments out every `cpu-idle-states`
+  (never shipped); stock bl301 deep-suspend wake = GPIOAO_7 falling edge (our ACC line).
+- Step 2 TF-A: `g12b_pm.c`, all behind `make G12B_CPU_SUSPEND=1` (+ `G12B_SUSPEND_CLUSTER_OFF=1` for
+  SCPI cluster_state=OFF on the A73 cluster). The default build is unchanged and so is the FIP `brunch` builds. To test, add
+  the flags to the TF-A make line in `vendor/khadas/vim3/bootloader/scripts/build-g12b-optee-fip.sh`.
+  CPU0 gets standby only and cluster 0 never goes off. Builds clean (release + debug).
+- Step 3 OP-TEE: no change needed (generic no-op suspend/resume handlers; opteed restores secure EL1 context).
+- Step 4 DTS: no kernel DTS change. U-Boot (`vim3_dt_add_idle_states`) adds the idle states to the kernel
+  DT only when BL31 reports CPU_SUSPEND (PSCI_FEATURES): the kernel sets `psci_ops.cpu_suspend` without a
+  feature check, so states on a BL31 without CPU_SUSPEND would make idle spin without WFI.
+- **First bench question:** does BL30 power a core back on when an interrupt arrives for it? Nobody has
+  shipped this. If not, the first CPU_SUSPEND power-down loses that core forever.
+  Test with a bench-only DTS: `CPU_RET_0` on every CPU and `CPU_SLEEP_0` on one A73 only (e.g. cpu2 = MPIDR 0x100);
+  watch that CPU's `cpuidle/state*/usage` and check that it still
+  runs work (`taskset -c 2 true` in a loop, and IPIs/timers keep firing).
+
 1. **RE the stock BL31 first** (half a day): find its `plat_psci_ops` and follow
    `validate_power_state`, `pwr_domain_suspend`, `pwr_domain_suspend_finish`,
    `pwr_domain_pwr_down_wfi`. Write down:
@@ -91,7 +110,47 @@ Two levels, in this order:
    `pm_test=platform` and real s2idle cycles with the XPWR wake; OP-TEE xtest; 24 h soak. Then flash on
    the bench, then the car.
 
+### Phase A outcome (bench, 2026-11-16) — parked
+
+- Works: PSCI standby (retention) on every core (~125k entries, 0 rejected); core power-down on up to
+  two cores (cpu1 A53, cpu2/3 A73), hundreds of cycles; KeyMint and hotplug fine afterwards. U-Boot
+  adds the idle states only when BL31 reports CPU_SUSPEND (vim3_dt_add_idle_states, PSCI_FEATURES).
+- Fails: with 5 cores in core power-down, BL30 eventually powers a suspended A73 off and never back on
+  (serial: "hard LOCKUP on cpu N"; BL31 stuck-core report: stage 3 = final WFI, SCP acked, mailbox
+  entry set, crumb 0 = reset stub never reached). After that even PSCI SYSTEM_RESET (through the SCP)
+  never completes: the board hangs until a manual reset. A BL31 "kick" (SCPI on, then off+5 ms+on
+  like the CPU_ON retry) revives the core electrically but it then stalls in the reset stub (crumb
+  0x81). Amlogic never enabled core power-down on G12B (vendor 4.9: commented out; 5.4: SM1 only;
+  5.15: none). Parked in favour of phase B. Code: TF-A G12B_CPU_SUSPEND (+ stuck-core report and
+  kick), U-Boot modes off/a73one/a73two/cpu12/a73three/core, all uncommitted.
+- Serial: Pico debug probe on the VIM3 debug UART (/dev/ttyACM0), log with `cat` (read-only).
+
 ## Phase B — SYSTEM_SUSPEND (deep)
+
+**Status 2026-11-16 (bench, RAM-booted, VIM3 without mainboard): FULL DEEP SUSPEND + RESUME WORKS.**
+Linux → BL31 SYSTEM_SUSPEND (CPU0, css OFF) → BL30 DDR self-refresh (15 us) → wake → DDR resume
+(229 us) → BL31 "PM: system resume" → CPU1-5 up, NVMe back (294 MB/s read), USB reinit, KeyMint OK,
+suspend_stats success 1. Woke immediately (wake reason 14 acc-wake: the ACC line floats without the
+mainboard), so a long sleep is not tested yet.
+- TF-A: `make G12B_SYSTEM_SUSPEND=1` (PLAT_MAX_PWR_LVL=2, CPU0 powers down at system level, resume
+  re-inits console + GIC distributor and sets AO_CPU_FLAGS bit 0 = "AP back" for BL30). Bench build
+  also dumps DMC registers (g12b_dmc_dump). Default build unchanged.
+- U-Boot: appends `mem_sleep_default=s2idle` when BL31 reports SYSTEM_SUSPEND (the kernel would make
+  deep the default by itself); deep is opt-in via /sys/power/mem_sleep.
+- **BL30 needs a 2 x 2-byte patch** (bl30.bin from fip-collect-g12b-kvim3-khadas-vims-pie-20210111):
+  its DDR suspend and resume wait for DMC_DRAM_STAT (0xff638654) bits 7:4 == 0 or 4 ("access"), but
+  the stock BL2 of the same collection leaves the controller in state 2 after command 4 (BL2 waits for
+  2 itself). Patch: `bne` at 0x3794 (suspend) and 0x36d2 (resume) -> `nop` (0xbf00); both are the
+  loop-back of "cmp r2,#0x40". BL30 is re-signed by the FIP script (aml_encrypt --bl30sig), no key.
+  Without the patch: endless "DMC_DRAM_STAT11: 0x24" (suspend) / "DMC_DRAM_STAT3: 0x24" (resume).
+- **In the regular build (2026-11-16):** vendor/khadas/vim3 9437876 builds BL31 with G12B_SYSTEM_SUSPEND=1
+  and patches BL30 in generate-g12b-optee-fip.sh (original bytes checked); TF-A a138b29bb, U-Boot
+  7d30544539f (s2idle guard). Flashed on the bench/car VIM3 2026-11-16 (copy + md5 in
+  ~/android/fip-flashed/). Deep is opt-in only: `echo deep > /sys/power/mem_sleep`.
+- Open: black HDMI after a deep resume (Android/DRM say the output is on); long sleep test (RTC wake with
+  acc-wake disabled, or the real ACC line; the ACC line floats without the mainboard so it wakes at
+  once); power-rail behaviour of the KVIM3 bl301 (power_off_at_24M cuts 5V/3V3/VCCK) vs the car
+  mainboard; current measurement; then Android opt-in to deep for the ACC-off sleep.
 
 Only after phase 0 shows the SoC is the dominant consumer.
 
