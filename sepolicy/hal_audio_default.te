@@ -4,3 +4,5 @@ allow hal_audio_default usb_device:chr_file rw_file_perms;
 
 # Eventueel property access als routing via properties wordt geregeld
 get_prop(hal_audio_default, vendor_vehicle_prop)
+# Primary output PCM running (read by the VHAL for the amplifier mute)
+set_prop(hal_audio_default, vendor_audio_output_prop)

@@ -1,3 +1,4 @@
 ro.vendor.vehicle.    u:object_r:vendor_vehicle_prop:s0
 vendor.vehicle.       u:object_r:vendor_vehicle_prop:s0
 persist.vendor.vehicle.    u:object_r:vendor_vehicle_prop:s0
+vendor.audio.output_running    u:object_r:vendor_audio_output_prop:s0 exact bool

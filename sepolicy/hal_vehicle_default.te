@@ -35,3 +35,6 @@ allow vendor_vehicle_schuurman sysfs_vpu:file { read open getattr };
 # makes /dev/hidraw* 0660 system:system (the VHAL runs with group system); nodes carry no VID/PID in their
 # name, so the VHAL opens each one and picks the MCU by HIDIOCGRAWINFO and the 0xFF00 usage page.
 allow vendor_vehicle_schuurman hidraw_device:chr_file rw_file_perms;
+
+# Audio HAL output state: keep the MCU audio mute until the DACs are clocked
+get_prop(vendor_vehicle_schuurman, vendor_audio_output_prop)
