@@ -9,15 +9,56 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 00. 2026-11-16: ACC-off suspend-to-RAM works; next = CPU/SYSTEM suspend
+## 00. RESUME HERE (2026-11-16, evening): deep suspend works, bootloader flashed; MCU A/B update WIP
 
-Car unit runs slot _b (OTA 2026-11-16). Fixed and verified on the car: VHAL answers FINISHED (Android
-really suspends), MCU no longer hangs in WAKING, pci-meson link_up accepts L1 (NVMe survives resume),
-audio: volume applied once (-36..0 dB curve), output PCM always running + MCU mute until it runs.
-All pushed. **Next session: `plan-cpu-suspend.md`** (PSCI CPU_SUSPEND, then SYSTEM_SUSPEND), plus the open
-items listed at its end (OTA of vehicle_interfaces fc41ccd, MCU firmware 0.2.0 PC flash, MCU self-update).
+**Device:** the car VIM3 is on the bench: rev 0.6 mainboard *disconnected* (so no MCU, no audio module,
+the ACC line floats), Pico debug probe on the VIM3 debug UART (`/dev/ttyACM0`, 115200, log it with a
+plain `cat`, read-only), USB-C to the PC for adb and maskrom. Android slot `_b` (OTA 2026-11-16).
+**Bootloader flashed 2026-11-16 ~19:40:** the new OP-TEE FIP (copy + md5 in `~/android/fip-flashed/`,
+`u-boot_kvim3_ab_optee-syssuspend-20261116.bin` 7da30861…): RAM-booted first, then
+`fastboot flash bootloader`, verified booting from eMMC (BL31 built 19:22:21, OP-TEE, KeyMint, slot _b).
 
-## 0. RESUME HERE (state 2026-10-14, evening)
+**Suspend work (detail: `plan-cpu-suspend.md`, RE: `re-stock-bl31-suspend.md`):**
+- *Phase B, PSCI SYSTEM_SUSPEND ("deep"): WORKS on the bench.* Linux → BL31 (CPU0, css OFF) → BL30 DDR
+  self-refresh → wake → DDR resume → BL31 → Linux; NVMe, KeyMint, all 6 cores fine after resume.
+  Needed a 2x2-byte BL30 patch: the vims-pie BL30 waits for DMC state 0/4 before self-refresh and after
+  resume, the BL2 of the same collection leaves state 2 (it looped on `DMC_DRAM_STAT11/STAT3: 0x24`).
+- *In the regular build and pushed:* TF-A `a138b29bb` (G12B_SYSTEM_SUSPEND), vendor `9437876` (BL31 flag +
+  BL30 patch at FIP build time, original bytes checked), U-Boot `7d30544539f` (appends
+  `mem_sleep_default=s2idle` when BL31 has SYSTEM_SUSPEND: the kernel would otherwise make deep the
+  default). **The ACC-off sleep still uses s2idle**; deep only via `echo deep > /sys/power/mem_sleep`.
+- `out/.../u-boot_kvim3_ab_optee.bin` from the latest `m u-boot_kvim3_ab_optee` has a *rebuilt* OP-TEE
+  (same commit + same TA key, 4 KB smaller): RAM-boot it before ever flashing it.
+- *Phase A, CPU_SUSPEND (cpuidle core/cluster power-down): parked.* Works on up to two cores; with more,
+  BL30 loses suspended A73 cores (and then even SYSTEM_RESET hangs: manual reset only). Amlogic never
+  enabled it on G12B. Code stays in TF-A behind `G12B_CPU_SUSPEND` (off).
+- **Open (phase B):** black HDMI after a deep resume (DRM says the output is on); wake was immediate on
+  the bench (`14 acc-wake`, ACC floats) so a long sleep and the RTC wake are untested; the stock bl301
+  board task cuts KVIM3 rails (5V/3V3/VCCK) — check against the car mainboard, probably our own bl301;
+  12 V current measurement; then Android opt-in to deep for the ACC-off sleep.
+
+**MCU firmware (rev 0.6 board):** the car MCU was flashed with **0.2.0** (fc41ccd) from the VIM3 (BOOTSEL
+drive, VIM3 on USB-C power). The *bench* session then installed an A/B partition table + plain 0.3.0
+(WIP) on it: the A/B try-before-you-buy update from Android is partly built and **uncommitted** in
+vendor/gschuurman/vehicle_interfaces (protocol FW_* messages, firmware fw_update.c + host tests, TBYB
+logic, McuFwUpdater, `mcutool fw`). Blocker: writing the other slot crashes the MCU and leaves the
+running slot unbootable — needs SWD (the Pico probe on J22) to debug. Bootrom TBYB pitfalls are in the
+memory note `project_mcu_ab_tbyb`. Not started: mcu.bin in /vendor, VHAL properties, HeadUnitDebug UI.
+Reinstall 0.2.0 or plain 0.3.0 before the car if the A/B work isn't finished.
+
+**Bench gotchas (learned the hard way):**
+- Maskrom: `boot-g12.py` needs `PYTHONPATH=~/khadas-flashing/lib/python3.12/site-packages` (the pipx venv
+  broke with the Python 3.14 upgrade). On the PC's AMD root port (`usb 1-6`) transfers often fail
+  (-71 / I/O error); a failed first write wedges the ROM: power-cycle, don't retry blindly.
+- Only RAM-boot FIPs **with our OP-TEE** (a stock-BL31 FIP without OP-TEE stalls Android on keystore2),
+  and ask before changing what the board boots.
+- A board hung in BL30 (deep suspend loop) never resets by itself, even on panic: manual power cycle.
+- No `/dev/mem` on GKI; read SoC registers from BL31 (EL3) instead.
+
+Still open from earlier today: OTA of vehicle_interfaces `fc41ccd` (12 h off delay for MCU fw 0.2.0),
+Wi-Fi not reconnecting after resume with the screen off.
+
+## 0. State 2026-10-14, evening
 
 **Device (2026-10-14 ~19:55, powered off at handoff):** slot `_a` = 2026-10-14 17:43 UTC build (boot marked
 successful, SELinux enforcing): everything below *except* CarRadioApp `90261b2`. Slot `_b` = 15:47 build. AA receiver is
