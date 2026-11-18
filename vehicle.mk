@@ -2,10 +2,12 @@
 # Vehicle hardware integration — VHAL, GPIO, backlight, power policy
 # =============================================================================
 
-# Custom Schuurman VHAL service, and mcutool to inspect the peripheral board MCU (adb root)
+# Custom Schuurman VHAL service, mcutool to inspect the peripheral board MCU and mcu_flash to
+# install its firmware over BOOTSEL (both adb root)
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@schuurman-service \
-    mcutool
+    mcutool \
+    mcu_flash
 
 # Head Unit Debug: live peripheral board (MCU) and GNSS status on the head unit
 PRODUCT_PACKAGES += \
