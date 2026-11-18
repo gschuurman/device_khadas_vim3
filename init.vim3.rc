@@ -117,3 +117,13 @@ on post-fs-data
     mkdir /data/vendor/wifi/wpa 0770 wifi wifi
     mkdir /data/vendor/wifi/wpa/sockets 0770 wifi wifi
 
+
+# ACC-off sleep depth. U-Boot keeps s2idle the default (mem_sleep_default=s2idle when BL31 has
+# PSCI SYSTEM_SUSPEND); 1 makes CarPowerManagementService's suspend a PSCI SYSTEM_SUSPEND (DDR
+# self-refresh, bl301 switches the VIM3 5V/3V3 rails off). Needs MCU firmware that treats the
+# rail drop after DEEP_SLEEP_ENTRY as asleep, not off (vehicle_interfaces power_sm deep_sleep).
+on property:persist.vendor.vehicle.deep_suspend=1
+    write /sys/power/mem_sleep deep
+
+on property:persist.vendor.vehicle.deep_suspend=0
+    write /sys/power/mem_sleep s2idle
