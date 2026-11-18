@@ -9,7 +9,42 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 00. RESUME HERE (2026-11-16, evening): deep suspend works, bootloader flashed; MCU A/B update WIP
+## 00. RESUME HERE (2026-11-18): deep suspend wired to the mainboard; MCU 0.2.1 flashed; car test next
+
+**Device:** bench, rev 0.6 mainboard **connected** (MCU `2e8a:ca50`, ACC reads on), VIM3 also on USB-C
+from the PC (adb `CE88ECF8D115`). Bootloader = the deep-capable FIP flashed 2026-11-16 (unchanged).
+
+**Mainboard rails vs deep suspend (from `PCB/rev0.6/layout/schematic/gen5.py`):** the MCU's VIM3-on
+sense R7/R8 taps `VIM3_3V3` = VIM3 header pins 20/27 = `VCC_3V3`, which the stock KVIM3 bl301 switches
+off in deep suspend (TEST_N); `VIM3_5V` (pins 1/2 = `VCC_5V`, GPIOH_8) goes off too but only feeds the
+DAC LDOs/audio header. CH334R hubs are not on VIM3 rails. (VIM3 side read from the DTS regulator names;
+no VIM3 schematic on disk.) So the old MCU firmware would have cut the supply 2 s into a deep sleep.
+
+**Done today (all pushed):**
+- vehicle_interfaces `9a21fa1`: power_sm `deep_sleep` flag from `DEEP_SLEEP_ENTRY` until the rail is
+  back: a low rail in SUSPENDED/WAKING is "asleep", keep pressing XPWR while USB is gone, cut (→ cold
+  boot with ACC on) if it never resumes. 3 new host tests, all 12 pass.
+- `ba28ecc` + `a392d71`: **MCU fw 0.2.1** = 0.2.0 + that fix, *without* the A/B work, IMAGE_DEF version
+  inverted (65535.65022) + hashed so it beats the 0.3.0 in slot B. **Flashed on this MCU**, runs from
+  slot A, VHAL link up. Image: `~/android/mcu-fw/carradio_mcu-0.2.1-a392d71.uf2`.
+- device `f8e720d`: `persist.vendor.vehicle.deep_suspend=1` → `/sys/power/mem_sleep` deep for the
+  ACC-off sleep (default off = s2idle).
+- vehicle_interfaces `280ef4b` + device `76b5492`: `/vendor/bin/mcu_flash FILE.uf2` (BOOTSEL install
+  from the VIM3, syncs first, two runs).
+- MCU A/B WIP moved to the **local** branch `mcu-ab-wip` (`522348a`, not pushed) so OTAs don't ship the
+  untested McuFwUpdater; the main checkout is back on `android-16`.
+
+**Gotcha:** BOOTSEL from the VIM3 reboots the VIM3 even on USB-C power (R72 pull-down cuts the supply,
+the switch-over browns it out), and again when the new firmware powers it back; an unsynced `adb push`
+is lost. R72 → 10k pull-up to `+3V3_MCU` fixes it (next board).
+
+**OTA:** a full `brunch vim3_nvme` with all of the above was started 2026-11-18, to go to slot `_a`.
+
+**Next (needs the user):** ACC-off test with deep enabled (switchable ACC, long sleep, ACC on → check
+screen, Wi-Fi, NVMe; black HDMI after resume only seen on the bench with ACC floating, fix only if it
+shows), 12 V current in deep vs running, then the off delay (MCU `off_delay_s`, now 900 s).
+
+## 00-old. 2026-11-16, evening: deep suspend works, bootloader flashed; MCU A/B update WIP
 
 **Device:** the car VIM3 is on the bench: rev 0.6 mainboard *disconnected* (so no MCU, no audio module,
 the ACC line floats), Pico debug probe on the VIM3 debug UART (`/dev/ttyACM0`, 115200, log it with a
