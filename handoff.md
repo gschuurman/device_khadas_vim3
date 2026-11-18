@@ -39,14 +39,15 @@ the switch-over browns it out), and again when the new firmware powers it back; 
 is lost. R72 → 10k pull-up to `+3V3_MCU` fixes it (next board).
 
 **OTAs 2026-11-18:** (1) deep-sleep build on `_a` (merged); `persist.vendor.vehicle.deep_suspend=1`
-set (mem_sleep `[deep]`). (2) K-line VHAL + CarStatus build on **`_b`** (current, merge pending at
-writing). USB `adb push` of the 1.1 GB zip hung adb twice (PC AMD port, usb 1-6): transfer over Wi-Fi
+set (mem_sleep `[deep]`). (2) K-line VHAL + CarStatus build on **`_b`** (current, merged). USB `adb push` of the 1.1 GB zip hung adb twice (PC AMD port, usb 1-6): transfer over Wi-Fi
 instead (`python3 -m http.server` on the PC + detached `curl -C -` on the device, check md5), run
 `apply_ota` detached (`nohup … &`), adb over Wi-Fi `192.168.1.172:5555`.
 
 **K-line / MEMS 1.9 + engine alarm (plan: vehicle_interfaces `mcu/kline-mems-plan.md`), all pushed:**
 - MCU fw 0.2.2 `2055120`: K-line transport for `PCB/kline_module_r01` (L9637D, GPIO28 = K-line side
-  power), raw frames → VHAL. Host-tested against a simulated ECU; **not flashed** (car MCU = 0.2.1).
+  power), raw frames → VHAL. Host-tested against a simulated ECU. **Flashed 2026-11-18 as a flat
+  image** (`8fe360d`: A/B partition table erased with `mcu/firmware/tools/erase-partition-table.py`,
+  A/B dropped; WIP only on local branch `mcu-ab-wip`). Runs; K-line state RETRY without module.
 - VHAL `45b7a44`: MemsDecoder → ENGINE_COOLANT_TEMP/ENGINE_RPM, VENDOR_MEMS_LIVE 0x21610614,
   VENDOR_MEMS_RAW 0x21700615, KLINE_STATE/MODE/CMD; snapshot request on every MCU (re)open.
 - CarStatus app `88f97f6` (device `20e6b6c`): persistent priv-app, alarm service in user 0.
