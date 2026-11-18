@@ -65,7 +65,34 @@ reverted to s2idle (`persist.vendor.vehicle.deep_suspend=0` set on the device).*
   whose resume hangs after stmmaceth; (c) consider masking/clearing the gpio_intc pending bit in TF-A before
   SYSTEM_SUSPEND, or arming the wake only in BL30.
 
-**Next (old list, item 1–2 superseded by the update above):**
+**UPDATE ~19:15 — narrowed to the firmware, car config set:**
+- pm_test (framework stopped, alarms otherwise abort with alarmtimer -EBUSY): devices / platform /
+  processors / core all pass with NO acc-wake edge; runtime CPU hotplug neither. The edge only happens
+  once BL31 SYSTEM_SUSPEND hands over to BL30/bl301.
+- MCU 0.2.4 times VIM3 3V3 dips in an edge IRQ: **during the deep attempts the header 3V3 never dipped**;
+  it DOES dip on a VIM3 reset (maskrom: 2.2 s, 1 s), so it is the switched VCC3V3 (user confirms). =>
+  bl301 never ran its rail cut, the abort is BEFORE bl301 `enter_suspend`.
+- bl301 RE (vims-pie collection, loaded at 0x1000a000; disasm in scratchpad bl301/bl301.dis):
+  enter_suspend 0x1000b500 = power_off_at_24M (0x1000a318: GPIOH_8 EN_N bit8, GPIOAO_4 low, TEST_N
+  AO_GPIO_O bit31 low, VDDEE) → power_off_at_mcu (0x1000a506, power-off only) → detect_key (0x1000b31c,
+  irq slot 14 + AO_GPIO_I bit7 low = reason 6) → power_on_at_24M (0x1000a3aa) → print exit_reason.
+  vendor/khadas/vim3 d50a36b adds BL301_KEEP=3v3|5v to the FIP script; test FIPs in ~/android/fip-test
+  (fip-keep-3v3/5v/baseline). **Probably pointless now** (the rail cut is never reached); keep for later.
+- **Next: UART console** (BL30/bl301 + kernel): J2 pad 37 = VIM3 pin 19 Linux_TX (unrouted on the
+  mainboard) + GND → Pico Debug Probe "U" RX (yellow), 115200 → /dev/ttyACM0. Needs the user's tools.
+- MCU **0.2.5** (vehicle_interfaces e6e61e7, flashed over SWD): RUNNING after a wake without VHAL link
+  for 3 min → cut + cold boot; wake with no answer after 3 presses → cut regardless of ACC.
+- SWD: Pico Debug Probe on J22 + RPi OpenOCD in ~/android/pico/openocd; `~/android/pico/mcu-swd-peek.sh`
+  reads log queue / dip ring / power state live (symbols from the newest ELF). Flash: clean `reboot -p`,
+  then `openocd … -c "program <elf> verify reset exit"`.
+- Maskrom with the mainboard: Function 3× resets the VIM3, the 3V3 is off > 2 s and the MCU latches off
+  (supply cut; VIM3 then lives on USB-C only and the RAM-booted FIP is lost on the next supply switch-over).
+  Fit the SERVICE jumper JP1 before maskrom, remove it for the ACC test. Maskrom enumerated on the AMD port
+  1-6 on the 2nd try and the RAM-boot worked there.
+- **Car config 19:10 (user):** deep OFF (`persist.vendor.vehicle.deep_suspend=0`, s2idle) and
+  `persist.vendor.vehicle.off_delay_s=1800` (30 min, then the MCU powers the VIM3 off, ~0.1 W).
+
+**Next (old list, item 1–2 superseded by the updates above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
 2. If confirmed: kernel `kernel/khadas/vim3` axg-card.c `.driver.pm = &snd_soc_pm_ops` (module
