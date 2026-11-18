@@ -29,7 +29,17 @@ Then: ~5 W draw (should be < 1 W), VIM3 never comes back on USB, MCU cuts power 
   `.pm = &snd_soc_pm_ops`** → streams are not suspended. The 11-16 success was a bare VIM3 without the
   audio module.
 
-**Next:**
+**UPDATE ~17:30: audio hypothesis REFUTED** — with both PCMs blocked (no PCM open) it is still 5 W and
+no wake (ACC on doesn't wake it either; MCU LED fast-flash = WAKING pressing XPWR). Lab PSU now 13.2 V (MCU
+reads 12.73 V: 0.5 V lower; R10 senses VBAT_P *before* D1 so not a diode drop — ADC/divider error or PSU
+lead drop; user to measure at ISO A4/A8 before adding an offset). **MCU 0.2.3 flashed** (vehicle_interfaces
+`a582bc4`, ~/android/mcu-fw/carradio_mcu-0.2.3-diag.uf2): logs `t<s> in acc/vim3/svc/usbsusp/lowbat/vbat`
+edges + `t<s> power <state> vbat`, held until VHAL hello (lines were lost before: sent before hidraw open),
+16-deep queue, no K-line lines while link down. Next test: after it comes back, `logcat | grep "MCU: t"` —
+does `vim3` go 0 after `power suspended`? 0 = real deep reached (rails cut) → resume problem; stays 1 = hang
+before (BL30 DDR / kernel late suspend). VIM3 powered off 17:31 for the night (MCU LATCHED_OFF until ACC cycles).
+
+**Next (old list, item 1–2 superseded by the update above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
 2. If confirmed: kernel `kernel/khadas/vim3` axg-card.c `.driver.pm = &snd_soc_pm_ops` (module
