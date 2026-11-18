@@ -9,7 +9,40 @@ Pick work from **§2**. §1 is the current state, §3 the reference for how to w
 
 ---
 
-## 00. RESUME HERE (2026-11-18): deep suspend wired to the mainboard; MCU 0.2.1 flashed; car test next
+## 000. RESUME HERE (2026-11-18 ~16:45): deep sleep on the mainboard HANGS — audio DMA suspect, test pending
+
+**State of the device (bench, lab PSU, slot _b, MCU flat 0.2.2):** everything from §00 below is in.
+For the pending test the I2S PCMs are blocked: `chmod 000 /dev/snd/pcmC0D0p /dev/snd/pcmC0D3c` + audio
+HAL restarted → no audio until reboot (or `chmod 660` + kill the HAL pid). A live capture loop may still run on
+the PC: scratchpad `.../6a2359d0-.../scratchpad/acctest/cap.sh` (logcat.txt / dmesg.txt; `pkill -f acctest/cap.sh`).
+
+**ACC-off test results (2026-11-18, twice):** ACC off → garage mode (~12 s) → DEEP_SLEEP_ENTRY → MCU
+`suspended` (deep_sleep flag set, handshake fine) → FINISHED → kernel `PM: suspend entry (deep)` → USB gone.
+Then: ~5 W draw (should be < 1 W), VIM3 never comes back on USB, MCU cuts power ~1 min later, ACC on = cold boot.
+- The cut itself = MCU **low-battery guard**: PSU was ~11.5 V (`battery_mv 11527`) < LOW_BATT_MV 12200 for
+  60 s with ACC off → start_wake(for_shutdown) → 3× XPWR 15 s apart (screen flash = backlight in WAKING) → cut.
+  Correct behaviour; **run tests with the PSU at 12.6 V**.
+- The real bug: **the VIM3 does not reach deep / does not resume.** XPWR is ignored, rails stay up (5 W).
+  Hypothesis: BL30 hangs waiting for DDR self-refresh (the "DMC_DRAM_STAT11: 0x24" loop seen on the bench
+  11-16) because a DMA master still accesses DRAM: the I2S audio HAL keeps `pcmC0D0p` (OutputMixer
+  keep-alive) and `pcmC0D3c` open permanently, and `sound/soc/meson/axg-card.c` has **no
+  `.pm = &snd_soc_pm_ops`** → streams are not suspended. The 11-16 success was a bare VIM3 without the
+  audio module.
+
+**Next:**
+1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
+   after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
+2. If confirmed: kernel `kernel/khadas/vim3` axg-card.c `.driver.pm = &snd_soc_pm_ops` (module
+   snd-soc-meson-axg-sound-card.ko in vendor_dlkm). After resume the stream is SUSPENDED → pcm_write fails →
+   OutputMixer already reopens (OutputMixer.cpp:355); check the capture path (alsa proxy) recovers too.
+   Brunch + OTA, retest with audio running; then check HDMI after resume, Wi-Fi, NVMe; then measure 12 V draw → off delay.
+3. If NOT confirmed: other DMA masters (VPU/HDMI scanout while screen "off", MS210x grabber, NVMe) or the
+   mainboard rails; without a serial console (UART not broken out) only the draw + MCU logs tell.
+4. MCU fw small fix: K-line "kline state" logs flood the 8-entry log queue while the link is down, so the
+   `power …` lines (which would have shown this at once after reconnect) are dropped. Don't log K-line
+   state changes while the link is down / prioritise power logs; also log IN_SBC (VIM3 3V3) edges.
+
+## 00. 2026-11-18: deep suspend wired to the mainboard; MCU 0.2.1 flashed; car test next
 
 **Device:** bench, rev 0.6 mainboard **connected** (MCU `2e8a:ca50`, ACC reads on), VIM3 also on USB-C
 from the PC (adb `CE88ECF8D115`). Bootloader = the deep-capable FIP flashed 2026-11-16 (unchanged).
