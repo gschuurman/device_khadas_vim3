@@ -13,6 +13,11 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     HeadUnitDebug
 
+# Car Status: engine dashboard (MEMS 1.9 over the K-line module) and the always-on overheat /
+# coolant-loss alarm (persistent priv-app)
+PRODUCT_PACKAGES += \
+    CarStatus
+
 # Handbrake wire on ISO A2: auto (use it once seen engaged, else GNSS speed) | wired | gnss
 PRODUCT_VENDOR_PROPERTIES += \
     persist.vendor.vehicle.handbrake=auto
