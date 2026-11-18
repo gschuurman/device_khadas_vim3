@@ -39,6 +39,32 @@ edges + `t<s> power <state> vbat`, held until VHAL hello (lines were lost before
 does `vim3` go 0 after `power suspended`? 0 = real deep reached (rails cut) → resume problem; stays 1 = hang
 before (BL30 DDR / kernel late suspend). VIM3 powered off 17:31 for the night (MCU LATCHED_OFF until ACC cycles).
 
+**UPDATE ~18:20 (MCU 0.2.3 logs + pstore after VIM3 reset button): ROOT CAUSES FOUND, deep NOT usable yet;
+reverted to s2idle (`persist.vendor.vehicle.deep_suspend=0` set on the device).**
+- The VIM3 3V3 rail (MCU `vim3`) **never dropped** in any run: the SoC never reached BL30's real deep sleep.
+- **Spurious falling edge on GPIOAO_7 (acc-wake, irq 14) at every deep attempt**, exactly when Linux takes
+  down the non-boot CPUs (`Disabling non-boot CPUs` → `pm_system_irq_wakeup: 14 triggered acc-wake`, count +1
+  per attempt). Nobody presses: ACC 0 and no MCU `power key`. Doesn't happen in s2idle (no CPU offlining).
+  Suspects: PSCI CPU_OFF via BL31/SCPI → BL30 (re)configuring GPIOAO_7 / power-key pinmux or pull, or the VIM3
+  STM8 MCU on the same power-key net. → CPMS loops (suspend, abort, garage mode again ~15 s apart) = the
+  "reboots" the user saw. Also some attempts abort on `alarmtimer -EBUSY` (alarm < 2 s away; harmless retry).
+- With the gpio-keys-wake wakeup disabled (`/sys/devices/platform/gpio-keys-wake/power/wakeup`) PSCI
+  SYSTEM_SUSPEND returns after ~80 ms anyway (the latched edge is pending), and that resume then **HUNG in
+  device resume** right after `stmmaceth ... PTP not supported` (pstore console-ramoops, copy in scratchpad
+  acctest/pstore-hang.txt): USB host back (MCU usbsusp 0) but no thaw, no VHAL/adb, 3.85 W; ACC on → XPWR did
+  nothing → MCU went RUNNING-without-link (wake_nolink 45 s) and the VIM3 stayed hung until the reset button.
+  The earlier 5 W "hangs" are probably the same hang.
+- MCU firmware flaw found: in WAKING with ACC on, rail up, USB not suspended but no link → enter_running
+  after 45 s and nothing ever recovers a hung VIM3. Needs a "no VHAL hello within N min while RUNNING after a
+  wake → cut and cold boot" watchdog.
+- Draw (lab PSU 13.2 V): 7 W running screen on, 5 W garage mode / hung, 3.85 W hung after PSCI return.
+  s2idle on the mainboard NOT measured yet (do this next: it is the car mode now).
+- Next for deep: (a) find the GPIOAO_7 edge source: read GPIOAO_7 level/pinmux/pull (AO_GPIO regs
+  0xff800024.., AO_RTI_PIN_MUX) before/after hot-unplugging CPUs 1-5 at runtime (`echo 0 > cpuN/online`) — does
+  hotplug alone fire irq 14? (b) `echo 1 > /sys/power/pm_print_times` before a deep attempt to name the driver
+  whose resume hangs after stmmaceth; (c) consider masking/clearing the gpio_intc pending bit in TF-A before
+  SYSTEM_SUSPEND, or arming the wake only in BL30.
+
 **Next (old list, item 1–2 superseded by the update above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
