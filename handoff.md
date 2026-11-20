@@ -167,6 +167,16 @@ scratchpad uart/log.sh): BOTH ROOT CAUSES FOUND.**
 - Tools: Pico Debug Probe on J22 (SWD) — mcu-swd-peek.sh takes the ELF as arg (default newest in
   ~/android/mcu-fw); Bus Pirate 5 bridge for the VIM3 UART (J2 pad 37 + GND), logger scratchpad uart/log.sh.
 
+**TODO at the next power-on (decided 2026-11-20 night):** off delay **1 hour** — run
+`adb shell setprop persist.vendor.vehicle.off_delay_s 3600` (the persisted 1800 overrides the defaults);
+flash MCU **0.2.8** over SWD (~/android/mcu-fw/carradio_mcu-0.2.8-1h.elf: default off delay 1 h, plus 0.2.7's
+500 ms deep wake press); deploy the VHAL (26748df settings resync + 966af82 1 h default) by OTA or the
+stop / VHAL bind-mount / start test. Battery math: 2.26 W ≈ 0.18 A → a 1 h stop ≈ 0.2 Ah; ~0.1 W after the cut.
+Also measure: unplug the USB video grabber (MS210x on the VIM3's own USB-A port) during deep sleep — if
+the draw drops, VIM3 USB VBUS (GPIOH_8) isn't really cut either. Wi-Fi/BT are already off in sleep
+(AAOS system_power_policy_suspend_prep: AUDIO, BLUETOOTH, WIFI, LOCATION, MICROPHONE, CPU; car-service
+WifiManager.setWifiEnabled(false) / BluetoothAdapter.disable()) → keep `keep-power-in-suspend`.
+
 **Next (old list, item 1–2 superseded by the updates above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
