@@ -151,7 +151,7 @@ scratchpad uart/log.sh): BOTH ROOT CAUSES FOUND.**
   own power button works. → Q1/J5 path broken: **user suspects the J5 power-key lead/connector**. Measure J5
   pin 1: ~3.3 V idle, ~0 V while pressing (the SWD press can be repeated with the openocd command above).
   Until fixed, the MCU falls back after 3 presses to cut + cold boot (that is what happened in the tests).
-- **VHAL bug (fix next):** after an MCU restart the MCU shows off_delay_s 43200 and suspend_save 0 although
+- **VHAL bug — FIXED in vehicle_interfaces 26748df (built, NOT yet on the device: next OTA or bind-mount test):** after an MCU restart the MCU shows off_delay_s 43200 and suspend_save 0 although
   the persist props are 1800/3 — the VHAL reads them before /data persist props are loaded and never
   rechecks. Fix: compare the MCU-reported MCU_PROP_OFF_DELAY_S / SUSPEND_SAVE with the props (e.g. on every
   MCU report / in the housekeeping loop) and resend on mismatch. Until then: `mcutool set off_delay_s 1800;
