@@ -135,6 +135,38 @@ scratchpad uart/log.sh): BOTH ROOT CAUSES FOUND.**
   should now really drop in deep) + ACC wake + 12 V draw → then the off delay. Car config until then:
   deep_suspend=0 (persist), off_delay_s=1800 (but mem_sleep is `deep` until the next boot after the loop tests).
 
+**UPDATE 2026-11-20 night — mainboard test, DEEP ENABLED, end-of-day state:**
+- Device: slot `_a` (kernel 516aa623a9f), bootloader fip-noeth (flashed), MCU **0.2.7** (vehicle_interfaces
+  0ad60aa, flashed over SWD). `persist.vendor.vehicle.deep_suspend=1`, `off_delay_s=1800`,
+  `suspend_save=3` (all set in Android). Unit powered off for the night (user checks the J5 lead).
+- **ACC-off on the mainboard works:** garage mode → deep. Draw at 13.2 V: 7 W running (screen on), 5 W
+  garage, **2.56 W deep** → 2.30 W with TPS55288 PFM → **2.26 W with hub 1 parked** (suspend_save bits,
+  set live via SWD; only ~0.1 W together). The VIM3 header 3V3 does NOT drop in deep (MCU: vim3 1, no dips):
+  bl301's TEST_N cut doesn't switch that rail on this VIM3, so VIM3 peripherals stay powered.
+  Self-wakes happen (Android RTC alarms; MCU sends it back to sleep).
+- **ACC wake FAILS on the mainboard — hardware:** MCU 150 ms presses missed (fixed anyway: 0.2.7 uses
+  500 ms out of deep, deep_sleep kept until Android is back), but then also no wake. SWD test with the VIM3
+  AWAKE: forcing GPIO15 (MCU_PWR_KEY) high via IO_BANK0 GPIO15_CTRL OUTOVER (0x4002807c = 0x3005, status
+  0x04022200 = driven high) gives NO edge on GPIOAO_7 (acc-wake count unchanged, no key event). The VIM3's
+  own power button works. → Q1/J5 path broken: **user suspects the J5 power-key lead/connector**. Measure J5
+  pin 1: ~3.3 V idle, ~0 V while pressing (the SWD press can be repeated with the openocd command above).
+  Until fixed, the MCU falls back after 3 presses to cut + cold boot (that is what happened in the tests).
+- **VHAL bug (fix next):** after an MCU restart the MCU shows off_delay_s 43200 and suspend_save 0 although
+  the persist props are 1800/3 — the VHAL reads them before /data persist props are loaded and never
+  rechecks. Fix: compare the MCU-reported MCU_PROP_OFF_DELAY_S / SUSPEND_SAVE with the props (e.g. on every
+  MCU report / in the housekeeping loop) and resend on mismatch. Until then: `mcutool set off_delay_s 1800;
+  mcutool set suspend_save 3` after an MCU restart.
+- **Google Maps blank after a deep resume** (seen once, after the power-button wake): not yet investigated
+  (Wi-Fi was up afterwards; check SurfaceFlinger/panfrost/Maps logs right after the next real resume).
+- **Power fine-tuning options** (analysed, not done): Wi-Fi BCM4359 has `keep-power-in-suspend` in the DTS
+  (chip stays powered for WoWLAN) → drop it (fragile brcmfmac re-init, test) or make sure Android turns
+  Wi-Fi off (check what system_power_policy_suspend_prep really does on this build); BT has shutdown-gpios
+  (GPIOX_17), off if Android disables BT (BT host-wake woke deep once, exit_reason 4); NVMe power state in
+  suspend (check APST/PS); GNSS is already off (MCU); VIM3 USB: hub 1 parked, VIM3 USB-A VBUS via GPIOH_8 off.
+  Rev 0.7 hardware: load switches for the panel 5 V and SDR_VBUS (both hang on +5V_SYS now).
+- Tools: Pico Debug Probe on J22 (SWD) — mcu-swd-peek.sh takes the ELF as arg (default newest in
+  ~/android/mcu-fw); Bus Pirate 5 bridge for the VIM3 UART (J2 pad 37 + GND), logger scratchpad uart/log.sh.
+
 **Next (old list, item 1–2 superseded by the updates above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
