@@ -117,6 +117,24 @@ scratchpad uart/log.sh): BOTH ROOT CAUSES FOUND.**
   time to reach the board. MCU 0.2.6 (vehicle_interfaces 9eda80f): service jumper also stops the BOOTING
   timeout cut (no rail sense with the ribbon unplugged).
 
+**UPDATE 2026-11-20 evening — DEEP SUSPEND WORKS (bare VIM3, UART-verified):**
+- **Bootloader FLASHED** (fastboot, after RAM-boot tests): `fip-noeth.bin` = BL31 a138b29bb + U-Boot
+  7d30544539f + OP-TEE + BL30 DDR patch + **bl301 noeth**; copy + md5 74d772f4… in
+  ~/android/fip-flashed/u-boot_kvim3_ab_optee-noeth-20261120.bin. FIP script default is now noeth
+  (vendor/khadas/vim3 55584fb), so the build's u-boot_kvim3_ab_optee.bin carries it too.
+- **Kernel fix** (kernel/khadas/vim3 516aa623a9f, pushed to gschuurman lineage-23.0): opp-suspend on the
+  1 GHz OPPs + g12a.c G12B syscore hook that saves sys_pll/sys1_pll/CPU mux registers and restores the PLLs
+  after resume. Log line `g12b-clkc: resume: ...` shows BL30 leaves BOTH PLLs in reset/off every time
+  (d80104b8 → 280104b8). OTA (lineage-23.2-20261120) applied via apply_ota → **slot _a**.
+- **Result:** 10/10 deep cycles with cpufreq free + CPU load after each resume (both clusters at 1.8/2.208 GHz
+  on the PLLs), then performance governor: alive. Before: hard hang on the first PLL step.
+- Known leftovers: BL30 resumes the A53 cluster on the other dyn-mux half (64010400 vs Linux 00000001, both
+  1 GHz): only a warning, harmless in all transitions. BOOTTIME doesn't include the sleep (vrtc not read on
+  resume). Android alarms wake deep sleep via meson-vrtc (exit_reason 3), BT host-wake too (4).
+- **Next:** mainboard back on → `persist.vendor.vehicle.deep_suspend=1` → ACC-off test (MCU log: vim3 3V3
+  should now really drop in deep) + ACC wake + 12 V draw → then the off delay. Car config until then:
+  deep_suspend=0 (persist), off_delay_s=1800 (but mem_sleep is `deep` until the next boot after the loop tests).
+
 **Next (old list, item 1–2 superseded by the updates above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
