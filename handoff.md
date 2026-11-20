@@ -92,6 +92,31 @@ reverted to s2idle (`persist.vendor.vehicle.deep_suspend=0` set on the device).*
 - **Car config 19:10 (user):** deep OFF (`persist.vendor.vehicle.deep_suspend=0`, s2idle) and
   `persist.vendor.vehicle.off_delay_s=1800` (30 min, then the MCU powers the VIM3 off, ~0.1 W).
 
+**UPDATE 2026-11-20 — UART console (bare VIM3, Bus Pirate 5 bridge /dev/ttyACM1, 115200, logger
+scratchpad uart/log.sh): BOTH ROOT CAUSES FOUND.**
+1. **Spurious wake = Wake-on-LAN check in bl301:** `exit_reason:0x0d` 22 ms after "Enter ddr suspend".
+   detect_key 0x1000b43c: if suspend_from != 0 and GPIOZ_14 (RTL8211F PHY INTB, PREG_PAD GPIOZ_I 0xff634478
+   bit 14) is low → reason 13. Our PHY has an interrupt pending → immediate wake, before any rail cut (hence no
+   3V3 dip). **Fix: bl301 patch `noeth`** (bpl→nop at file offset 0x1448 / 0x1000b448), BL301_KEEP=noeth in
+   generate-g12b-optee-fip.sh (vendor/khadas/vim3, uncommitted edit on top of d50a36b). Test FIP
+   ~/android/fip-test/fip-noeth.bin (+ fip-noeth-cnt.bin with BL31 printing CNTPCT; TF-A g12b_pm.c edit
+   uncommitted). With it: real deep sleep for minutes, wake on power key (`exit_reason:0x06`), RTC
+   (`0x03`, Android alarms via meson-vrtc rtc1; bl301 prints `alarm=NNNS`) and BT host-wake (`0x04`).
+   CNTPCT keeps counting through deep (not the hang cause).
+2. **Resume hang = cpufreq after BL30 touched the CPU clocks:** with cpufreq pinned to min: 14/14 deep
+   cycles clean; at max/conservative: 2 hangs in 4; switching to max/performance after the cycles froze the
+   board instantly (no suspend involved). BL30 sets the CPU clocks itself (`Little/Big core clk resume rate
+   1000000000 / 1398000000`) behind the clk framework's back; the next cpufreq transition programs PLL/mux on
+   stale cached state → silent hard hang. **Fix plan (kernel):** `opp-suspend` OPP in the DT (cpufreq-dt
+   sets it before suspend) and resync/NOCACHE the G12B CPU clocks after resume; then retest the loop at
+   max/conservative. Loop scripts: /data/local/tmp/loop2.sh (vrtc +20 s wake per cycle, pins min freq).
+- Side notes: BOOTTIME/uptime does not include the deep sleep time (kernel doesn't read meson-vrtc on
+  resume); Android's own system-suspend also enters deep once mem_sleep=deep.
+- Maskrom on the bare VIM3: USB-C must be a data connection to the PC; the ROM USB window is short →
+  scratchpad ramboot.sh polls lsusb 5×/s and retries. Stopping U-Boot over the UART (spaces) gives the user
+  time to reach the board. MCU 0.2.6 (vehicle_interfaces 9eda80f): service jumper also stops the BOOTING
+  timeout cut (no rail sense with the ribbon unplugged).
+
 **Next (old list, item 1–2 superseded by the updates above):**
 1. Test (user, pending): PSU 12.6 V, PCMs blocked (as now), pull ACC, read draw ~30 s after dark, ACC on
    after ~1 min. Expect < 1 W and a resume in ~5 s. (After a reboot re-block the PCMs first.)
